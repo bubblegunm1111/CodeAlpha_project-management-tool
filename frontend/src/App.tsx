@@ -27,7 +27,10 @@ import {
   CalendarCheck,
   Palette,
   Check,
-  Trash2
+  Trash2,
+  Pencil,
+  Copy,
+  ArrowRight
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -331,6 +334,18 @@ export default function App() {
   const [createTaskSubtasks, setCreateTaskSubtasks] = useState<string[]>([]);
   const [createTaskSubtaskInput, setCreateTaskSubtaskInput] = useState('');
 
+  // 3-dots Card Context Menu state
+  const [cardMenuOpenId, setCardMenuOpenId] = useState<string | null>(null);
+
+  // Close card menu on document click
+  useEffect(() => {
+    const handleDocumentClick = () => {
+      setCardMenuOpenId(null);
+    };
+    window.addEventListener('click', handleDocumentClick);
+    return () => window.removeEventListener('click', handleDocumentClick);
+  }, []);
+
   // Notifications
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'Backend connected to SQLite API server', time: 'Just now' },
@@ -528,12 +543,76 @@ export default function App() {
     ]);
   };
 
-  // Move task to next column
+  // Delete task
+  const handleDeleteTask = (taskId: string) => {
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+    if (selectedTask && selectedTask.id === taskId) {
+      setSelectedTask(null);
+    }
+    setCardMenuOpenId(null);
+
+    const numId = taskId.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}`, {
+      method: 'DELETE'
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Card removed from board`, time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  // Duplicate task
+  const handleDuplicateTask = (task: Task) => {
+    const duplicated: Task = {
+      ...task,
+      id: `t-${Date.now()}`,
+      title: `${task.title} (Copy)`,
+      subtasks: task.subtasks ? task.subtasks.map((s, idx) => ({ ...s, id: `st-${Date.now()}-${idx}` })) : [],
+      comments: [],
+      commentsCount: 0
+    };
+
+    setTasks(prev => [duplicated, ...prev]);
+    setCardMenuOpenId(null);
+
+    fetch(`${API_BASE}/projects/1/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        column_id: duplicated.columnId === 'todo' ? 1 : duplicated.columnId === 'inprogress' ? 2 : 3,
+        title: duplicated.title,
+        priority: duplicated.priority,
+        color: duplicated.color,
+        tags: duplicated.tags,
+        subtasks: duplicated.subtasks,
+        progress: duplicated.progress
+      })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Duplicated card "${task.title.slice(0, 18)}..."`, time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  // Move task to column
   const moveTask = (taskId: string, targetCol: 'todo' | 'inprogress' | 'inreview' | 'done') => {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, columnId: targetCol } : t));
     if (selectedTask && selectedTask.id === taskId) {
       setSelectedTask(prev => prev ? { ...prev, columnId: targetCol } : null);
     }
+    setCardMenuOpenId(null);
+
+    const numId = taskId.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        column_id: targetCol === 'todo' ? 1 : targetCol === 'inprogress' ? 2 : 3,
+        position: 0
+      })
+    }).catch(() => {});
   };
 
   // Create new task with initial subtasks
@@ -1077,21 +1156,86 @@ export default function App() {
                                   >
                                     <Palette className="w-3.5 h-3.5 text-[#7A6D5E]" />
                                   </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const nextCols: Record<string, 'todo' | 'inprogress' | 'inreview'> = {
-                                        todo: 'inprogress',
-                                        inprogress: 'inreview',
-                                        inreview: 'todo'
-                                      };
-                                      moveTask(task.id, nextCols[task.columnId]);
-                                    }}
-                                    className="text-[#877969] hover:text-[#2E2721] p-1 rounded-md hover:bg-black/5 text-[10px] font-bold"
-                                    title="Advance task column"
-                                  >
-                                    <MoreVertical className="w-3.5 h-3.5" />
-                                  </button>
+                                  {/* Contextual 3-Dots Dropdown Menu */}
+                                  <div className="relative">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCardMenuOpenId(cardMenuOpenId === task.id ? null : task.id);
+                                      }}
+                                      className="text-[#877969] hover:text-[#2E2721] p-1 rounded-md hover:bg-black/10 transition-colors"
+                                      title="Card options"
+                                    >
+                                      <MoreVertical className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    {cardMenuOpenId === task.id && (
+                                      <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="absolute right-0 mt-1 w-48 bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-2xl z-50 py-1.5 text-xs animate-in fade-in zoom-in-95 duration-100"
+                                      >
+                                        {/* Edit / Open */}
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedTask(task);
+                                            setCardMenuOpenId(null);
+                                          }}
+                                          className="w-full text-left px-3 py-1.5 flex items-center space-x-2 text-[#3A3026] hover:bg-[#EFE8DC] font-medium transition-colors"
+                                        >
+                                          <Pencil className="w-3.5 h-3.5 text-[#7A6D5E]" />
+                                          <span>Edit / Open Details</span>
+                                        </button>
+
+                                        {/* Duplicate Card */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDuplicateTask(task)}
+                                          className="w-full text-left px-3 py-1.5 flex items-center space-x-2 text-[#3A3026] hover:bg-[#EFE8DC] font-medium transition-colors"
+                                        >
+                                          <Copy className="w-3.5 h-3.5 text-[#7A6D5E]" />
+                                          <span>Duplicate Card</span>
+                                        </button>
+
+                                        {/* Move to Column Submenu */}
+                                        <div className="px-3 pt-1.5 pb-0.5 border-t border-[#E8DEC9] text-[10px] font-bold text-[#8C7F70] uppercase tracking-wider">
+                                          Move To Column
+                                        </div>
+                                        {(['todo', 'inprogress', 'inreview'] as const).map(col => {
+                                          const isCurrent = task.columnId === col;
+                                          const labels = { todo: 'Todo list', inprogress: 'In Progress', inreview: 'In Review' };
+                                          return (
+                                            <button
+                                              key={col}
+                                              type="button"
+                                              disabled={isCurrent}
+                                              onClick={() => moveTask(task.id, col)}
+                                              className={`w-full text-left px-3 py-1 flex items-center justify-between text-xs font-medium transition-colors ${
+                                                isCurrent
+                                                  ? 'opacity-40 cursor-default bg-black/5 text-[#8A7D6F]'
+                                                  : 'text-[#3A3026] hover:bg-[#EFE8DC]'
+                                              }`}
+                                            >
+                                              <span>{labels[col]}</span>
+                                              {isCurrent ? <span className="text-[10px] font-bold">Active</span> : <ArrowRight className="w-3 h-3 text-[#9C8F7F]" />}
+                                            </button>
+                                          );
+                                        })}
+
+                                        {/* Delete Card Option */}
+                                        <div className="border-t border-[#E8DEC9] mt-1 pt-1">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteTask(task.id)}
+                                            className="w-full text-left px-3 py-1.5 flex items-center space-x-2 text-rose-700 hover:bg-rose-50 font-bold transition-colors"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                            <span>Delete Card</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
 
