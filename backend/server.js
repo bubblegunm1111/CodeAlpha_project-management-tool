@@ -17,31 +17,39 @@ const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:5173';
 let mailTransporter = null;
 const initMailer = async () => {
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    mailTransporter = nodemailer.createTransport({
+    const liveTransport = nodemailer.createTransport({
       service: process.env.SMTP_SERVICE || 'gmail',
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       }
     });
-    console.log(`[Email Service] Configured live SMTP with ${process.env.SMTP_USER}`);
-  } else {
-    // Generate test account so real emails can still be tested and previewed
+
     try {
-      const testAccount = await nodemailer.createTestAccount();
-      mailTransporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass
-        }
-      });
-      console.log(`[Email Service] Ethereal test mailer ready. User: ${testAccount.user}`);
-    } catch (e) {
-      console.log('[Email Service] Offline mail fallback enabled');
+      await liveTransport.verify();
+      mailTransporter = liveTransport;
+      console.log(`[Email Service] Live SMTP verified and active for ${process.env.SMTP_USER}`);
+      return;
+    } catch (authErr) {
+      console.warn(`[Email Service Warning] Gmail credentials rejected (${authErr.message}). Switching to Ethereal web mailer so invitation links remain accessible.`);
     }
+  }
+
+  // Generate test account so emails can always be inspected live
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    mailTransporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      }
+    });
+    console.log(`[Email Service] Ethereal test mailer ready. User: ${testAccount.user}`);
+  } catch (e) {
+    console.log('[Email Service] Offline mail fallback enabled');
   }
 };
 initMailer();
