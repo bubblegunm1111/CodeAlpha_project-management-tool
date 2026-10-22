@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --vintage-bg: #F5EFEB;
+    --vintage-paper: #FAF6EE;
+    --vintage-paper-dark: #EFE8DA;
+    --vintage-folder: #E8DECA;
+    --vintage-folder-active: #FAF6EE;
+    --vintage-border: #DCD1BC;
+    --vintage-border-dark: #C6B99E;
+    --vintage-ink: #2C2621;
+    --vintage-ink-muted: #73695F;
+    --vintage-ink-light: #A4988A;
+  }
+
+  body {
+    background-color: var(--vintage-bg);
+    color: var(--vintage-ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbar matching vintage paper */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #EFE8DA;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #CFC2A9;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B4A487;
+}
+
+/* Folder tab cutout curves */
+.folder-tab {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.folder-tab.active {
+  background-color: #FAF6EE;
+  border-color: #DCD1BC #DCD1BC transparent #DCD1BC;
+}
+
+.folder-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #FAF6EE;
+}
