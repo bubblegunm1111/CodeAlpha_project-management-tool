@@ -37,16 +37,48 @@ const initializeDB = () => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Projects table
+    // Organizations table
+    db.run(`CREATE TABLE IF NOT EXISTS organizations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      description TEXT,
+      owner_id INTEGER NOT NULL,
+      icon TEXT DEFAULT 'Building2',
+      color TEXT DEFAULT 'stone',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+    )`);
+
+    // Task Folders (Dossiers) within Organizations
+    db.run(`CREATE TABLE IF NOT EXISTS folders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      organization_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      code TEXT,
+      description TEXT,
+      color TEXT DEFAULT 'peach',
+      status TEXT DEFAULT 'Active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
+    )`);
+
+    // Projects table (linked optionally to folders & organizations)
     db.run(`CREATE TABLE IF NOT EXISTS projects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       description TEXT,
       owner_id INTEGER NOT NULL,
+      folder_id INTEGER,
+      organization_id INTEGER,
       is_private BOOLEAN DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+      FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL,
+      FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
     )`);
 
     // Project members table
@@ -145,6 +177,8 @@ const initializeDB = () => {
     db.run("ALTER TABLE tasks ADD COLUMN progress INTEGER DEFAULT 0", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN subtasks TEXT DEFAULT '[]'", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN note TEXT", () => {});
+    db.run("ALTER TABLE projects ADD COLUMN organization_id INTEGER", () => {});
+    db.run("ALTER TABLE projects ADD COLUMN folder_id INTEGER", () => {});
   });
 };
 
@@ -253,6 +287,118 @@ app.get('/api/v1/auth/me', authMiddleware, async (req, res) => {
       user = { id: 1, email: 'mason.walker@example.com', name: 'Mason Walker', avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop' };
     }
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ ORGANIZATIONS ENDPOINTS ============
+
+app.get('/api/v1/organizations', authMiddleware, async (req, res) => {
+  try {
+    let orgs = await allAsync('SELECT * FROM organizations ORDER BY created_at ASC');
+    if (orgs.length === 0) {
+      // Seed default organization
+      const result = await runAsync(
+        'INSERT INTO organizations (name, slug, description, owner_id, icon, color) VALUES (?, ?, ?, ?, ?, ?)',
+        ['Apex Studio Agency', 'apex-studio', 'Digital product design, brand identity & architecture studio', req.userId, 'Briefcase', 'stone']
+      );
+      const defaultOrgId = result.lastID;
+
+      // Seed initial folders (Dossiers)
+      const initialFolders = [
+        { name: 'Client Deliverables', code: 'DOSSIER-01', description: 'Active client design systems & production builds', color: 'peach' },
+        { name: 'Internal Research & Labs', code: 'DOSSIER-02', description: 'Product specs, AI models & wireframes', color: 'mint' },
+        { name: 'Brand & Marketing Ops', code: 'DOSSIER-03', description: 'Press kits, typography guides & launch schedules', color: 'blue' }
+      ];
+
+      for (let f of initialFolders) {
+        await runAsync(
+          'INSERT INTO folders (organization_id, name, code, description, color, status) VALUES (?, ?, ?, ?, ?, ?)',
+          [defaultOrgId, f.name, f.code, f.description, f.color, 'Active']
+        );
+      }
+
+      orgs = await allAsync('SELECT * FROM organizations WHERE id = ?', [defaultOrgId]);
+    }
+
+    // Attach folders to each org
+    for (let org of orgs) {
+      const folders = await allAsync('SELECT * FROM folders WHERE organization_id = ? ORDER BY id ASC', [org.id]);
+      org.folders = folders;
+    }
+
+    res.json(orgs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/v1/organizations', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, color, icon } = req.body;
+    if (!name) return res.status(400).json({ error: 'Organization name is required' });
+
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString().slice(-4);
+    const result = await runAsync(
+      'INSERT INTO organizations (name, slug, description, owner_id, icon, color) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, slug, description || '', req.userId, icon || 'Building2', color || 'stone']
+    );
+
+    const newOrgId = result.lastID;
+
+    // Create a default initial folder for this organization
+    await runAsync(
+      'INSERT INTO folders (organization_id, name, code, description, color, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [newOrgId, 'General Dossier', 'DOSSIER-01', 'Primary task folder and boards', 'peach', 'Active']
+    );
+
+    const created = await getAsync('SELECT * FROM organizations WHERE id = ?', [newOrgId]);
+    created.folders = await allAsync('SELECT * FROM folders WHERE organization_id = ?', [newOrgId]);
+    res.status(201).json(created);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ TASK FOLDERS ENDPOINTS ============
+
+app.get('/api/v1/organizations/:orgId/folders', authMiddleware, async (req, res) => {
+  try {
+    const folders = await allAsync(
+      'SELECT * FROM folders WHERE organization_id = ? ORDER BY created_at ASC',
+      [req.params.orgId]
+    );
+
+    // Attach task count and projects count
+    for (let f of folders) {
+      const taskCount = await getAsync(
+        `SELECT COUNT(*) as count FROM tasks t JOIN projects p ON t.project_id = p.id WHERE p.folder_id = ?`,
+        [f.id]
+      );
+      f.taskCount = taskCount ? taskCount.count : 0;
+    }
+
+    res.json(folders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/v1/organizations/:orgId/folders', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, color, code } = req.body;
+    if (!name) return res.status(400).json({ error: 'Folder name is required' });
+
+    const generatedCode = code || `DOSSIER-${Math.floor(10 + Math.random() * 90)}`;
+    const result = await runAsync(
+      'INSERT INTO folders (organization_id, name, code, description, color, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.params.orgId, name, generatedCode, description || '', color || 'peach', 'Active']
+    );
+
+    const newFolder = await getAsync('SELECT * FROM folders WHERE id = ?', [result.lastID]);
+    newFolder.taskCount = 0;
+    res.status(201).json(newFolder);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -37,7 +37,9 @@ import {
   EyeOff,
   LogOut,
   Sparkles,
-  FolderOpen
+  FolderOpen,
+  Building2,
+  Layers
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -97,6 +99,24 @@ interface ScheduleItem {
   priority: 'Low' | 'Medium' | 'High' | 'Urgent';
   assignee: string;
   status: 'Scheduled' | 'Completed';
+}
+
+export interface TaskFolder {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  color: CardColor;
+  status: string;
+  tasksCount?: number;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  folders: TaskFolder[];
 }
 
 const INITIAL_TASKS: Task[] = [
@@ -310,10 +330,62 @@ const GoogleIcon = () => (
 );
 
 export default function App() {
-  // Screen Management: 'splash' | 'auth' | 'app'
-  const [currentScreen, setCurrentScreen] = useState<'splash' | 'auth' | 'app'>('splash');
+  // Screen Management: 'splash' | 'auth' | 'org_setup' | 'folder_hub' | 'app'
+  const [currentScreen, setCurrentScreen] = useState<'splash' | 'auth' | 'org_setup' | 'folder_hub' | 'app'>('splash');
   const [isFolderOpened, setIsFolderOpened] = useState(false);
   const [splashStep, setSplashStep] = useState<number>(0);
+
+  // Organizations & Folder States
+  const [organizations, setOrganizations] = useState<Organization[]>([
+    {
+      id: 'org-1',
+      name: 'Apex Studio Agency',
+      slug: 'apex-studio',
+      description: 'Digital product design, brand identity & architecture studio',
+      folders: [
+        {
+          id: 'f-1',
+          name: 'Client Deliverables',
+          code: 'DOSSIER-01',
+          description: 'Active client design systems & production builds',
+          color: 'peach',
+          status: 'Active',
+          tasksCount: 4
+        },
+        {
+          id: 'f-2',
+          name: 'Internal Research & Labs',
+          code: 'DOSSIER-02',
+          description: 'Product specs, AI models & wireframes',
+          color: 'mint',
+          status: 'Active',
+          tasksCount: 2
+        },
+        {
+          id: 'f-3',
+          name: 'Brand & Marketing Ops',
+          code: 'DOSSIER-03',
+          description: 'Press kits, typography guides & launch schedules',
+          color: 'blue',
+          status: 'Active',
+          tasksCount: 0
+        }
+      ]
+    }
+  ]);
+  const [currentOrg, setCurrentOrg] = useState<Organization>(organizations[0]);
+  const [currentFolder, setCurrentFolder] = useState<TaskFolder>(organizations[0].folders[0]);
+
+  // Modals for creating new Organization or Task Folder
+  const [isNewOrgModalOpen, setIsNewOrgModalOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
+  const [newOrgDescription, setNewOrgDescription] = useState('');
+
+  const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderCode, setNewFolderCode] = useState('');
+  const [newFolderDescription, setNewFolderDescription] = useState('');
+  const [newFolderColor, setNewFolderColor] = useState<CardColor>('peach');
 
   // Auth form states (matching user screenshot)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -394,6 +466,39 @@ export default function App() {
     }
   }, [currentScreen]);
 
+  // Load organizations from backend
+  useEffect(() => {
+    fetch(`${API_BASE}/organizations`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          const mappedOrgs: Organization[] = data.map((org: any) => ({
+            id: `org-${org.id}`,
+            name: org.name,
+            slug: org.slug,
+            description: org.description || '',
+            folders: (org.folders || []).map((f: any) => ({
+              id: `f-${f.id}`,
+              name: f.name,
+              code: f.code || 'DOSSIER',
+              description: f.description || '',
+              color: (f.color || 'peach') as CardColor,
+              status: f.status || 'Active',
+              tasksCount: f.taskCount || 0
+            }))
+          }));
+          setOrganizations(mappedOrgs);
+          if (mappedOrgs.length > 0) {
+            setCurrentOrg(mappedOrgs[0]);
+            if (mappedOrgs[0].folders && mappedOrgs[0].folders.length > 0) {
+              setCurrentFolder(mappedOrgs[0].folders[0]);
+            }
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalEmail = authEmail.trim() || 'mason.walker@company.com';
@@ -405,7 +510,12 @@ export default function App() {
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
     });
 
-    setCurrentScreen('app');
+    // If signing up or no organizations exist, go to Organization Setup; otherwise to Folder Hub
+    if (authMode === 'signup' || organizations.length === 0) {
+      setCurrentScreen('org_setup');
+    } else {
+      setCurrentScreen('folder_hub');
+    }
 
     setNotifications(prev => [
       { id: Date.now(), text: `Authenticated as ${finalName}`, time: 'Just now' },
@@ -419,9 +529,103 @@ export default function App() {
       email: 'mason.walker@gmail.com',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
     });
-    setCurrentScreen('app');
+    if (organizations.length === 0) {
+      setCurrentScreen('org_setup');
+    } else {
+      setCurrentScreen('folder_hub');
+    }
     setNotifications(prev => [
       { id: Date.now(), text: 'Signed in with Google Account', time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  // Create new organization handler
+  const handleCreateOrganization = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrgName.trim()) return;
+
+    const newOrg: Organization = {
+      id: `org-${Date.now()}`,
+      name: newOrgName.trim(),
+      slug: newOrgName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      description: newOrgDescription.trim() || 'Custom Organization Workspace',
+      folders: [
+        {
+          id: `f-${Date.now()}-1`,
+          name: 'Primary Tasks',
+          code: 'DOSSIER-01',
+          description: 'Primary tasks and active deliverables',
+          color: 'peach',
+          status: 'Active',
+          tasksCount: 0
+        }
+      ]
+    };
+
+    setOrganizations(prev => [...prev, newOrg]);
+    setCurrentOrg(newOrg);
+    setCurrentFolder(newOrg.folders[0]);
+    setIsNewOrgModalOpen(false);
+    setNewOrgName('');
+    setNewOrgDescription('');
+
+    // Persist to backend
+    fetch(`${API_BASE}/organizations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newOrg.name, description: newOrg.description })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Created organization: "${newOrg.name}"`, time: 'Just now' },
+      ...prev
+    ]);
+
+    // Proceed to Folder Hub for this new organization
+    setCurrentScreen('folder_hub');
+  };
+
+  // Create new task folder handler
+  const handleCreateFolder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderName.trim()) return;
+
+    const newFld: TaskFolder = {
+      id: `f-${Date.now()}`,
+      name: newFolderName.trim(),
+      code: newFolderCode.trim().toUpperCase() || `DOSSIER-0${currentOrg.folders.length + 1}`,
+      description: newFolderDescription.trim() || 'Classified task folder',
+      color: newFolderColor,
+      status: 'Active',
+      tasksCount: 0
+    };
+
+    const updatedFolders = [...currentOrg.folders, newFld];
+    const updatedOrg = { ...currentOrg, folders: updatedFolders };
+
+    setOrganizations(prev => prev.map(o => o.id === currentOrg.id ? updatedOrg : o));
+    setCurrentOrg(updatedOrg);
+    setCurrentFolder(newFld);
+    setIsNewFolderModalOpen(false);
+    setNewFolderName('');
+    setNewFolderCode('');
+    setNewFolderDescription('');
+
+    const orgNumId = currentOrg.id.replace('org-', '');
+    fetch(`${API_BASE}/organizations/${orgNumId}/folders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: newFld.name,
+        code: newFld.code,
+        description: newFld.description,
+        color: newFld.color
+      })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Created task folder: "${newFld.name}" (${newFld.code})`, time: 'Just now' },
       ...prev
     ]);
   };
@@ -1336,21 +1540,449 @@ export default function App() {
     );
   }
 
-  // 3. Main Application Screen
+  // 2b. Organization Onboarding / Setup Screen
+  if (currentScreen === 'org_setup') {
+    return (
+      <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative selection:bg-[#E8DECA]">
+        <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+
+        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center mx-auto shadow-sm">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#2C2621]">
+              Create Your Organization
+            </h2>
+            <p className="mt-1 text-xs text-[#7A7064]">
+              Organizations house your task folders, dossiers, and project management boards.
+            </p>
+          </div>
+
+          <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="bg-[#FAF6EE] py-8 px-6 sm:px-8 shadow-sm border border-[#DCD1BC] rounded-2xl">
+              <form onSubmit={handleCreateOrganization} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">
+                    Organization Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Apex Studio Agency, Horizon Media..."
+                    value={newOrgName}
+                    onChange={(e) => setNewOrgName(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">
+                    Description or Industry
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Brief description of what your team or organization builds..."
+                    value={newOrgDescription}
+                    onChange={(e) => setNewOrgDescription(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 px-4 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-sm flex items-center justify-center space-x-2"
+                  >
+                    <span>Create Organization & Continue</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </form>
+
+              {organizations.length > 0 && (
+                <div className="text-center mt-5 pt-4 border-t border-[#E8DEC9]">
+                  <p className="text-xs text-[#7A7064]">
+                    Already have an organization?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentScreen('folder_hub')}
+                      className="font-bold text-[#3F3730] hover:underline"
+                    >
+                      Go to Folder Hub
+                    </button>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2c. Task Folders & Dossiers Hub Screen
+  if (currentScreen === 'folder_hub') {
+    return (
+      <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col justify-between selection:bg-[#E8DECA] relative overflow-x-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1.2px,transparent_1.2px)] [background-size:20px_20px] opacity-35 pointer-events-none" />
+
+        {/* Top Header */}
+        <header className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between relative z-10">
+          <div className="flex items-center space-x-4">
+            <div className="w-9 h-9 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-sm">
+              <Folder className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-base tracking-tight text-[#2C241E]">Archival PM</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#E4DAC7] text-[#5A5046] border border-[#D5CABB]">
+                  Folder Hub
+                </span>
+              </div>
+              <p className="text-[11px] text-[#7A7064] font-medium">Select a dossier task folder to open its Kanban board</p>
+            </div>
+          </div>
+
+          {/* Org Selector & Controls */}
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <select
+                value={currentOrg.id}
+                onChange={(e) => {
+                  const found = organizations.find(o => o.id === e.target.value);
+                  if (found) {
+                    setCurrentOrg(found);
+                    if (found.folders && found.folders.length > 0) {
+                      setCurrentFolder(found.folders[0]);
+                    }
+                  }
+                }}
+                className="pl-3 pr-8 py-1.5 text-xs font-bold bg-[#FAF6EE] border border-[#D5CABB] rounded-lg text-[#2C2621] focus:outline-none cursor-pointer shadow-xs"
+              >
+                {organizations.map(org => (
+                  <option key={org.id} value={org.id}>
+                    🏢 {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={() => setIsNewOrgModalOpen(true)}
+              className="px-3 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EFE8DC] border border-[#D5CABB] text-xs font-semibold text-[#433A31] transition-colors flex items-center space-x-1"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Org</span>
+            </button>
+
+            <button
+              onClick={() => setIsNewFolderModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-xs flex items-center space-x-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Task Folder</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentScreen('auth')}
+              className="p-1.5 rounded-lg bg-[#FAF6EE] border border-[#D5CABB] text-[#7A7064] hover:text-[#2C2621]"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Main Folder Grid */}
+        <main className="max-w-6xl mx-auto w-full px-6 py-10 flex-1 relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-[#DCD1BC]">
+            <div>
+              <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-[#E8DECA] text-[#5A5046] border border-[#D5CABB] text-[11px] font-semibold uppercase tracking-wider mb-2">
+                <Building2 className="w-3 h-3 text-amber-700" />
+                <span>{currentOrg.name}</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#2C241E] tracking-tight">
+                Classified Task Folders
+              </h1>
+              <p className="text-xs text-[#7A7064] mt-1 max-w-xl">
+                {currentOrg.description || 'Each folder contains independent Kanban boards, subtask checklists, and classified notes.'}
+              </p>
+            </div>
+
+            <div className="mt-4 sm:mt-0 flex items-center space-x-2">
+              <span className="text-xs text-[#7A7064] font-medium">
+                {currentOrg.folders.length} {currentOrg.folders.length === 1 ? 'Folder' : 'Folders'} Available
+              </span>
+            </div>
+          </div>
+
+          {/* Grid of Manila Folders */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentOrg.folders.map(folder => {
+              const colorStyle = getColorStyles(folder.color);
+              return (
+                <div
+                  key={folder.id}
+                  onClick={() => {
+                    setCurrentFolder(folder);
+                    setCurrentScreen('app');
+                  }}
+                  className="group relative cursor-pointer"
+                >
+                  {/* Folder Tab Cutout on Top Left */}
+                  <div className="w-36 h-5 rounded-t-lg bg-[#E2D5BA] group-hover:bg-[#DACBB0] border-t-2 border-l-2 border-r-2 border-[#C6B695] px-3 flex items-center transition-colors">
+                    <span className="text-[9px] font-mono font-bold text-[#6B5D48] tracking-widest uppercase">
+                      {folder.code}
+                    </span>
+                  </div>
+
+                  {/* Folder Body Card */}
+                  <div className="bg-[#FAF6EE] group-hover:bg-white rounded-b-2xl rounded-tr-2xl border-2 border-[#C6B695] p-5 shadow-sm group-hover:shadow-md transition-all relative overflow-hidden">
+                    <div className="flex items-start justify-between">
+                      <div className="w-10 h-10 rounded-xl bg-[#EFE8DA] flex items-center justify-center text-[#5C4F3F] group-hover:bg-[#3F3730] group-hover:text-[#FAF6EE] transition-colors border border-[#DCD1BC]">
+                        <Folder className="w-5 h-5" />
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${colorStyle.tagBg} ${colorStyle.tagText}`}>
+                        {folder.color}
+                      </span>
+                    </div>
+
+                    <div className="mt-4">
+                      <h3 className="text-base font-bold text-[#2C241E] group-hover:text-[#1A1410] transition-colors">
+                        {folder.name}
+                      </h3>
+                      <p className="text-xs text-[#7A7064] mt-1 line-clamp-2 leading-relaxed">
+                        {folder.description || 'Task management board with interactive checklist physics and pastel palettes.'}
+                      </p>
+                    </div>
+
+                    {/* Stats & Launch Action */}
+                    <div className="mt-6 pt-3 border-t border-[#EAE1D1] flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5 text-xs text-[#6B5F50] font-medium">
+                        <Layers className="w-3.5 h-3.5 text-[#8C8072]" />
+                        <span>Kanban Board</span>
+                      </div>
+                      <div className="flex items-center space-x-1 text-xs font-bold text-[#3F3730] group-hover:translate-x-1 transition-transform">
+                        <span>Open Board</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Quick Add Folder Card */}
+            <div
+              onClick={() => setIsNewFolderModalOpen(true)}
+              className="border-2 border-dashed border-[#CFC0A4] hover:border-[#8E7E65] rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-[#F7F1E7]/50 hover:bg-[#F2ECE0] transition-colors min-h-[200px]"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#E8DECA] flex items-center justify-center text-[#5A4E3F] mb-3">
+                <Plus className="w-5 h-5" />
+              </div>
+              <p className="text-sm font-bold text-[#2C241E]">Create New Task Folder</p>
+              <p className="text-xs text-[#7A7064] mt-1 max-w-xs">
+                Add another folder dossier for a specific project, client, or team sprint.
+              </p>
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="px-6 py-4 bg-[#EFE8DC] border-t border-[#DCD1BC] flex items-center justify-between text-xs text-[#7A7064] relative z-10">
+          <span>Archival PM Dossier System • Organization: {currentOrg.name}</span>
+          <button
+            onClick={() => setCurrentScreen('splash')}
+            className="hover:text-[#2C2621] font-semibold underline"
+          >
+            Replay 3D Opening Animation
+          </button>
+        </footer>
+
+        {/* Modal: Create Organization */}
+        {isNewOrgModalOpen && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#FAF6EE] rounded-2xl border border-[#D5CABB] shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E8DEC9]">
+                <h3 className="text-base font-bold text-[#2C241E] flex items-center space-x-2">
+                  <Building2 className="w-4 h-4 text-amber-800" />
+                  <span>Create New Organization</span>
+                </h3>
+                <button onClick={() => setIsNewOrgModalOpen(false)} className="text-[#8C8072] hover:text-[#2C241E]">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateOrganization} className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">Organization Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Horizon Labs, Nordic Studio..."
+                    value={newOrgName}
+                    onChange={(e) => setNewOrgName(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">Description</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Focus areas, teams or client scope..."
+                    value={newOrgDescription}
+                    onChange={(e) => setNewOrgDescription(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewOrgModalOpen(false)}
+                    className="px-3 py-1.5 rounded-lg border border-[#D5CABB] text-xs font-semibold text-[#5A5046] hover:bg-[#EFE8DC]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621]"
+                  >
+                    Create Organization
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Create Task Folder */}
+        {isNewFolderModalOpen && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#FAF6EE] rounded-2xl border border-[#D5CABB] shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E8DEC9]">
+                <h3 className="text-base font-bold text-[#2C241E] flex items-center space-x-2">
+                  <Folder className="w-4 h-4 text-amber-800" />
+                  <span>Create Task Folder Dossier</span>
+                </h3>
+                <button onClick={() => setIsNewFolderModalOpen(false)} className="text-[#8C8072] hover:text-[#2C241E]">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateFolder} className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">Folder Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Mobile App Redesign, Q3 Marketing..."
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">Dossier Code (Notch Label)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DOSSIER-04, PROJ-ALPHA"
+                    value={newFolderCode}
+                    onChange={(e) => setNewFolderCode(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">Description</label>
+                  <textarea
+                    rows={2}
+                    placeholder="What goals are tracked in this folder?"
+                    value={newFolderDescription}
+                    onChange={(e) => setNewFolderDescription(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">Folder Theme Color</label>
+                  <div className="flex space-x-2">
+                    {(['peach', 'mint', 'blue', 'purple', 'coral', 'canary'] as CardColor[]).map(c => (
+                      <button
+                        type="button"
+                        key={c}
+                        onClick={() => setNewFolderColor(c)}
+                        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center capitalize text-[10px] font-bold ${
+                          newFolderColor === c ? 'border-[#3F3730] scale-110 shadow-xs' : 'border-transparent'
+                        }`}
+                        style={{
+                          backgroundColor:
+                            c === 'peach' ? '#FFE2C2' :
+                            c === 'mint' ? '#D1F7E2' :
+                            c === 'blue' ? '#D6E6FE' :
+                            c === 'purple' ? '#E5D7FF' :
+                            c === 'coral' ? '#FFE0E0' : '#FEF08A'
+                        }}
+                      >
+                        {newFolderColor === c && '✓'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewFolderModalOpen(false)}
+                    className="px-3 py-1.5 rounded-lg border border-[#D5CABB] text-xs font-semibold text-[#5A5046] hover:bg-[#EFE8DC]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621]"
+                  >
+                    Create Task Folder
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 3. Main Application Screen (Board for currentFolder)
   return (
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header (Image 2 Inspiration) */}
       <header className="px-6 pt-4 pb-0 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2.5 pb-3">
-            <div className="w-8 h-8 rounded-lg bg-[#3F3730] flex items-center justify-center text-[#FAF6EE] shadow-sm">
+            <button
+              onClick={() => setCurrentScreen('folder_hub')}
+              className="w-8 h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-colors"
+              title="Return to Folder Hub"
+            >
               <Folder className="w-4 h-4" />
-            </div>
+            </button>
             <div>
-              <span className="font-bold text-base tracking-tight text-[#2B241F]">Archival PM</span>
-              <span className="ml-2 text-xs px-2 py-0.5 rounded bg-[#E4DAC7] text-[#5A5046] font-medium border border-[#D5CABB]">
-                Dossier v1.0
-              </span>
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() => setCurrentScreen('folder_hub')}
+                  className="font-bold text-sm tracking-tight text-[#2B241F] hover:underline"
+                >
+                  {currentOrg.name}
+                </button>
+                <span className="text-[#8C8072] text-xs">/</span>
+                <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2 py-0.5 rounded border border-[#DFD1B8]">
+                  {currentFolder.name} ({currentFolder.code})
+                </span>
+              </div>
+              <button
+                onClick={() => setCurrentScreen('folder_hub')}
+                className="text-[10px] text-[#7A7064] hover:text-[#2C241E] flex items-center space-x-1 mt-0.5"
+              >
+                <span>← Switch Folder or Org</span>
+              </button>
             </div>
           </div>
 
@@ -1456,9 +2088,19 @@ export default function App() {
                 <button
                   onClick={() => {
                     setIsUserMenuOpen(false);
-                    setCurrentScreen('splash');
+                    setCurrentScreen('folder_hub');
                   }}
                   className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                >
+                  <Building2 className="w-3.5 h-3.5 text-[#73695F]" />
+                  <span>Folder Hub & Organizations</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    setCurrentScreen('splash');
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
                 >
                   <FolderOpen className="w-3.5 h-3.5 text-[#73695F]" />
                   <span>Replay Folder Opening</span>
