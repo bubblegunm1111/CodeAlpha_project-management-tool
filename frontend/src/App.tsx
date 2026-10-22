@@ -797,6 +797,9 @@ export default function App() {
     token: string;
     invite_url: string;
     organization_name: string;
+    email_sent?: boolean;
+    email_preview_url?: string | null;
+    email_error?: string | null;
   } | null>(null);
   const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
   const [activeInvitationToken, setActiveInvitationToken] = useState<string | null>(null);
@@ -1756,7 +1759,14 @@ export default function App() {
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data.invite_url) {
-          setLastCreatedInvite(prev => prev ? { ...prev, invite_url: data.invite_url, token: data.token } : null);
+          setLastCreatedInvite(prev => prev ? {
+            ...prev,
+            invite_url: data.invite_url,
+            token: data.token,
+            email_sent: data.email_sent,
+            email_preview_url: data.email_preview_url,
+            email_error: data.email_error
+          } : null);
         }
       })
       .catch(() => {});
@@ -5438,12 +5448,25 @@ export default function App() {
               {/* Notification Banner */}
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start space-x-2.5 text-xs text-emerald-900">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
+                <div className="flex-1">
                   <p className="font-bold">An invitation email was sent to {lastCreatedInvite.email}</p>
                   <p className="text-[11px] text-emerald-800 mt-0.5">
                     When they open the email and accept, they will automatically join{' '}
                     <span className="font-semibold">{lastCreatedInvite.organization_name}</span> with immediate access to folders & boards.
                   </p>
+                  {lastCreatedInvite.email_preview_url && (
+                    <div className="mt-2 pt-2 border-t border-emerald-200">
+                      <a
+                        href={lastCreatedInvite.email_preview_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-[11px] shadow-xs"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>View Sent Email in Live Web Inbox &rarr;</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
 

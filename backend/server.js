@@ -4,12 +4,47 @@ const dotenv = require('dotenv');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'archival-secret-key-change-in-prod';
+const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:5173';
+
+// Setup email transporter (Supports real Gmail/SMTP or Ethereal test inbox)
+let mailTransporter = null;
+const initMailer = async () => {
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    mailTransporter = nodemailer.createTransport({
+      service: process.env.SMTP_SERVICE || 'gmail',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+    console.log(`[Email Service] Configured live SMTP with ${process.env.SMTP_USER}`);
+  } else {
+    // Generate test account so real emails can still be tested and previewed
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      mailTransporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass
+        }
+      });
+      console.log(`[Email Service] Ethereal test mailer ready. User: ${testAccount.user}`);
+    } catch (e) {
+      console.log('[Email Service] Offline mail fallback enabled');
+    }
+  }
+};
+initMailer();
 
 // Middleware
 app.use(cors());
@@ -1393,7 +1428,74 @@ app.post('/api/v1/organizations/:orgId/invites', authMiddleware, async (req, res
     const invitation = await getAsync('SELECT * FROM organization_invitations WHERE id = ?', [result.lastID]);
     invitation.projects = JSON.parse(invitation.projects || '[]');
     invitation.organization_name = org.name;
-    invitation.invite_url = `http://localhost:5173/?invite=${token}`;
+    
+    // Dynamic link (supports local or Vercel production deployment)
+    const clientBaseUrl = req.headers.origin || APP_BASE_URL || 'http://localhost:5173';
+    const inviteUrl = `${clientBaseUrl}/?invite=${token}`;
+    invitation.invite_url = inviteUrl;
+
+    // Send Real Email via nodemailer
+    let emailSent = false;
+    let emailPreviewUrl = null;
+    let emailError = null;
+
+    if (mailTransporter) {
+      try {
+        const mailOptions = {
+          from: `"Archival PM" <${process.env.SMTP_FROM || process.env.SMTP_USER || 'invites@archivalpm.com'}>`,
+          to: email.trim().toLowerCase(),
+          subject: `${org.name}: You have been invited to collaborate on Archival PM`,
+          headers: {
+            'X-Priority': '1',
+            'X-MSMail-Priority': 'High',
+            'Importance': 'High'
+          },
+          text: `You have been invited to join ${org.name} on Archival PM as ${role || 'team member'}.\n\nClick the link below to accept and access your workspace:\n${inviteUrl}\n\nWelcome aboard!`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F5EFEB; padding: 40px 20px; color: #2A231D;">
+              <div style="max-width: 520px; margin: 0 auto; background: #FAF6EE; border: 2px solid #D5CABB; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                <div style="background-color: #EFE8DC; padding: 18px 24px; border-bottom: 1px solid #DCD1BC;">
+                  <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #7F7364;">Archival PM &bull; Classified Workspace</span>
+                </div>
+                <div style="padding: 32px 28px; text-align: center;">
+                  <div style="width: 54px; height: 54px; line-height: 54px; margin: 0 auto 16px; border-radius: 50%; background-color: #2B231D; color: #FAF6EE; font-weight: 900; font-size: 20px; border: 2px solid #D5CABB;">
+                    AP
+                  </div>
+                  <h2 style="font-size: 20px; font-weight: 900; color: #2A231D; margin: 0 0 8px;">You've been invited to join ${org.name}</h2>
+                  <p style="font-size: 13px; color: #6B5E4F; line-height: 1.6; margin: 0 0 24px;">
+                    Collaborate on confidential project dossiers, interactive schedules, and sprint boards on Archival PM.
+                  </p>
+                  <div style="margin: 28px 0;">
+                    <a href="${inviteUrl}" style="background-color: #2B231D; color: #FAF6EE; padding: 14px 28px; border-radius: 12px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                      Accept Invitation & Join &rarr;
+                    </a>
+                  </div>
+                  <p style="font-size: 11px; color: #8C7E6C; margin: 24px 0 0; border-top: 1px solid #E8DEC9; pt: 16px;">
+                    Or paste this URL in your browser:<br/>
+                    <a href="${inviteUrl}" style="color: #2A231D; word-break: break-all;">${inviteUrl}</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          `
+        };
+
+        const info = await mailTransporter.sendMail(mailOptions);
+        emailSent = true;
+        emailPreviewUrl = nodemailer.getTestMessageUrl(info);
+        console.log(`[Email Sent] Message ID: ${info.messageId} to ${email}`);
+        if (emailPreviewUrl) {
+          console.log(`[Email Preview URL]: ${emailPreviewUrl}`);
+        }
+      } catch (err) {
+        console.error('[Email Dispatch Error]', err);
+        emailError = err.message;
+      }
+    }
+
+    invitation.email_sent = emailSent;
+    invitation.email_preview_url = emailPreviewUrl;
+    invitation.email_error = emailError;
 
     res.status(201).json(invitation);
   } catch (error) {
