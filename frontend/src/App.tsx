@@ -817,17 +817,6 @@ export default function App() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(INITIAL_TEAM);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Theme Palette Toggle: 'vintage' (original cream manila) vs 'aubergine_marigold' (ice silver, deep aubergine, marigold)
-  const [appTheme, setAppTheme] = useState<'vintage' | 'aubergine_marigold'>(() => {
-    return (localStorage.getItem('app_theme') as any) || 'aubergine_marigold';
-  });
-
-  const handleToggleTheme = () => {
-    const nextTheme = appTheme === 'vintage' ? 'aubergine_marigold' : 'vintage';
-    setAppTheme(nextTheme);
-    localStorage.setItem('app_theme', nextTheme);
-  };
-
   // Team Management Filters & Modal State
   const [teamRoleFilter, setTeamRoleFilter] = useState<string>('All Roles');
   const [teamProjectFilter, setTeamProjectFilter] = useState<string>('All Projects');
@@ -2192,79 +2181,8 @@ export default function App() {
     return 'bg-[#F97316]';
   };
 
-  // Color Styles Mapping (supports 'vintage' and 'aubergine_marigold' palette combos)
+  // Color Styles Mapping (matching vintage pastel paper aesthetics)
   const getColorStyles = (color: CardColor) => {
-    if (appTheme === 'aubergine_marigold') {
-      switch (color) {
-        case 'blue': // Ice Silver Primary Accent
-          return {
-            bg: 'bg-[#E6ECF5]',
-            border: 'border-[#BDC9DE]',
-            tagBg: 'bg-[#D3DEED]',
-            tagText: 'text-[#24344D]',
-            dotActive: 'bg-[#2A0F34]',
-            dotInactive: 'bg-[#CBD5E1]',
-            textColor: 'text-[#192435]',
-            indicator: 'bg-[#BDC9DE]'
-          };
-        case 'peach': // Marigold Vibrant Gold (#EAAADD)
-          return {
-            bg: 'bg-[#FEF5E7]',
-            border: 'border-[#F8D595]',
-            tagBg: 'bg-[#FEE5B3]',
-            tagText: 'text-[#8A4F00]',
-            dotActive: 'bg-[#EAAADD]',
-            dotInactive: 'bg-[#FCEAC7]',
-            textColor: 'text-[#4A2B00]',
-            indicator: 'bg-[#EAAADD]'
-          };
-        case 'purple': // Deep Aubergine Accent (#2A0F34)
-          return {
-            bg: 'bg-[#F6EEFA]',
-            border: 'border-[#DEC8E8]',
-            tagBg: 'bg-[#EED8FA]',
-            tagText: 'text-[#2A0F34]',
-            dotActive: 'bg-[#2A0F34]',
-            dotInactive: 'bg-[#E2CEEB]',
-            textColor: 'text-[#2A0F34]',
-            indicator: 'bg-[#2A0F34]'
-          };
-        case 'mint': // Cool Sage Silver
-          return {
-            bg: 'bg-[#EBF3F1]',
-            border: 'border-[#C2DDD7]',
-            tagBg: 'bg-[#D3E9E4]',
-            tagText: 'text-[#1F453E]',
-            dotActive: 'bg-[#2A0F34]',
-            dotInactive: 'bg-[#CBE3DE]',
-            textColor: 'text-[#14322D]',
-            indicator: 'bg-[#2A7566]'
-          };
-        case 'coral': // Aubergine-tinted Crimson
-          return {
-            bg: 'bg-[#FAEEF1]',
-            border: 'border-[#F0C9D3]',
-            tagBg: 'bg-[#F9D6DF]',
-            tagText: 'text-[#6B182C]',
-            dotActive: 'bg-[#EAAADD]',
-            dotInactive: 'bg-[#F8D2DC]',
-            textColor: 'text-[#480E1B]',
-            indicator: 'bg-[#A82845]'
-          };
-        case 'canary': // Pure Marigold Highlight
-          return {
-            bg: 'bg-[#FFF9EE]',
-            border: 'border-[#FBE4AA]',
-            tagBg: 'bg-[#FEEFC4]',
-            tagText: 'text-[#7A4500]',
-            dotActive: 'bg-[#EAAADD]',
-            dotInactive: 'bg-[#FDF0CE]',
-            textColor: 'text-[#522E00]',
-            indicator: 'bg-[#EAAADD]'
-          };
-      }
-    }
-
     switch (color) {
       case 'blue':
         return {
@@ -2333,78 +2251,6 @@ export default function App() {
           indicator: 'bg-yellow-500'
         };
     }
-  };
-
-  // Full Website Layout Theme (Vintage Manila Paper vs Deep Aubergine & Marigold)
-  const getThemeLayoutStyles = () => {
-    if (appTheme === 'aubergine_marigold') {
-      return {
-        rootBg: 'bg-[#DDE3EB]', // Ice Silver base canvas
-        headerBg: 'bg-[#2A0F34]', // Deep Aubergine top header
-        headerBorder: 'border-[#431B52]',
-        headerBreadcrumbBg: 'bg-[#1D0825]',
-        headerBreadcrumbText: 'text-[#EAAADD]', // Marigold brand accent
-        headerFolderBadgeBg: 'bg-[#3D144B]',
-        headerFolderBadgeBorder: 'border-[#58216A]',
-        headerFolderBadgeText: 'text-[#EAAADD]',
-        headerSearchBg: 'bg-[#381345]',
-        headerSearchBorder: 'border-[#552069]',
-        headerSearchText: 'text-[#FAF4FC] placeholder-[#AC95B6]',
-        tabActiveBg: 'bg-[#EBF0F6]', // Ice Silver canvas tab
-        tabActiveText: 'text-[#2A0F34]',
-        tabActiveBorder: 'border-[#CBD5E1]',
-        tabInactiveBg: 'bg-[#391547]/80',
-        tabInactiveText: 'text-[#D0B8DC]',
-        tabInactiveBorder: 'border-[#4E1E60]',
-        tabBadgeActive: 'bg-[#EAAADD] text-[#2A0F34]',
-        sidebarBg: 'bg-[#240C2E]', // Dark plum sidebar
-        sidebarBorder: 'border-[#3D144B]',
-        sidebarText: 'text-[#E0CFE7]',
-        sidebarItemActive: 'bg-[#3D144B] text-[#EAAADD] font-bold shadow-sm border border-[#5A216D]',
-        sidebarItemHover: 'hover:bg-[#341142] hover:text-[#FAF4FC]',
-        mainBg: 'bg-[#EBF0F6]', // Clean Ice Silver main work area
-        mainTitleText: 'text-[#2A0F34]',
-        columnBg: 'bg-[#DFE7F0]', // Silver column card holder
-        columnBorder: 'border-[#CAD6E5]',
-        columnTitleText: 'text-[#2A0F34]',
-        primaryBtn: 'bg-[#2A0F34] hover:bg-[#3E164C] text-[#EAAADD] shadow-md border border-[#552069]',
-        accentGold: '#EAAADD'
-      };
-    }
-
-    // Default Vintage Manila Paper Theme
-    return {
-      rootBg: 'bg-[#F5EFEB]',
-      headerBg: 'bg-[#EFE8DC]',
-      headerBorder: 'border-[#DCD1BC]',
-      headerBreadcrumbBg: 'bg-[#E4DAC7]',
-      headerBreadcrumbText: 'text-[#2B241F]',
-      headerFolderBadgeBg: 'bg-[#F4E9D5]',
-      headerFolderBadgeBorder: 'border-[#DFD1B8]',
-      headerFolderBadgeText: 'text-[#8A4A1C]',
-      headerSearchBg: 'bg-[#FAF6EE]',
-      headerSearchBorder: 'border-[#D8CDBC]',
-      headerSearchText: 'text-[#2C2621] placeholder-[#9E9486]',
-      tabActiveBg: 'bg-[#FAF6EE]',
-      tabActiveText: 'text-[#2C241E]',
-      tabActiveBorder: 'border-[#DCD1BC]',
-      tabInactiveBg: 'bg-[#E5DCCB]/60',
-      tabInactiveText: 'text-[#786D61]',
-      tabInactiveBorder: 'border-[#D9CEBC]',
-      tabBadgeActive: 'bg-[#3F3730] text-[#FAF6EE]',
-      sidebarBg: 'bg-[#EFE8DC]/90',
-      sidebarBorder: 'border-[#DCD1BC]',
-      sidebarText: 'text-[#61574C]',
-      sidebarItemActive: 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]',
-      sidebarItemHover: 'hover:bg-[#E9E0CE] hover:text-[#2C241E]',
-      mainBg: 'bg-[#FAF6EE]',
-      mainTitleText: 'text-[#26201A]',
-      columnBg: 'bg-[#F5EFEB]/90',
-      columnBorder: 'border-[#DCD1BC]',
-      columnTitleText: 'text-[#2A231D]',
-      primaryBtn: 'bg-[#2E2721] hover:bg-[#463D34] text-[#FAF6EE] shadow-md',
-      accentGold: '#D97706'
-    };
   };
 
   const getNotePaperColor = (color: NoteItem['color']) => {
@@ -3354,23 +3200,17 @@ export default function App() {
   }
 
   // 3. Main Application Screen (Board for currentFolder)
-  const theme = getThemeLayoutStyles();
-
   return (
-    <div className={`min-h-screen ${theme.rootBg} text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]`}>
+    <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header */}
-      <header className={`${theme.headerBg} border-b ${theme.headerBorder} select-none transition-colors duration-200`}>
+      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
-        <div className={`px-6 py-2.5 flex items-center justify-between border-b ${appTheme === 'aubergine_marigold' ? 'border-[#3D144B]' : 'border-[#E4DAC7]'}`}>
+        <div className="px-6 py-2.5 flex items-center justify-between border-b border-[#E4DAC7]">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
           <div className="flex items-center space-x-3 shrink-0">
             <button
               onClick={() => setCurrentScreen('folder_hub')}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm transition-transform hover:scale-105 shrink-0 ${
-                appTheme === 'aubergine_marigold'
-                  ? 'bg-[#3D144B] hover:bg-[#4E1E60] text-[#EAAADD] border border-[#58216A]'
-                  : 'bg-[#3F3730] hover:bg-[#2B241E] text-[#FAF6EE]'
-              }`}
+              className="w-8 h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
               title="Return to Folder Hub"
             >
               <Folder className="w-4 h-4" />
@@ -3378,34 +3218,20 @@ export default function App() {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className={`font-extrabold text-sm tracking-tight hover:underline ${
-                  appTheme === 'aubergine_marigold' ? 'text-[#FAF4FC]' : 'text-[#2B241F]'
-                }`}
+                className="font-extrabold text-sm tracking-tight text-[#2B241F] hover:underline"
               >
                 {currentOrg.name}
               </button>
-              <span className={appTheme === 'aubergine_marigold' ? 'text-[#8E6D99] text-xs' : 'text-[#8C8072] text-xs'}>/</span>
-              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md border shadow-2xs inline-flex items-center space-x-1.5 ${
-                appTheme === 'aubergine_marigold'
-                  ? `${theme.headerFolderBadgeBg} ${theme.headerFolderBadgeBorder} ${theme.headerFolderBadgeText}`
-                  : 'bg-[#F4E9D5] text-[#8A4A1C] border-[#DFD1B8]'
-              }`}>
+              <span className="text-[#8C8072] text-xs">/</span>
+              <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5">
                 <span>{currentFolder.name}</span>
-                <span className={`font-mono text-[10px] font-extrabold px-1.5 py-0.2 rounded ${
-                  appTheme === 'aubergine_marigold'
-                    ? 'bg-[#2A0F34] text-[#EAAADD]'
-                    : 'bg-[#EBDDC5] text-[#A66030]'
-                }`}>
+                <span className="font-mono text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1.5 py-0.2 rounded">
                   {formatFolderCode(currentFolder.code)}
                 </span>
               </span>
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className={`text-[11px] font-medium ml-2 px-2 py-0.5 rounded transition-colors ${
-                  appTheme === 'aubergine_marigold'
-                    ? 'text-[#C7B3D2] hover:text-[#FAF4FC] hover:bg-[#3D144B]'
-                    : 'text-[#85796B] hover:text-[#2C241E] hover:bg-[#E5DCBE]'
-                }`}
+                className="text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium ml-2 px-2 py-0.5 rounded hover:bg-[#E5DCBE] transition-colors"
               >
                 Switch
               </button>
@@ -3415,82 +3241,37 @@ export default function App() {
           {/* Right Controls: Search, Notifications, Profile */}
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${
-                appTheme === 'aubergine_marigold' ? 'text-[#AC95B6]' : 'text-[#7D7366]'
-              }`} />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
               <input
                 type="text"
                 placeholder="Search tasks & tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-8 pr-3 py-1.5 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-48 shadow-inner ${
-                  appTheme === 'aubergine_marigold'
-                    ? `${theme.headerSearchBg} border ${theme.headerSearchBorder} ${theme.headerSearchText}`
-                    : 'bg-[#FAF6EE] border border-[#D8CDBC] text-[#2C2621] placeholder-[#9E9486]'
-                }`}
+                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-52 shadow-inner"
               />
             </div>
-
-            {/* Color Palette Switcher & Revert Button */}
-            <button
-              onClick={handleToggleTheme}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center space-x-2 shadow-2xs ${
-                appTheme === 'aubergine_marigold'
-                  ? 'bg-[#3D144B] text-[#EAAADD] border-[#5A216D] hover:bg-[#4E1E60]'
-                  : 'bg-[#FAF6EE] text-[#4F4438] border-[#DCD1BC] hover:bg-[#EFE8DC]'
-              }`}
-              title="Click to toggle between Deep Aubergine/Marigold and Vintage Manila palette"
-            >
-              <div className="flex items-center space-x-1 shrink-0">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#EAAADD] border border-black/20" title="Marigold"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#2A0F34] border border-white/20" title="Deep Aubergine"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#DDE3EB] border border-black/20" title="Ice Silver"></span>
-              </div>
-              <span>
-                {appTheme === 'aubergine_marigold' ? 'Palette: Aubergine & Marigold' : 'Palette: Vintage Paper'}
-              </span>
-              <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.2 rounded ${
-                appTheme === 'aubergine_marigold' ? 'bg-[#EAAADD] text-[#2A0F34]' : 'bg-black/20'
-              }`}>
-                {appTheme === 'aubergine_marigold' ? 'Revert ↺' : 'Try Combo ✨'}
-              </span>
-            </button>
 
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`p-1.5 rounded-lg relative transition-colors ${
-                  appTheme === 'aubergine_marigold'
-                    ? 'bg-[#3D144B] border border-[#58216A] text-[#EAAADD] hover:bg-[#4E1E60]'
-                    : 'bg-[#FAF6EE] border border-[#D8CDBC] text-[#52493E] hover:bg-[#F2ECE0]'
-                }`}
+                className="p-1.5 bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#52493E] hover:bg-[#F2ECE0] relative transition-colors"
                 title="Notifications"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-[#2A0F34]"></span>
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-600 rounded-full border-2 border-[#FAF6EE]"></span>
               </button>
 
               {showNotifications && (
-                <div className={`absolute right-0 mt-2 w-72 rounded-xl shadow-xl z-50 p-3 border ${
-                  appTheme === 'aubergine_marigold'
-                    ? 'bg-[#2A0F34] border-[#4E1E60] text-[#FAF4FC]'
-                    : 'bg-[#FAF6EE] border-[#D8CDBC]'
-                }`}>
-                  <div className={`flex items-center justify-between pb-2 mb-2 border-b ${
-                    appTheme === 'aubergine_marigold' ? 'border-[#3D144B]' : 'border-[#E8DEC9]'
-                  }`}>
-                    <span className={`text-xs font-bold ${appTheme === 'aubergine_marigold' ? 'text-[#FAF4FC]' : 'text-[#2C241E]'}`}>Live Events (WebSockets)</span>
-                    <span className={`text-[11px] ${appTheme === 'aubergine_marigold' ? 'text-[#BFA4CB]' : 'text-[#867B6F]'}`}>3 unread</span>
+                <div className="absolute right-0 mt-2 w-72 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-3">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E8DEC9]">
+                    <span className="text-xs font-bold text-[#2C241E]">Live Events (WebSockets)</span>
+                    <span className="text-[11px] text-[#867B6F]">3 unread</span>
                   </div>
                   <div className="space-y-2">
                     {notifications.map(n => (
-                      <div key={n.id} className={`text-xs p-2 rounded-lg border ${
-                        appTheme === 'aubergine_marigold'
-                          ? 'bg-[#351342] border-[#4E1E60]'
-                          : 'bg-[#F3ECDD] border-[#E4DAC7]'
-                      }`}>
-                        <p className={`font-medium leading-snug ${appTheme === 'aubergine_marigold' ? 'text-[#FAF4FC]' : 'text-[#322A23]'}`}>{n.text}</p>
-                        <span className={`text-[10px] mt-0.5 block ${appTheme === 'aubergine_marigold' ? 'text-[#BFA4CB]' : 'text-[#8C8072]'}`}>{n.time}</span>
+                      <div key={n.id} className="text-xs p-2 rounded-lg bg-[#F3ECDD] border border-[#E4DAC7]">
+                        <p className="text-[#322A23] font-medium leading-snug">{n.text}</p>
+                        <span className="text-[10px] text-[#8C8072] mt-0.5 block">{n.time}</span>
                       </div>
                     ))}
                   </div>
@@ -3498,7 +3279,7 @@ export default function App() {
               )}
             </div>
 
-            <div className={`relative pl-2 border-l ${appTheme === 'aubergine_marigold' ? 'border-[#431B52]' : 'border-[#DCD1BC]'}`}>
+            <div className="relative pl-2 border-l border-[#DCD1BC]">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2 text-left hover:opacity-85 transition-opacity"
@@ -3506,42 +3287,28 @@ export default function App() {
                 <img
                   src={currentUser.avatar}
                   alt={currentUser.name}
-                  className={`w-7 h-7 rounded-full object-cover border ${
-                    appTheme === 'aubergine_marigold' ? 'border-[#EAAADD]' : 'border-[#C5B8A1]'
-                  }`}
+                  className="w-7 h-7 rounded-full border border-[#C5B8A1] object-cover"
                 />
                 <div className="hidden md:block text-left">
-                  <p className={`text-xs font-bold leading-none ${
-                    appTheme === 'aubergine_marigold' ? 'text-[#FAF4FC]' : 'text-[#2A231D]'
-                  }`}>{currentUser.name}</p>
-                  <p className={`text-[10px] leading-tight ${
-                    appTheme === 'aubergine_marigold' ? 'text-[#C7B3D2]' : 'text-[#7A7064]'
-                  }`}>{currentUser.email}</p>
+                  <p className="text-xs font-bold text-[#2A231D] leading-none">{currentUser.name}</p>
+                  <p className="text-[10px] text-[#7A7064] leading-tight">{currentUser.email}</p>
                 </div>
               </button>
 
               {isUserMenuOpen && (
-                <div className={`absolute right-0 mt-2 w-52 rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100 border ${
-                  appTheme === 'aubergine_marigold'
-                    ? 'bg-[#2A0F34] border-[#4E1E60]'
-                    : 'bg-[#FAF6EE] border-[#D8CDBC]'
-                }`}>
-                  <div className={`px-3 py-2 mb-1 border-b ${appTheme === 'aubergine_marigold' ? 'border-[#3D144B]' : 'border-[#E8DEC9]'}`}>
-                    <p className={`text-xs font-bold ${appTheme === 'aubergine_marigold' ? 'text-[#FAF4FC]' : 'text-[#2C241E]'}`}>{currentUser.name}</p>
-                    <p className={`text-[10px] truncate ${appTheme === 'aubergine_marigold' ? 'text-[#C7B3D2]' : 'text-[#7A7064]'}`}>{currentUser.email}</p>
+                <div className="absolute right-0 mt-2 w-52 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-3 py-2 border-b border-[#E8DEC9] mb-1">
+                    <p className="text-xs font-bold text-[#2C241E]">{currentUser.name}</p>
+                    <p className="text-[10px] text-[#7A7064] truncate">{currentUser.email}</p>
                   </div>
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       setCurrentScreen('folder_hub');
                     }}
-                    className={`w-full text-left px-3 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors font-medium ${
-                      appTheme === 'aubergine_marigold'
-                        ? 'text-[#FAF4FC] hover:bg-[#3D144B]'
-                        : 'text-[#433A31] hover:bg-[#F2ECE0]'
-                    }`}
+                    className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium"
                   >
-                    <Building2 className={`w-3.5 h-3.5 ${appTheme === 'aubergine_marigold' ? 'text-[#EAAADD]' : 'text-[#73695F]'}`} />
+                    <Building2 className="w-3.5 h-3.5 text-[#73695F]" />
                     <span>Folder Hub & Organizations</span>
                   </button>
                   <button
@@ -3549,13 +3316,9 @@ export default function App() {
                       setIsUserMenuOpen(false);
                       setCurrentScreen('splash');
                     }}
-                    className={`w-full text-left px-3 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5 ${
-                      appTheme === 'aubergine_marigold'
-                        ? 'text-[#FAF4FC] hover:bg-[#3D144B]'
-                        : 'text-[#433A31] hover:bg-[#F2ECE0]'
-                    }`}
+                    className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
                   >
-                    <FolderOpen className={`w-3.5 h-3.5 ${appTheme === 'aubergine_marigold' ? 'text-[#EAAADD]' : 'text-[#73695F]'}`} />
+                    <FolderOpen className="w-3.5 h-3.5 text-[#73695F]" />
                     <span>Replay Folder Opening</span>
                   </button>
                   <button
@@ -3563,7 +3326,7 @@ export default function App() {
                       setIsUserMenuOpen(false);
                       setCurrentScreen('auth');
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-rose-500 hover:bg-rose-950/30 rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
+                    className="w-full text-left px-3 py-1.5 text-xs text-rose-700 hover:bg-[#FBEBE8] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Sign Out</span>
@@ -3589,16 +3352,14 @@ export default function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`folder-tab px-5 py-2.5 text-xs font-semibold rounded-t-lg border-t border-x transition-all flex items-center space-x-2 ${
                   activeTab === tab.id
-                    ? `active ${theme.tabActiveBg} ${theme.tabActiveText} ${theme.tabActiveBorder} shadow-sm font-bold`
-                    : `${theme.tabInactiveBg} ${theme.tabInactiveText} ${theme.tabInactiveBorder} hover:opacity-90`
+                    ? 'active bg-[#FAF6EE] text-[#2C241E] border-[#DCD1BC] shadow-sm font-bold'
+                    : 'bg-[#E5DCCB]/60 text-[#786D61] border-[#D9CEBC] hover:bg-[#EFE8DC] hover:text-[#3B332B]'
                 }`}
               >
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold leading-none ${
-                    activeTab === tab.id
-                      ? (appTheme === 'aubergine_marigold' ? 'bg-[#2A0F34] text-[#EAAADD]' : 'bg-[#3F3730] text-[#FAF6EE]')
-                      : (appTheme === 'aubergine_marigold' ? 'bg-[#240C2E] text-[#D0B8DC]' : 'bg-[#DCD1BC] text-[#554C42]')
+                    activeTab === tab.id ? 'bg-[#3F3730] text-[#FAF6EE]' : 'bg-[#DCD1BC] text-[#554C42]'
                   }`}>
                     {tab.count}
                   </span>
@@ -3611,35 +3372,27 @@ export default function App() {
 
       {/* Main Body with Sidebar + Active View */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Sidebar */}
+        {/* Left Sidebar (Image 1 Style) */}
         <aside
-          className={`${theme.sidebarBg} border-r ${theme.sidebarBorder} flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-20 shrink-0 ${
+          className={`bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-20 shrink-0 ${
             isSidebarOpen ? 'w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
           }`}
         >
           <div className="space-y-6">
-            <div className={`flex items-center justify-between px-2 ${appTheme === 'aubergine_marigold' ? 'text-[#E0CFE7]' : 'text-[#463D34]'}`}>
+            <div className="flex items-center justify-between px-2 text-[#463D34]">
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="flex items-center space-x-2 text-left group transition-colors"
+                className="flex items-center space-x-2 text-left hover:text-[#2C241E] group transition-colors"
                 title="Return to Folder Hub"
               >
-                <div className={`p-1 rounded-md transition-colors ${
-                  appTheme === 'aubergine_marigold'
-                    ? 'bg-[#3D144B] text-[#EAAADD] group-hover:bg-[#4E1E60]'
-                    : 'bg-[#E5DCCB] group-hover:bg-[#DACBB0] text-[#463D34]'
-                }`}>
+                <div className="p-1 rounded-md bg-[#E5DCCB] group-hover:bg-[#DACBB0] text-[#463D34] transition-colors">
                   <ArrowLeft className="w-3.5 h-3.5" />
                 </div>
-                <span className={`text-sm font-extrabold tracking-tight ${appTheme === 'aubergine_marigold' ? 'text-[#FAF4FC]' : 'text-[#2B241E]'}`}>Folders Hub</span>
+                <span className="text-sm font-extrabold tracking-tight text-[#2B241E]">Folders Hub</span>
               </button>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  appTheme === 'aubergine_marigold'
-                    ? 'hover:bg-[#3D144B] text-[#BFA4CB] hover:text-[#FAF4FC]'
-                    : 'hover:bg-[#E4DAC7] text-[#7A7064] hover:text-[#2C241E]'
-                }`}
+                className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#7A7064] hover:text-[#2C241E] transition-colors"
                 title="Hide sidebar"
               >
                 <PanelLeftClose className="w-4 h-4" />
@@ -3647,9 +3400,7 @@ export default function App() {
             </div>
 
             <div>
-              <p className={`text-[10px] font-bold tracking-wider px-2 uppercase mb-1.5 ${
-                appTheme === 'aubergine_marigold' ? 'text-[#BFA4CB]' : 'text-[#8C8072]'
-              }`}>Main</p>
+              <p className="text-[10px] font-bold text-[#8C8072] tracking-wider px-2 uppercase mb-1.5">Main</p>
               <nav className="space-y-0.5">
                 {[
                   { id: 'board', icon: LayoutDashboard, label: 'Dashboard' },
@@ -3670,11 +3421,11 @@ export default function App() {
                       }}
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                         isActive
-                          ? theme.sidebarItemActive
-                          : `${appTheme === 'aubergine_marigold' ? 'text-[#D0B8DC] hover:bg-[#341142] hover:text-[#FAF4FC]' : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'}`
+                          ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
+                          : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${isActive && appTheme === 'aubergine_marigold' ? 'text-[#EAAADD]' : 'text-[#756A5E]'}`} />
+                      <Icon className="w-4 h-4 text-[#756A5E]" />
                       <span>{item.label}</span>
                     </button>
                   );
@@ -3683,16 +3434,14 @@ export default function App() {
             </div>
 
             <div>
-              <p className={`text-[10px] font-bold tracking-wider px-2 uppercase mb-1.5 ${
-                appTheme === 'aubergine_marigold' ? 'text-[#BFA4CB]' : 'text-[#8C8072]'
-              }`}>Records</p>
+              <p className="text-[10px] font-bold text-[#8C8072] tracking-wider px-2 uppercase mb-1.5">Records</p>
               <nav className="space-y-0.5">
                 <button
                   onClick={() => setActiveTab('team')}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     activeTab === 'team'
-                      ? theme.sidebarItemActive
-                      : `${appTheme === 'aubergine_marigold' ? 'text-[#D0B8DC] hover:bg-[#341142] hover:text-[#FAF4FC]' : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'}`
+                      ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
+                      : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
@@ -3700,21 +3449,15 @@ export default function App() {
                     <span>Team</span>
                   </div>
                   <span className="flex items-center space-x-1">
-                    <span className={`px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
-                      appTheme === 'aubergine_marigold' ? 'bg-[#3D144B] text-[#EAAADD]' : 'bg-[#DCD1BC] text-[#554C42]'
-                    }`}>
+                    <span className="px-1.5 py-0.2 text-[10px] rounded-full font-bold bg-[#DCD1BC] text-[#554C42]">
                       {teamMembers.length}
                     </span>
-                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                    <ChevronRight className="w-3.5 h-3.5 text-[#9C9081]" />
                   </span>
                 </button>
                 <button
                   onClick={() => setActiveTab('team')}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                    appTheme === 'aubergine_marigold'
-                      ? 'text-[#D0B8DC] hover:bg-[#341142] hover:text-[#FAF4FC]'
-                      : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
-                  }`}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E] transition-all"
                 >
                   <div className="flex items-center space-x-2.5">
                     <Briefcase className="w-4 h-4 text-[#756A5E]" />
@@ -3724,40 +3467,28 @@ export default function App() {
               </nav>
             </div>
 
-            <div className={`p-3 rounded-xl border shadow-inner text-xs space-y-1.5 ${
-              appTheme === 'aubergine_marigold'
-                ? 'bg-[#2E113B] border-[#4E1E60] text-[#E0CFE7]'
-                : 'bg-[#FAF6EE] border-[#DCD1BC]'
-            }`}>
+            <div className="p-3 bg-[#FAF6EE] rounded-xl border border-[#DCD1BC] shadow-inner text-xs space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] uppercase font-bold ${appTheme === 'aubergine_marigold' ? 'text-[#BFA4CB]' : 'text-[#837666]'}`}>Active Project</span>
+                <span className="text-[10px] uppercase font-bold text-[#837666]">Active Project</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               </div>
-              <p className={`font-bold text-xs ${appTheme === 'aubergine_marigold' ? 'text-[#FAF4FC]' : 'text-[#2A231D]'}`}>Acme Digital Revamp</p>
-              <div className={`w-full h-1.5 rounded-full overflow-hidden ${appTheme === 'aubergine_marigold' ? 'bg-[#3D144B]' : 'bg-[#E5DCBE]'}`}>
-                <div className={`h-full rounded-full ${appTheme === 'aubergine_marigold' ? 'bg-[#EAAADD]' : 'bg-[#463D34]'}`} style={{ width: '68%' }}></div>
+              <p className="font-bold text-[#2A231D] text-xs">Acme Digital Revamp</p>
+              <div className="w-full bg-[#E5DCBE] h-1.5 rounded-full overflow-hidden">
+                <div className="bg-[#463D34] h-full rounded-full" style={{ width: '68%' }}></div>
               </div>
-              <div className={`flex justify-between text-[10px] ${appTheme === 'aubergine_marigold' ? 'text-[#BFA4CB]' : 'text-[#7A7064]'}`}>
+              <div className="flex justify-between text-[10px] text-[#7A7064]">
                 <span>Progress</span>
-                <span className={`font-bold ${appTheme === 'aubergine_marigold' ? 'text-[#EAAADD]' : 'text-[#3B322A]'}`}>68%</span>
+                <span className="font-bold text-[#3B322A]">68%</span>
               </div>
             </div>
           </div>
 
-          <div className={`space-y-0.5 pt-4 border-t ${appTheme === 'aubergine_marigold' ? 'border-[#3D144B]' : 'border-[#DCD1BC]'}`}>
-            <button className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-              appTheme === 'aubergine_marigold'
-                ? 'text-[#D0B8DC] hover:bg-[#341142] hover:text-[#FAF4FC]'
-                : 'text-[#61574C] hover:bg-[#E9E0CE]'
-            }`}>
+          <div className="space-y-0.5 pt-4 border-t border-[#DCD1BC]">
+            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] transition-all">
               <Settings className="w-4 h-4 text-[#756A5E]" />
               <span>Settings</span>
             </button>
-            <button className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-              appTheme === 'aubergine_marigold'
-                ? 'text-[#D0B8DC] hover:bg-[#341142] hover:text-[#FAF4FC]'
-                : 'text-[#61574C] hover:bg-[#E9E0CE]'
-            }`}>
+            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] transition-all">
               <HelpCircle className="w-4 h-4 text-[#756A5E]" />
               <span>Support</span>
             </button>
@@ -3765,22 +3496,16 @@ export default function App() {
         </aside>
 
         {/* Dynamic Main View */}
-        <main className={`flex-1 ${theme.mainBg} overflow-y-auto p-6 flex flex-col relative transition-colors duration-200`}>
+        <main className="flex-1 bg-[#FAF6EE] overflow-y-auto p-6 flex flex-col relative">
           {/* VIEW 1: KANBAN BOARD */}
           {activeTab === 'board' && (
             <>
-              <div className={`flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b ${
-                appTheme === 'aubergine_marigold' ? 'border-[#CBD5E1]' : 'border-[#E5DBCA]'
-              } gap-4`}>
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-[#E5DBCA] gap-4">
                 <div className="flex items-start space-x-3.5">
                   {!isSidebarOpen && (
                     <button
                       onClick={() => setIsSidebarOpen(true)}
-                      className={`mt-0.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-2xs flex items-center space-x-1.5 transition-all shrink-0 ${
-                        appTheme === 'aubergine_marigold'
-                          ? 'bg-[#2A0F34] hover:bg-[#3D144B] border border-[#4E1E60] text-[#EAAADD]'
-                          : 'bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-[#3F3730]'
-                      }`}
+                      className="mt-0.5 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-2xs flex items-center space-x-1.5 transition-all shrink-0"
                       title="Show Folders sidebar"
                     >
                       <PanelLeftOpen className="w-4 h-4" />
@@ -3788,19 +3513,13 @@ export default function App() {
                     </button>
                   )}
                   <div>
-                    <p className={`text-xs font-medium flex items-center space-x-1.5 ${
-                      appTheme === 'aubergine_marigold' ? 'text-[#64748B]' : 'text-[#7B7062]'
-                    }`}>
+                    <p className="text-xs text-[#7B7062] font-medium flex items-center space-x-1.5">
                       <Clock className="w-3.5 h-3.5" />
                       <span>{getRealTimeDateFormatted()}</span>
                     </p>
-                    <h1 className={`text-2xl font-black tracking-tight mt-0.5 flex items-center space-x-2 ${theme.mainTitleText}`}>
+                    <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-0.5 flex items-center space-x-2">
                       <span>Task Management Board</span>
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        appTheme === 'aubergine_marigold'
-                          ? 'bg-[#D3DEED] border border-[#BDC9DE] text-[#2A0F34]'
-                          : 'bg-[#F3ECDE] border border-[#D8CEBC] text-[#695D50]'
-                      }`}>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F3ECDE] border border-[#D8CEBC] text-[#695D50]">
                         Sprint #3
                       </span>
                     </h1>
@@ -3814,9 +3533,9 @@ export default function App() {
                       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces',
                       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces'
                     ].map((src, i) => (
-                      <img key={i} src={src} alt="collaborator" className="w-7 h-7 rounded-full border-2 border-white object-cover shadow-sm" />
+                      <img key={i} src={src} alt="collaborator" className="w-7 h-7 rounded-full border-2 border-[#FAF6EE] object-cover shadow-sm" />
                     ))}
-                    <span className="w-7 h-7 rounded-full bg-[#E8DFC9] border-2 border-white text-[10px] font-bold text-[#574C40] flex items-center justify-center">
+                    <span className="w-7 h-7 rounded-full bg-[#E8DFC9] border-2 border-[#FAF6EE] text-[10px] font-bold text-[#574C40] flex items-center justify-center">
                       +3
                     </span>
                   </div>
@@ -3826,7 +3545,7 @@ export default function App() {
                       setNewTaskTargetColumn('todo');
                       setIsNewTaskModalOpen(true);
                     }}
-                    className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 ${theme.primaryBtn}`}
+                    className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#2E2721] text-[#FAF6EE] text-xs font-bold hover:bg-[#463D34] shadow-md transition-all active:scale-95"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Create Task</span>
@@ -3840,16 +3559,12 @@ export default function App() {
                   const columnTasks = filteredTasks.filter(t => t.columnId === column.id);
 
                   return (
-                    <div key={column.id} className={`${theme.columnBg} rounded-2xl border ${theme.columnBorder} p-4 flex flex-col shadow-sm`}>
+                    <div key={column.id} className="bg-[#F5EFEB]/90 rounded-2xl border border-[#DCD1BC] p-4 flex flex-col shadow-sm">
                       <div className="flex items-center justify-between pb-3.5 mb-1 px-1">
                         <div className="flex items-center space-x-2">
-                          <span className={appTheme === 'aubergine_marigold' ? 'text-[#8A6D99]' : 'text-[#8A7D6F]'}>▸</span>
-                          <h2 className={`text-sm font-black tracking-tight ${theme.columnTitleText}`}>{column.title}</h2>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                            appTheme === 'aubergine_marigold'
-                              ? 'bg-[#CBD5E1] text-[#2A0F34]'
-                              : 'bg-[#E8DECA] text-[#554B3E]'
-                          }`}>
+                          <span className="text-xs text-[#8A7D6F]">▸</span>
+                          <h2 className="text-sm font-black text-[#2A231D] tracking-tight">{column.title}</h2>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#E8DECA] font-bold text-[#554B3E]">
                             {column.count}
                           </span>
                         </div>
@@ -3859,20 +3574,12 @@ export default function App() {
                               setNewTaskTargetColumn(column.id as any);
                               setIsNewTaskModalOpen(true);
                             }}
-                            className={`p-1 rounded-md transition-colors ${
-                              appTheme === 'aubergine_marigold'
-                                ? 'text-[#64748B] hover:text-[#2A0F34] hover:bg-[#CBD5E1]'
-                                : 'text-[#786D60] hover:text-[#26201A] hover:bg-[#EAE0CD]'
-                            }`}
+                            className="p-1 rounded-md text-[#786D60] hover:text-[#26201A] hover:bg-[#EAE0CD] transition-colors"
                             title="Add task"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
-                          <button className={`p-1 rounded-md transition-colors ${
-                            appTheme === 'aubergine_marigold'
-                              ? 'text-[#64748B] hover:text-[#2A0F34] hover:bg-[#CBD5E1]'
-                              : 'text-[#786D60] hover:text-[#26201A] hover:bg-[#EAE0CD]'
-                          }`}>
+                          <button className="p-1 rounded-md text-[#786D60] hover:text-[#26201A] hover:bg-[#EAE0CD] transition-colors">
                             <MoreVertical className="w-4 h-4" />
                           </button>
                         </div>
