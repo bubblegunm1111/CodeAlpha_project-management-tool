@@ -5485,20 +5485,16 @@ export default function App() {
                     {currentUser.name} invited you to join {lastCreatedInvite.organization_name}
                   </h4>
                   <p className="text-xs text-[#6B5E4F] max-w-sm mx-auto">
-                    Collaborate on classified task dossiers, interactive timelines, and sprint boards on Archival PM.
+                    Collaborate on confidential project dossiers, interactive schedules, and sprint boards on Archival PM.
                   </p>
 
                   <div className="pt-2">
-                    <button
-                      onClick={() => {
-                        setShowInviteSuccessModal(false);
-                        window.location.href = lastCreatedInvite.invite_url;
-                      }}
-                      className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#2B231D] hover:bg-[#433931] text-[#FAF6EE] text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
-                    >
-                      <span>Accept Invitation & Join</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#2B231D]/80 text-[#FAF6EE] text-xs font-bold rounded-xl shadow-xs select-none cursor-default">
+                      <span>Accept Invitation & Join &rarr;</span>
+                    </div>
+                    <p className="text-[10px] text-[#8C7E6C] mt-1.5 italic">
+                      (Preview of the button {lastCreatedInvite.email} clicks inside their email)
+                    </p>
                   </div>
                 </div>
               </div>
