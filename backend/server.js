@@ -167,6 +167,14 @@ const initializeDB = () => {
       priority TEXT DEFAULT 'Medium',
       assignee TEXT,
       status TEXT DEFAULT 'Scheduled',
+      phase TEXT DEFAULT 'Discovery & Research',
+      start_date TEXT,
+      end_date TEXT,
+      description TEXT,
+      assignee_avatar TEXT,
+      assignee_role TEXT,
+      subtasks TEXT DEFAULT '[]',
+      comments TEXT DEFAULT '[]',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )`);
@@ -179,6 +187,14 @@ const initializeDB = () => {
     db.run("ALTER TABLE tasks ADD COLUMN note TEXT", () => {});
     db.run("ALTER TABLE projects ADD COLUMN organization_id INTEGER", () => {});
     db.run("ALTER TABLE projects ADD COLUMN folder_id INTEGER", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN phase TEXT DEFAULT 'Discovery & Research'", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN start_date TEXT", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN end_date TEXT", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN description TEXT", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN assignee_avatar TEXT", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN assignee_role TEXT", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN subtasks TEXT DEFAULT '[]'", () => {});
+    db.run("ALTER TABLE schedules ADD COLUMN comments TEXT DEFAULT '[]'", () => {});
   });
 };
 
@@ -666,8 +682,224 @@ app.delete('/api/v1/notes/:id', authMiddleware, async (req, res) => {
 
 app.get('/api/v1/schedules', authMiddleware, async (req, res) => {
   try {
-    const schedules = await allAsync('SELECT * FROM schedules ORDER BY date ASC, time ASC');
-    res.json(schedules);
+    let schedules = await allAsync('SELECT * FROM schedules ORDER BY date ASC, time ASC');
+    
+    // Seed default realistic interactive timeline tasks matching reference if empty or missing phases
+    if (schedules.length === 0 || !schedules.some(s => s.phase)) {
+      const initialSchedule = [
+        {
+          project_id: 1,
+          title: 'Market research & competitive analysis',
+          phase: 'Discovery & Research',
+          date: '2026-05-05',
+          start_date: '2026-05-05',
+          end_date: '2026-05-07',
+          time: '09:00 AM',
+          category: 'Research',
+          color: 'blue',
+          priority: 'High',
+          status: 'Done',
+          assignee: 'Sarah Lin',
+          assignee_role: 'Lead UX Researcher',
+          assignee_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
+          description: 'Comprehensive benchmark of rival project management & vintage workspace interfaces, surveying 40+ user pain points.',
+          subtasks: JSON.stringify([
+            { id: 'sub-1', text: 'Identify top 5 industry competitors', completed: true },
+            { id: 'sub-2', text: 'Conduct 10 in-depth stakeholder interviews', completed: true },
+            { id: 'sub-3', text: 'Compile synthesis report into Dossier', completed: true }
+          ]),
+          comments: JSON.stringify([
+            { id: 'c-1', author: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop', time: 'May 5, 11:30 AM', content: 'Synthesis complete and attached to Dossier 01.' }
+          ])
+        },
+        {
+          project_id: 1,
+          title: 'User interviews & personas synthesis',
+          phase: 'Discovery & Research',
+          date: '2026-05-06',
+          start_date: '2026-05-06',
+          end_date: '2026-05-08',
+          time: '02:00 PM',
+          category: 'Milestone',
+          color: 'purple',
+          priority: 'Medium',
+          status: 'In Progress',
+          assignee: 'Alex Rivera',
+          assignee_role: 'UX Strategist',
+          assignee_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+          description: 'Define target persona archetypes, user journey mapping, and core motivation cards for the archival filing system.',
+          subtasks: JSON.stringify([
+            { id: 'sub-4', text: 'Draft 3 primary archetype profiles', completed: true },
+            { id: 'sub-5', text: 'Review customer journey mapping with PM', completed: false }
+          ]),
+          comments: JSON.stringify([
+            { id: 'c-2', author: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop', time: 'May 6, 04:15 PM', content: 'Second persona drafted. Reviewing friction points on task nesting.' }
+          ])
+        },
+        {
+          project_id: 1,
+          title: 'Information architecture & folder taxonomy',
+          phase: 'Design & Planning',
+          date: '2026-05-07',
+          start_date: '2026-05-07',
+          end_date: '2026-05-08',
+          time: '11:00 AM',
+          category: 'Sprint',
+          color: 'peach',
+          priority: 'High',
+          status: 'In Progress',
+          assignee: 'Elena Rostova',
+          assignee_role: 'Lead Information Architect',
+          assignee_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+          description: 'Establish the physical folder hierarchical metaphor: Organizations -> Folders (Dossiers) -> Kanban Boards & Timelines.',
+          subtasks: JSON.stringify([
+            { id: 'sub-6', text: 'Define tab slip navigation schema', completed: true },
+            { id: 'sub-7', text: 'Finalize URL routing structure', completed: true },
+            { id: 'sub-8', text: 'Produce interactive sitemap tree', completed: false }
+          ]),
+          comments: JSON.stringify([])
+        },
+        {
+          project_id: 1,
+          title: 'Wireframing & design system tokens',
+          phase: 'Design & Planning',
+          date: '2026-05-08',
+          start_date: '2026-05-08',
+          end_date: '2026-05-10',
+          time: '10:00 AM',
+          category: 'Sprint',
+          color: 'peach',
+          priority: 'High',
+          status: 'In Progress',
+          assignee: 'Mason Walker',
+          assignee_role: 'Design Lead',
+          assignee_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+          description: 'Develop the vintage physical stationery palette (#FAF6EE, #F5EFEB, #3F3730) and high-fidelity interactive Figma component set.',
+          subtasks: JSON.stringify([
+            { id: 'sub-9', text: 'Color swatch & typography tokens', completed: true },
+            { id: 'sub-10', text: 'Gantt timeline bar interactions', completed: false },
+            { id: 'sub-11', text: 'Detail drawer checklist specs', completed: false }
+          ]),
+          comments: JSON.stringify([
+            { id: 'c-3', author: 'Mason Walker', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop', time: 'May 8, 09:20 AM', content: 'Warm parchment tones verified on Retina and standard monitors.' }
+          ])
+        },
+        {
+          project_id: 1,
+          title: 'Frontend timeline view & Gantt engine',
+          phase: 'Development',
+          date: '2026-05-08',
+          start_date: '2026-05-08',
+          end_date: '2026-05-11',
+          time: '01:00 PM',
+          category: 'Sprint',
+          color: 'blue',
+          priority: 'Urgent',
+          status: 'In Progress',
+          assignee: 'David Kim',
+          assignee_role: 'Senior Frontend Engineer',
+          assignee_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop',
+          description: 'Construct the dynamic date-spanning bar calculations, task connector lines, and drawer sync.',
+          subtasks: JSON.stringify([
+            { id: 'sub-12', text: 'Build 7-day Gantt grid view', completed: true },
+            { id: 'sub-13', text: 'Task status checklist toggle API', completed: true },
+            { id: 'sub-14', text: 'Comments thread real-time feed', completed: true }
+          ]),
+          comments: JSON.stringify([
+            { id: 'c-4', author: 'David Kim', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop', time: 'May 9, 10:15 AM', content: 'Gantt horizontal bar offsets calculated based on May 5–11 window.' }
+          ])
+        },
+        {
+          project_id: 1,
+          title: 'Backend SQLite timeline & subtasks persistence',
+          phase: 'Development',
+          date: '2026-05-09',
+          start_date: '2026-05-09',
+          end_date: '2026-05-10',
+          time: '03:30 PM',
+          category: 'Sprint',
+          color: 'mint',
+          priority: 'High',
+          status: 'Done',
+          assignee: 'Mason Walker',
+          assignee_role: 'Fullstack Engineer',
+          assignee_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+          description: 'Provide RESTful endpoints for phases, subtasks checklists, comments, and date range filters.',
+          subtasks: JSON.stringify([
+            { id: 'sub-15', text: 'Migrate schedules schema in SQLite', completed: true },
+            { id: 'sub-16', text: 'CRUD routes for schedule tasks', completed: true }
+          ]),
+          comments: JSON.stringify([])
+        },
+        {
+          project_id: 1,
+          title: 'End-to-end integration & QA testing',
+          phase: 'Review & QA',
+          date: '2026-05-10',
+          start_date: '2026-05-10',
+          end_date: '2026-05-11',
+          time: '11:00 AM',
+          category: 'Deadline',
+          color: 'coral',
+          priority: 'High',
+          status: 'Scheduled',
+          assignee: 'Maya Patel',
+          assignee_role: 'QA Automation Lead',
+          assignee_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop',
+          description: 'Cross-browser testing, drawer responsiveness, keyboard navigation, and edge case checklist verification.',
+          subtasks: JSON.stringify([
+            { id: 'sub-17', text: 'Verify timeline drag and click triggers', completed: false },
+            { id: 'sub-18', text: 'Check mobile & tablet viewport layouts', completed: false }
+          ]),
+          comments: JSON.stringify([])
+        },
+        {
+          project_id: 1,
+          title: 'Production release & dossier archive handover',
+          phase: 'Launch',
+          date: '2026-05-11',
+          start_date: '2026-05-11',
+          end_date: '2026-05-11',
+          time: '05:00 PM',
+          category: 'Milestone',
+          color: 'canary',
+          priority: 'Urgent',
+          status: 'Scheduled',
+          assignee: 'Mason Walker',
+          assignee_role: 'Studio Principal',
+          assignee_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+          description: 'Final deployment to production servers and customer workspace documentation archival.',
+          subtasks: JSON.stringify([
+            { id: 'sub-19', text: 'Push build to live cloud servers', completed: false },
+            { id: 'sub-20', text: 'Publish release changelog', completed: false }
+          ]),
+          comments: JSON.stringify([])
+        }
+      ];
+
+      for (let s of initialSchedule) {
+        await runAsync(
+          `INSERT INTO schedules 
+          (project_id, title, phase, date, start_date, end_date, time, category, color, priority, status, assignee, assignee_role, assignee_avatar, description, subtasks, comments)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            s.project_id, s.title, s.phase, s.date, s.start_date, s.end_date, s.time,
+            s.category, s.color, s.priority, s.status, s.assignee, s.assignee_role,
+            s.assignee_avatar, s.description, s.subtasks, s.comments
+          ]
+        );
+      }
+
+      schedules = await allAsync('SELECT * FROM schedules ORDER BY date ASC, time ASC');
+    }
+
+    const formatted = schedules.map(s => ({
+      ...s,
+      subtasks: JSON.parse(s.subtasks || '[]'),
+      comments: JSON.parse(s.comments || '[]')
+    }));
+
+    res.json(formatted);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -675,14 +907,109 @@ app.get('/api/v1/schedules', authMiddleware, async (req, res) => {
 
 app.post('/api/v1/schedules', authMiddleware, async (req, res) => {
   try {
-    const { title, date, time, category, color, priority, assignee, status, project_id } = req.body;
+    const {
+      title, date, time, category, color, priority, assignee, status, project_id,
+      phase, start_date, end_date, description, assignee_avatar, assignee_role,
+      subtasks, comments
+    } = req.body;
+
     const result = await runAsync(
-      'INSERT INTO schedules (project_id, title, date, time, category, color, priority, assignee, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [project_id || 1, title, date, time || '10:00 AM', category || 'Sprint', color || 'blue', priority || 'Medium', assignee || 'Team', status || 'Scheduled']
+      `INSERT INTO schedules 
+      (project_id, title, date, time, category, color, priority, assignee, status, phase, start_date, end_date, description, assignee_avatar, assignee_role, subtasks, comments)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        project_id || 1,
+        title,
+        date || start_date || '2026-05-08',
+        time || '10:00 AM',
+        category || 'Sprint',
+        color || 'blue',
+        priority || 'Medium',
+        assignee || 'Team',
+        status || 'Scheduled',
+        phase || 'Design & Planning',
+        start_date || date || '2026-05-08',
+        end_date || date || '2026-05-10',
+        description || '',
+        assignee_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+        assignee_role || 'Contributor',
+        JSON.stringify(subtasks || []),
+        JSON.stringify(comments || [])
+      ]
     );
 
     const event = await getAsync('SELECT * FROM schedules WHERE id = ?', [result.lastID]);
+    event.subtasks = JSON.parse(event.subtasks || '[]');
+    event.comments = JSON.parse(event.comments || '[]');
     res.json(event);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/v1/schedules/:id', authMiddleware, async (req, res) => {
+  try {
+    const {
+      title, date, time, category, color, priority, assignee, status,
+      phase, start_date, end_date, description, assignee_avatar, assignee_role,
+      subtasks, comments
+    } = req.body;
+
+    const updates = [];
+    const params = [];
+
+    if (title !== undefined) { updates.push('title = ?'); params.push(title); }
+    if (date !== undefined) { updates.push('date = ?'); params.push(date); }
+    if (time !== undefined) { updates.push('time = ?'); params.push(time); }
+    if (category !== undefined) { updates.push('category = ?'); params.push(category); }
+    if (color !== undefined) { updates.push('color = ?'); params.push(color); }
+    if (priority !== undefined) { updates.push('priority = ?'); params.push(priority); }
+    if (assignee !== undefined) { updates.push('assignee = ?'); params.push(assignee); }
+    if (status !== undefined) { updates.push('status = ?'); params.push(status); }
+    if (phase !== undefined) { updates.push('phase = ?'); params.push(phase); }
+    if (start_date !== undefined) { updates.push('start_date = ?'); params.push(start_date); }
+    if (end_date !== undefined) { updates.push('end_date = ?'); params.push(end_date); }
+    if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+    if (assignee_avatar !== undefined) { updates.push('assignee_avatar = ?'); params.push(assignee_avatar); }
+    if (assignee_role !== undefined) { updates.push('assignee_role = ?'); params.push(assignee_role); }
+    if (subtasks !== undefined) { updates.push('subtasks = ?'); params.push(JSON.stringify(subtasks)); }
+    if (comments !== undefined) { updates.push('comments = ?'); params.push(JSON.stringify(comments)); }
+
+    if (updates.length > 0) {
+      params.push(req.params.id);
+      await runAsync(`UPDATE schedules SET ${updates.join(', ')} WHERE id = ?`, params);
+    }
+
+    const event = await getAsync('SELECT * FROM schedules WHERE id = ?', [req.params.id]);
+    if (!event) return res.status(404).json({ error: 'Schedule item not found' });
+    event.subtasks = JSON.parse(event.subtasks || '[]');
+    event.comments = JSON.parse(event.comments || '[]');
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/v1/schedules/:id/comments', authMiddleware, async (req, res) => {
+  try {
+    const { content, author, avatar } = req.body;
+    if (!content) return res.status(400).json({ error: 'Comment content is required' });
+
+    const event = await getAsync('SELECT * FROM schedules WHERE id = ?', [req.params.id]);
+    if (!event) return res.status(404).json({ error: 'Schedule item not found' });
+
+    const comments = JSON.parse(event.comments || '[]');
+    const newComment = {
+      id: 'c-' + Date.now(),
+      author: author || 'Current User',
+      avatar: avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+      time: 'Just now',
+      content
+    };
+    comments.push(newComment);
+
+    await runAsync('UPDATE schedules SET comments = ? WHERE id = ?', [JSON.stringify(comments), req.params.id]);
+    res.json(newComment);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

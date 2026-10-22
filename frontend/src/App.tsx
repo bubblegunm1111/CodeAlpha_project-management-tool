@@ -41,7 +41,9 @@ import {
   Building2,
   Layers,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  ChevronDown,
+  CheckSquare
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -91,16 +93,38 @@ interface NoteItem {
   date: string;
 }
 
+interface ScheduleSubtask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+interface ScheduleComment {
+  id: string;
+  author: string;
+  avatar: string;
+  time: string;
+  content: string;
+}
+
 interface ScheduleItem {
   id: string;
   title: string;
   date: string;
   time: string;
-  category: 'Milestone' | 'Review' | 'Sprint' | 'Deadline';
+  category: 'Milestone' | 'Review' | 'Sprint' | 'Deadline' | 'Research';
   color: CardColor;
   priority: 'Low' | 'Medium' | 'High' | 'Urgent';
   assignee: string;
-  status: 'Scheduled' | 'Completed';
+  status: 'Scheduled' | 'In Progress' | 'Done' | 'Completed';
+  phase?: 'Discovery & Research' | 'Design & Planning' | 'Development' | 'Review & QA' | 'Launch' | string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  assigneeRole?: string;
+  assigneeAvatar?: string;
+  subtasks?: ScheduleSubtask[];
+  comments?: ScheduleComment[];
 }
 
 export interface TaskFolder {
@@ -278,47 +302,191 @@ const INITIAL_NOTES: NoteItem[] = [
 const INITIAL_SCHEDULE: ScheduleItem[] = [
   {
     id: 's-1',
-    title: 'Client Design Review & Demo',
-    date: '2026-05-11',
-    time: '10:00 AM',
-    category: 'Review',
+    title: 'Market research & competitive analysis',
+    phase: 'Discovery & Research',
+    date: '2026-05-05',
+    startDate: '2026-05-05',
+    endDate: '2026-05-07',
+    time: '09:00 AM',
+    category: 'Research',
     color: 'blue',
     priority: 'High',
-    assignee: 'Mason Walker',
-    status: 'Scheduled'
+    status: 'Done',
+    assignee: 'Sarah Lin',
+    assigneeRole: 'Lead UX Researcher',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
+    description: 'Comprehensive benchmark of rival project management & vintage workspace interfaces, surveying 40+ user pain points.',
+    subtasks: [
+      { id: 'sub-1', text: 'Identify top 5 industry competitors', completed: true },
+      { id: 'sub-2', text: 'Conduct 10 in-depth stakeholder interviews', completed: true },
+      { id: 'sub-3', text: 'Compile synthesis report into Dossier', completed: true }
+    ],
+    comments: [
+      { id: 'c-1', author: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop', time: 'May 5, 11:30 AM', content: 'Synthesis complete and attached to Dossier 01.' }
+    ]
   },
   {
     id: 's-2',
-    title: 'Sprint #3 Mid-Point Check-in',
-    date: '2026-05-13',
-    time: '02:30 PM',
-    category: 'Sprint',
+    title: 'User interviews & personas synthesis',
+    phase: 'Discovery & Research',
+    date: '2026-05-06',
+    startDate: '2026-05-06',
+    endDate: '2026-05-08',
+    time: '02:00 PM',
+    category: 'Milestone',
     color: 'purple',
     priority: 'Medium',
-    assignee: 'Elena R.',
-    status: 'Scheduled'
+    status: 'In Progress',
+    assignee: 'Alex Rivera',
+    assigneeRole: 'UX Strategist',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+    description: 'Define target persona archetypes, user journey mapping, and core motivation cards for the archival filing system.',
+    subtasks: [
+      { id: 'sub-4', text: 'Draft 3 primary archetype profiles', completed: true },
+      { id: 'sub-5', text: 'Review customer journey mapping with PM', completed: false }
+    ],
+    comments: [
+      { id: 'c-2', author: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop', time: 'May 6, 04:15 PM', content: 'Second persona drafted. Reviewing friction points on task nesting.' }
+    ]
   },
   {
     id: 's-3',
-    title: 'Wehiu Task Wireframe Final Handoff',
-    date: '2026-05-14',
-    time: '05:00 PM',
-    category: 'Deadline',
+    title: 'Information architecture & folder taxonomy',
+    phase: 'Design & Planning',
+    date: '2026-05-07',
+    startDate: '2026-05-07',
+    endDate: '2026-05-08',
+    time: '11:00 AM',
+    category: 'Sprint',
     color: 'peach',
-    priority: 'Urgent',
-    assignee: 'David K.',
-    status: 'Scheduled'
+    priority: 'High',
+    status: 'In Progress',
+    assignee: 'Elena Rostova',
+    assigneeRole: 'Lead Information Architect',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    description: 'Establish the physical folder hierarchical metaphor: Organizations -> Folders (Dossiers) -> Kanban Boards & Timelines.',
+    subtasks: [
+      { id: 'sub-6', text: 'Define tab slip navigation schema', completed: true },
+      { id: 'sub-7', text: 'Finalize URL routing structure', completed: true },
+      { id: 'sub-8', text: 'Produce interactive sitemap tree', completed: false }
+    ],
+    comments: []
   },
   {
     id: 's-4',
-    title: 'Frontend & API Integration Milestone',
-    date: '2026-05-18',
-    time: '11:00 AM',
-    category: 'Milestone',
+    title: 'Wireframing & design system tokens',
+    phase: 'Design & Planning',
+    date: '2026-05-08',
+    startDate: '2026-05-08',
+    endDate: '2026-05-10',
+    time: '10:00 AM',
+    category: 'Sprint',
+    color: 'peach',
+    priority: 'High',
+    status: 'In Progress',
+    assignee: 'Mason Walker',
+    assigneeRole: 'Design Lead',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+    description: 'Develop the vintage physical stationery palette (#FAF6EE, #F5EFEB, #3F3730) and high-fidelity interactive Figma component set.',
+    subtasks: [
+      { id: 'sub-9', text: 'Color swatch & typography tokens', completed: true },
+      { id: 'sub-10', text: 'Gantt timeline bar interactions', completed: false },
+      { id: 'sub-11', text: 'Detail drawer checklist specs', completed: false }
+    ],
+    comments: [
+      { id: 'c-3', author: 'Mason Walker', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop', time: 'May 8, 09:20 AM', content: 'Warm parchment tones verified on Retina and standard monitors.' }
+    ]
+  },
+  {
+    id: 's-5',
+    title: 'Frontend timeline view & Gantt engine',
+    phase: 'Development',
+    date: '2026-05-08',
+    startDate: '2026-05-08',
+    endDate: '2026-05-11',
+    time: '01:00 PM',
+    category: 'Sprint',
+    color: 'blue',
+    priority: 'Urgent',
+    status: 'In Progress',
+    assignee: 'David Kim',
+    assigneeRole: 'Senior Frontend Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop',
+    description: 'Construct the dynamic date-spanning bar calculations, task connector lines, and drawer sync.',
+    subtasks: [
+      { id: 'sub-12', text: 'Build 7-day Gantt grid view', completed: true },
+      { id: 'sub-13', text: 'Task status checklist toggle API', completed: true },
+      { id: 'sub-14', text: 'Comments thread real-time feed', completed: true }
+    ],
+    comments: [
+      { id: 'c-4', author: 'David Kim', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop', time: 'May 9, 10:15 AM', content: 'Gantt horizontal bar offsets calculated based on May 5–11 window.' }
+    ]
+  },
+  {
+    id: 's-6',
+    title: 'Backend SQLite timeline & subtasks persistence',
+    phase: 'Development',
+    date: '2026-05-09',
+    startDate: '2026-05-09',
+    endDate: '2026-05-10',
+    time: '03:30 PM',
+    category: 'Sprint',
     color: 'mint',
     priority: 'High',
-    assignee: 'Team',
-    status: 'Scheduled'
+    status: 'Done',
+    assignee: 'Mason Walker',
+    assigneeRole: 'Fullstack Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+    description: 'Provide RESTful endpoints for phases, subtasks checklists, comments, and date range filters.',
+    subtasks: [
+      { id: 'sub-15', text: 'Migrate schedules schema in SQLite', completed: true },
+      { id: 'sub-16', text: 'CRUD routes for schedule tasks', completed: true }
+    ],
+    comments: []
+  },
+  {
+    id: 's-7',
+    title: 'End-to-end integration & QA testing',
+    phase: 'Review & QA',
+    date: '2026-05-10',
+    startDate: '2026-05-10',
+    endDate: '2026-05-11',
+    time: '11:00 AM',
+    category: 'Deadline',
+    color: 'coral',
+    priority: 'High',
+    status: 'Scheduled',
+    assignee: 'Maya Patel',
+    assigneeRole: 'QA Automation Lead',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop',
+    description: 'Cross-browser testing, drawer responsiveness, keyboard navigation, and edge case checklist verification.',
+    subtasks: [
+      { id: 'sub-17', text: 'Verify timeline drag and click triggers', completed: false },
+      { id: 'sub-18', text: 'Check mobile & tablet viewport layouts', completed: false }
+    ],
+    comments: []
+  },
+  {
+    id: 's-8',
+    title: 'Production release & dossier archive handover',
+    phase: 'Launch',
+    date: '2026-05-11',
+    startDate: '2026-05-11',
+    endDate: '2026-05-11',
+    time: '05:00 PM',
+    category: 'Milestone',
+    color: 'canary',
+    priority: 'Urgent',
+    status: 'Scheduled',
+    assignee: 'Mason Walker',
+    assigneeRole: 'Studio Principal',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+    description: 'Final deployment to production servers and customer workspace documentation archival.',
+    subtasks: [
+      { id: 'sub-19', text: 'Push build to live cloud servers', completed: false },
+      { id: 'sub-20', text: 'Publish release changelog', completed: false }
+    ],
+    comments: []
   }
 ];
 
@@ -434,9 +602,20 @@ export default function App() {
   const [newScheduleTitle, setNewScheduleTitle] = useState('');
   const [newScheduleDate, setNewScheduleDate] = useState('2026-05-15');
   const [newScheduleTime, setNewScheduleTime] = useState('10:00 AM');
-  const [newScheduleCategory, setNewScheduleCategory] = useState<'Milestone' | 'Review' | 'Sprint' | 'Deadline'>('Sprint');
+  const [newScheduleCategory, setNewScheduleCategory] = useState<'Milestone' | 'Review' | 'Sprint' | 'Deadline' | 'Research'>('Sprint');
   const [newScheduleColor, setNewScheduleColor] = useState<CardColor>('peach');
   const [newSchedulePriority, setNewSchedulePriority] = useState<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
+  const [newSchedulePhase, setNewSchedulePhase] = useState<string>('Design & Planning');
+  const [newScheduleStartDate, setNewScheduleStartDate] = useState('2026-05-08');
+  const [newScheduleEndDate, setNewScheduleEndDate] = useState('2026-05-10');
+
+  // Interactive Timeline / Gantt State
+  const [timelineViewMode, setTimelineViewMode] = useState<'gantt' | 'calendar'>('gantt');
+  const [timelineZoom, setTimelineZoom] = useState<'Week' | 'Month' | 'Quarter'>('Week');
+  const [selectedScheduleItem, setSelectedScheduleItem] = useState<ScheduleItem | null>(null);
+  const [timelineCommentInput, setTimelineCommentInput] = useState('');
+  const [timelineNewSubtaskInput, setTimelineNewSubtaskInput] = useState('');
+  const [timelineCollapsedPhases, setTimelineCollapsedPhases] = useState<Record<string, boolean>>({});
 
   // Subtask & Checklist state
   const [newSubtaskInput, setNewSubtaskInput] = useState('');
@@ -684,9 +863,17 @@ export default function App() {
             color: (d.color as any) || 'blue',
             priority: (d.priority as any) || 'Medium',
             assignee: d.assignee || 'Mason Walker',
-            status: (d.status as any) || 'Scheduled'
+            assigneeRole: d.assignee_role || 'Contributor',
+            assigneeAvatar: d.assignee_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+            status: (d.status as any) || 'Scheduled',
+            phase: d.phase || 'Discovery & Research',
+            startDate: d.start_date || d.date,
+            endDate: d.end_date || d.date,
+            description: d.description || '',
+            subtasks: Array.isArray(d.subtasks) ? d.subtasks : [],
+            comments: Array.isArray(d.comments) ? d.comments : []
           }));
-          setSchedules(prev => [...apiSchedules, ...prev.filter(p => !apiSchedules.some(a => a.id === p.id))]);
+          setSchedules(apiSchedules);
         }
       })
       .catch(() => {});
@@ -1015,12 +1202,20 @@ export default function App() {
       id: `s-${Date.now()}`,
       title: newScheduleTitle.trim(),
       date: newScheduleDate,
+      startDate: newScheduleStartDate || newScheduleDate,
+      endDate: newScheduleEndDate || newScheduleDate,
       time: newScheduleTime,
       category: newScheduleCategory,
       color: newScheduleColor,
       priority: newSchedulePriority,
-      assignee: 'Mason Walker',
-      status: 'Scheduled'
+      phase: newSchedulePhase || 'Design & Planning',
+      assignee: currentUser.name || 'Mason Walker',
+      assigneeRole: 'Contributor',
+      assigneeAvatar: currentUser.avatar,
+      description: 'Scheduled task in ' + (newSchedulePhase || 'project roadmap'),
+      status: 'Scheduled',
+      subtasks: [],
+      comments: []
     };
 
     setSchedules(prev => [...prev, newEvent]);
@@ -1033,11 +1228,132 @@ export default function App() {
       body: JSON.stringify({
         title: newEvent.title,
         date: newEvent.date,
+        start_date: newEvent.startDate,
+        end_date: newEvent.endDate,
         time: newEvent.time,
         category: newEvent.category,
         color: newEvent.color,
         priority: newEvent.priority,
-        assignee: newEvent.assignee
+        assignee: newEvent.assignee,
+        assignee_role: newEvent.assigneeRole,
+        assignee_avatar: newEvent.assigneeAvatar,
+        phase: newEvent.phase,
+        description: newEvent.description,
+        subtasks: [],
+        comments: []
+      })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Added "${newEvent.title.slice(0, 20)}..." to Timeline`, time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  // Toggle Timeline Task Subtask
+  const handleToggleScheduleSubtask = (itemId: string, subtaskId: string) => {
+    let updatedItem: ScheduleItem | null = null;
+    setSchedules(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const updatedSubs = (item.subtasks || []).map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st);
+        const allDone = updatedSubs.length > 0 && updatedSubs.every(st => st.completed);
+        updatedItem = {
+          ...item,
+          subtasks: updatedSubs,
+          status: allDone ? 'Done' : 'In Progress'
+        };
+        return updatedItem;
+      }
+      return item;
+    }));
+
+    if (selectedScheduleItem && selectedScheduleItem.id === itemId && updatedItem) {
+      setSelectedScheduleItem(updatedItem);
+    }
+
+    const numId = itemId.replace('s-', '');
+    if (updatedItem) {
+      const it = updatedItem as ScheduleItem;
+      fetch(`${API_BASE}/schedules/${numId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subtasks: it.subtasks,
+          status: it.status
+        })
+      }).catch(() => {});
+    }
+  };
+
+  // Add subtask to schedule item
+  const handleAddScheduleSubtask = (itemId: string) => {
+    if (!timelineNewSubtaskInput.trim()) return;
+    const newSt: ScheduleSubtask = {
+      id: 'sub-' + Date.now(),
+      text: timelineNewSubtaskInput.trim(),
+      completed: false
+    };
+
+    let updatedItem: ScheduleItem | null = null;
+    setSchedules(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const updatedSubs = [...(item.subtasks || []), newSt];
+        updatedItem = { ...item, subtasks: updatedSubs };
+        return updatedItem;
+      }
+      return item;
+    }));
+
+    if (selectedScheduleItem && selectedScheduleItem.id === itemId && updatedItem) {
+      setSelectedScheduleItem(updatedItem);
+    }
+    setTimelineNewSubtaskInput('');
+
+    const numId = itemId.replace('s-', '');
+    if (updatedItem) {
+      const it = updatedItem as ScheduleItem;
+      fetch(`${API_BASE}/schedules/${numId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subtasks: it.subtasks })
+      }).catch(() => {});
+    }
+  };
+
+  // Add Comment to Schedule Item
+  const handleAddScheduleComment = (itemId: string) => {
+    if (!timelineCommentInput.trim()) return;
+    const newComment: ScheduleComment = {
+      id: 'c-' + Date.now(),
+      author: currentUser.name || 'Mason Walker',
+      avatar: currentUser.avatar,
+      time: 'Just now',
+      content: timelineCommentInput.trim()
+    };
+
+    let updatedItem: ScheduleItem | null = null;
+    setSchedules(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const updatedComments = [...(item.comments || []), newComment];
+        updatedItem = { ...item, comments: updatedComments };
+        return updatedItem;
+      }
+      return item;
+    }));
+
+    if (selectedScheduleItem && selectedScheduleItem.id === itemId && updatedItem) {
+      setSelectedScheduleItem(updatedItem);
+    }
+    setTimelineCommentInput('');
+
+    const numId = itemId.replace('s-', '');
+    fetch(`${API_BASE}/schedules/${numId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: newComment.content,
+        author: newComment.author,
+        avatar: newComment.avatar
       })
     }).catch(() => {});
   };
@@ -2566,110 +2882,567 @@ export default function App() {
             </>
           )}
 
-          {/* VIEW 2: SCHEDULE & TIMELINE PAGE */}
+          {/* VIEW 2: SCHEDULE & TIMELINE PAGE (INTERACTIVE GANTT & CALENDAR) */}
           {activeTab === 'schedule' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-[#E5DBCA] gap-3">
-                <div>
-                  <p className="text-xs text-[#7B7062] font-medium flex items-center space-x-1.5">
-                    <CalendarCheck className="w-3.5 h-3.5" />
-                    <span>Sprint #3 Deliverables & Milestones Schedule</span>
-                  </p>
-                  <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-0.5">
-                    Project Timeline & Deadlines
-                  </h1>
-                </div>
-                <button
-                  onClick={() => setIsNewScheduleModalOpen(true)}
-                  className="px-4 py-2 bg-[#2E2721] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#463D34] shadow flex items-center space-x-1.5 self-start sm:self-auto"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>+ Schedule Event</span>
-                </button>
-              </div>
-
-              {/* Calendar & Timeline Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* May 2026 Calendar Grid (Vintage Paper Stationery Theme) */}
-                <div className="bg-[#F5EFEB] rounded-2xl border border-[#DCD1BC] p-5 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#DCD1BC]">
-                    <h2 className="text-sm font-black text-[#2C241E]">May 2026</h2>
-                    <span className="text-xs px-2.5 py-0.5 bg-[#E4DAC7] text-[#52473A] font-bold rounded-md">
-                      Week 19
+              {/* Top Control Bar (Project Switcher, Week Range, Today, Zoom Controls, View Switch) */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-[#E5DBCA] gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Project / Dossier Selector */}
+                  <div className="flex items-center space-x-2 bg-[#F5EFEB] border border-[#DCD1BC] px-3.5 py-1.5 rounded-xl shadow-xs">
+                    <Folder className="w-4 h-4 text-[#8C7F70]" />
+                    <span className="text-xs font-bold text-[#3B3128]">{currentFolder.name}</span>
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#E8DEC9] text-[#554A3E]">
+                      {currentFolder.code}
                     </span>
                   </div>
-                  <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-[#867A6B] mb-2">
-                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+
+                  {/* Date Range & Today Button */}
+                  <div className="flex items-center space-x-2 bg-[#F5EFEB] border border-[#DCD1BC] px-2 py-1 rounded-xl shadow-xs">
+                    <button
+                      onClick={() => {
+                        setNotifications(prev => [{ id: Date.now(), text: 'Jumped to current sprint week: May 5 – May 11, 2026', time: 'Just now' }, ...prev]);
+                      }}
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold text-[#4B4035] hover:bg-[#EAE1D1] transition-colors"
+                    >
+                      Today
+                    </button>
+                    <div className="h-4 w-px bg-[#D8CDBC]" />
+                    <span className="text-xs font-bold text-[#2A221B] px-1.5 flex items-center space-x-1.5">
+                      <CalendarIcon className="w-3.5 h-3.5 text-[#7C6F61]" />
+                      <span>May 5 – May 11, 2026</span>
+                    </span>
                   </div>
-                  <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-semibold">
-                    {Array.from({ length: 31 }).map((_, i) => {
-                      const day = i + 1;
-                      const isToday = day === 10;
-                      const hasEvent = [11, 13, 14, 18, 20].includes(day);
-                      return (
-                        <div
-                          key={day}
-                          className={`h-9 flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer ${
-                            isToday
-                              ? 'bg-[#2E2721] text-[#FAF6EE] font-black shadow-sm'
-                              : hasEvent
-                              ? 'bg-[#EAE0CF] text-[#2C241E] border border-[#D5CABB]'
-                              : 'text-[#695D50] hover:bg-[#EAE0CF]/50'
-                          }`}
-                        >
-                          <span>{day}</span>
-                          {hasEvent && !isToday && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 -mt-0.5"></span>
-                          )}
-                        </div>
-                      );
-                    })}
+
+                  {/* Zoom Pills (Week | Month | Quarter) */}
+                  <div className="flex items-center bg-[#ECE4D4] p-1 rounded-xl border border-[#DCD1BC] text-xs font-bold text-[#6D6052]">
+                    {(['Week', 'Month', 'Quarter'] as const).map(z => (
+                      <button
+                        key={z}
+                        onClick={() => setTimelineZoom(z)}
+                        className={`px-3 py-1 rounded-lg transition-all ${
+                          timelineZoom === z
+                            ? 'bg-[#2E2721] text-[#FAF6EE] shadow-xs'
+                            : 'hover:text-[#2E2721]'
+                        }`}
+                      >
+                        {z}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Scheduled Events List */}
-                <div className="lg:col-span-2 space-y-3">
-                  <h2 className="text-sm font-black text-[#2C241E] px-1">Upcoming Deliverables & Events ({schedules.length})</h2>
-                  <div className="space-y-3">
-                    {schedules.map(event => {
-                      const style = getColorStyles(event.color);
-                      return (
-                        <div
-                          key={event.id}
-                          className={`${style.bg} border ${style.border} rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs`}
-                        >
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${style.tagBg} ${style.tagText}`}>
-                                {event.category}
-                              </span>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/60 text-[#54483C]">
-                                Priority: {event.priority}
-                              </span>
-                            </div>
-                            <h3 className={`text-sm font-bold ${style.textColor}`}>{event.title}</h3>
-                            <div className="flex items-center space-x-3 text-xs text-[#7A6D5E]">
-                              <span className="flex items-center space-x-1">
-                                <CalendarIcon className="w-3.5 h-3.5" />
-                                <span>{event.date}</span>
-                              </span>
-                              <span className="flex items-center space-x-1">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>{event.time}</span>
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2 self-end sm:self-center">
-                            <span className="text-xs px-2.5 py-1 rounded-lg bg-white/70 font-semibold text-[#44382C] border border-black/5">
-                              👤 {event.assignee}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                {/* Right controls: View Toggle (Gantt vs Calendar) & New Event */}
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center bg-[#ECE4D4] p-1 rounded-xl border border-[#DCD1BC] text-xs font-bold">
+                    <button
+                      onClick={() => setTimelineViewMode('gantt')}
+                      className={`px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition-all ${
+                        timelineViewMode === 'gantt'
+                          ? 'bg-white text-[#2E2721] shadow-xs font-black'
+                          : 'text-[#6D6052] hover:text-[#2E2721]'
+                      }`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Timeline / Gantt</span>
+                    </button>
+                    <button
+                      onClick={() => setTimelineViewMode('calendar')}
+                      className={`px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition-all ${
+                        timelineViewMode === 'calendar'
+                          ? 'bg-white text-[#2E2721] shadow-xs font-black'
+                          : 'text-[#6D6052] hover:text-[#2E2721]'
+                      }`}
+                    >
+                      <CalendarCheck className="w-3.5 h-3.5" />
+                      <span>Calendar & Agenda</span>
+                    </button>
                   </div>
+
+                  <button
+                    onClick={() => setIsNewScheduleModalOpen(true)}
+                    className="px-3.5 py-1.5 bg-[#2E2721] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#463D34] shadow-sm flex items-center space-x-1.5 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Schedule Task</span>
+                  </button>
                 </div>
               </div>
+
+              {/* TIMELINE / GANTT VIEW MODE (Matches Screenshot 2) */}
+              {timelineViewMode === 'gantt' && (
+                <div className="flex flex-col xl:flex-row items-start gap-5">
+                  {/* Left & Center: Phase Tree + Horizontal 7-Day Timeline Grid */}
+                  <div className="flex-1 w-full bg-[#FAF6EE] rounded-2xl border border-[#D5CABB] shadow-sm overflow-hidden">
+                    {/* Gantt Header: Left Phase label + 7 Days columns (Tue May 5 – Mon May 11) */}
+                    <div className="flex border-b border-[#DCD1BC] bg-[#EFE8DC] text-xs font-bold text-[#554A3D]">
+                      <div className="w-72 sm:w-80 flex-shrink-0 px-4 py-3 border-r border-[#DCD1BC] flex items-center justify-between">
+                        <span className="uppercase tracking-wider text-[11px] text-[#7A6D5E]">Project Roadmap & Tasks</span>
+                        <span className="text-[10px] bg-[#E2D8C6] px-2 py-0.5 rounded-md font-semibold text-[#665A4E]">
+                          {schedules.length} Items
+                        </span>
+                      </div>
+                      <div className="flex-1 grid grid-cols-7 text-center">
+                        {[
+                          { day: 'Tue', date: '5', full: '2026-05-05' },
+                          { day: 'Wed', date: '6', full: '2026-05-06' },
+                          { day: 'Thu', date: '7', full: '2026-05-07' },
+                          { day: 'Fri', date: '8', full: '2026-05-08' },
+                          { day: 'Sat', date: '9', full: '2026-05-09' },
+                          { day: 'Sun', date: '10', full: '2026-05-10', isToday: true },
+                          { day: 'Mon', date: '11', full: '2026-05-11' },
+                        ].map(col => (
+                          <div
+                            key={col.full}
+                            className={`py-2 px-1 border-r border-[#E2D8C6] last:border-r-0 flex flex-col items-center justify-center ${
+                              col.isToday ? 'bg-[#E5DBC7]/60 font-black text-[#261E18]' : 'text-[#6D6153]'
+                            }`}
+                          >
+                            <span className="text-[10px] uppercase font-bold tracking-wider">{col.day}</span>
+                            <span className={`text-xs mt-0.5 ${col.isToday ? 'px-1.5 rounded-full bg-[#2E2721] text-[#FAF6EE]' : ''}`}>
+                              {col.date}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Phase Groups (Discovery & Research, Design & Planning, Development, Review & QA, Launch) */}
+                    <div className="divide-y divide-[#EFE7D8]">
+                      {[
+                        'Discovery & Research',
+                        'Design & Planning',
+                        'Development',
+                        'Review & QA',
+                        'Launch'
+                      ].map(phaseName => {
+                        const phaseTasks = schedules.filter(s => (s.phase || 'Discovery & Research') === phaseName);
+                        const isCollapsed = timelineCollapsedPhases[phaseName];
+
+                        return (
+                          <div key={phaseName} className="group">
+                            {/* Phase Accordion Title */}
+                            <div
+                              onClick={() => setTimelineCollapsedPhases(prev => ({ ...prev, [phaseName]: !prev[phaseName] }))}
+                              className="px-4 py-2.5 bg-[#F6F0E4] hover:bg-[#EFE8DC] cursor-pointer flex items-center justify-between border-b border-[#E8DEC9] transition-colors"
+                            >
+                              <div className="flex items-center space-x-2 text-xs font-black text-[#382F26]">
+                                <ChevronDown className={`w-3.5 h-3.5 text-[#8A7D6E] transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                                <span className="tracking-wide uppercase text-[11px]">{phaseName}</span>
+                                <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-[#E5DCC9] text-[#5A4E42]">
+                                  {phaseTasks.length}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-semibold text-[#8C7E70]">
+                                {isCollapsed ? 'Click to expand' : 'Click to collapse'}
+                              </span>
+                            </div>
+
+                            {/* Phase Tasks Rows */}
+                            {!isCollapsed && phaseTasks.map(item => {
+                              const style = getColorStyles(item.color);
+                              const isSelected = selectedScheduleItem?.id === item.id;
+
+                              // Date Span Calculation (Window May 5 - May 11, 2026: Day 0 to 6)
+                              const startIdx = Math.max(0, Math.min(6, (item.startDate ? parseInt(item.startDate.split('-')[2], 10) - 5 : 0)));
+                              const endIdx = Math.max(startIdx, Math.min(6, (item.endDate ? parseInt(item.endDate.split('-')[2], 10) - 5 : startIdx + 1)));
+                              const spanDays = endIdx - startIdx + 1;
+                              const leftPercent = (startIdx / 7) * 100;
+                              const widthPercent = (spanDays / 7) * 100;
+
+                              const completedSubs = (item.subtasks || []).filter(st => st.completed).length;
+                              const totalSubs = (item.subtasks || []).length;
+
+                              return (
+                                <div
+                                  key={item.id}
+                                  onClick={() => setSelectedScheduleItem(item)}
+                                  className={`flex hover:bg-[#F8F3EA] cursor-pointer transition-colors border-b border-[#EFE7D8] last:border-b-0 ${
+                                    isSelected ? 'bg-[#F2ECE0]' : ''
+                                  }`}
+                                >
+                                  {/* Left: Task row metadata & quick toggle */}
+                                  <div className="w-72 sm:w-80 flex-shrink-0 px-4 py-3 border-r border-[#E8DEC9] flex items-center justify-between space-x-2">
+                                    <div className="flex items-center space-x-2.5 min-w-0">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const nextStatus = item.status === 'Done' ? 'In Progress' : 'Done';
+                                          setSchedules(prev => prev.map(s => s.id === item.id ? { ...s, status: nextStatus } : s));
+                                          if (selectedScheduleItem?.id === item.id) {
+                                            setSelectedScheduleItem(prev => prev ? { ...prev, status: nextStatus } : null);
+                                          }
+                                        }}
+                                        className="text-[#998B7B] hover:text-[#2E2721] transition-colors flex-shrink-0"
+                                      >
+                                        {item.status === 'Done' ? (
+                                          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                                        ) : item.status === 'In Progress' ? (
+                                          <Circle className="w-4 h-4 text-amber-600 fill-amber-100" />
+                                        ) : (
+                                          <Circle className="w-4 h-4 text-[#B5A998]" />
+                                        )}
+                                      </button>
+                                      <span
+                                        className={`text-xs font-bold truncate ${
+                                          item.status === 'Done' ? 'line-through text-[#998B7C]' : 'text-[#2C241D]'
+                                        }`}
+                                        title={item.title}
+                                      >
+                                        {item.title}
+                                      </span>
+                                    </div>
+
+                                    {/* Task badges */}
+                                    <div className="flex items-center space-x-1.5 flex-shrink-0">
+                                      {totalSubs > 0 && (
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#E8DEC9] text-[#554A3D]">
+                                          {completedSubs}/{totalSubs}
+                                        </span>
+                                      )}
+                                      <img
+                                        src={item.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
+                                        alt={item.assignee}
+                                        className="w-5 h-5 rounded-full border border-white object-cover"
+                                        title={item.assignee}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Right: Gantt bar spanning calculated days */}
+                                  <div className="flex-1 relative py-2.5 px-1 bg-[linear-gradient(to_right,#EFE8DC_1px,transparent_1px)] bg-[size:14.285%_100%]">
+                                    <div
+                                      style={{
+                                        marginLeft: `${leftPercent}%`,
+                                        width: `calc(${widthPercent}% - 8px)`
+                                      }}
+                                      className={`h-7 rounded-xl border flex items-center justify-between px-2.5 text-xs font-bold shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
+                                        isSelected ? 'ring-2 ring-[#2E2721] scale-[1.01]' : 'hover:opacity-90'
+                                      }`}
+                                    >
+                                      <span className="truncate text-[11px] font-extrabold pr-2">
+                                        {item.title}
+                                      </span>
+                                      <div className="flex items-center space-x-1 flex-shrink-0">
+                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${style.tagBg} ${style.tagText}`}>
+                                          {item.category}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                            {!isCollapsed && phaseTasks.length === 0 && (
+                              <div className="px-6 py-3 text-xs text-[#998B7C] italic">
+                                No tasks scheduled under {phaseName}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Right-Hand Task Detail Drawer (Matching Reference Screenshot 2) */}
+                  {selectedScheduleItem ? (
+                    <div className="w-full xl:w-96 flex-shrink-0 bg-[#FAF6EE] rounded-2xl border border-[#D5CABB] p-5 shadow-lg space-y-5 animate-in fade-in zoom-in-95 duration-100">
+                      {/* Drawer Header */}
+                      <div className="flex items-center justify-between pb-3 border-b border-[#E8DEC9]">
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${getColorStyles(selectedScheduleItem.color).tagBg} ${getColorStyles(selectedScheduleItem.color).tagText}`}>
+                            {selectedScheduleItem.phase || 'General'}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#E8DEC9] text-[#554A3E]">
+                            {selectedScheduleItem.status}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setSelectedScheduleItem(null)}
+                          className="p-1 rounded-lg text-[#887A6B] hover:text-[#261E18] hover:bg-[#EAE0CF] transition-colors"
+                          title="Close drawer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Title & Description */}
+                      <div className="space-y-1.5">
+                        <h2 className="text-base font-black text-[#28201A] leading-snug">
+                          {selectedScheduleItem.title}
+                        </h2>
+                        <p className="text-xs text-[#6A5E50] leading-relaxed">
+                          {selectedScheduleItem.description || 'No detailed scope written for this timeline item.'}
+                        </p>
+                      </div>
+
+                      {/* Assignee & Dates Widget */}
+                      <div className="bg-[#F5EFEB] p-3.5 rounded-xl border border-[#DCD1BC] space-y-3 text-xs">
+                        {/* Assignee */}
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[#7A6D5E]">Assignee</span>
+                          <div className="flex items-center space-x-2">
+                            <img
+                              src={selectedScheduleItem.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
+                              alt={selectedScheduleItem.assignee}
+                              className="w-5 h-5 rounded-full object-cover border border-[#DCD1BC]"
+                            />
+                            <div className="text-right">
+                              <span className="font-bold text-[#2A211A] block">{selectedScheduleItem.assignee}</span>
+                              <span className="text-[10px] text-[#8C7F70]">{selectedScheduleItem.assigneeRole || 'Team Member'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dates Span */}
+                        <div className="flex items-center justify-between pt-2 border-t border-[#E8DEC9]">
+                          <span className="font-bold text-[#7A6D5E]">Schedule Span</span>
+                          <span className="font-extrabold text-[#2A211A]">
+                            {selectedScheduleItem.startDate || selectedScheduleItem.date} → {selectedScheduleItem.endDate || selectedScheduleItem.date}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Interactive Checklist (Subtasks) */}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between text-xs font-bold text-[#554A3E]">
+                          <span className="flex items-center space-x-1.5">
+                            <CheckSquare className="w-3.5 h-3.5 text-[#7A6E5F]" />
+                            <span>Checklist</span>
+                          </span>
+                          <span className="font-black text-[#261E18]">
+                            {(selectedScheduleItem.subtasks || []).filter(s => s.completed).length} / {(selectedScheduleItem.subtasks || []).length}
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-[#E5DCC9] h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="bg-[#2E2721] h-full transition-all duration-300 rounded-full"
+                            style={{
+                              width: `${
+                                (selectedScheduleItem.subtasks || []).length > 0
+                                  ? Math.round(
+                                      ((selectedScheduleItem.subtasks || []).filter(s => s.completed).length /
+                                        (selectedScheduleItem.subtasks || []).length) *
+                                        100
+                                    )
+                                  : 0
+                              }%`
+                            }}
+                          />
+                        </div>
+
+                        {/* Subtasks List */}
+                        <div className="space-y-1.5 pt-1">
+                          {(selectedScheduleItem.subtasks || []).map(st => (
+                            <div
+                              key={st.id}
+                              onClick={() => handleToggleScheduleSubtask(selectedScheduleItem.id, st.id)}
+                              className="flex items-center space-x-2.5 p-2 rounded-xl bg-white/70 border border-[#E5DBCA] hover:bg-white cursor-pointer transition-colors text-xs"
+                            >
+                              {st.completed ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                              ) : (
+                                <Circle className="w-4 h-4 text-[#A89C8C] hover:text-[#2E2721] flex-shrink-0" />
+                              )}
+                              <span className={`flex-1 ${st.completed ? 'line-through text-[#998B7C]' : 'font-medium text-[#2C241E]'}`}>
+                                {st.text}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Add Subtask Form */}
+                        <div className="flex items-center space-x-1.5 pt-1">
+                          <input
+                            type="text"
+                            value={timelineNewSubtaskInput}
+                            onChange={(e) => setTimelineNewSubtaskInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddScheduleSubtask(selectedScheduleItem.id);
+                              }
+                            }}
+                            placeholder="Add subtask and press Enter..."
+                            className="flex-1 px-3 py-1.5 rounded-xl border border-[#D5CABB] bg-white text-xs text-[#2A211A] placeholder-[#9C8F80] focus:outline-hidden focus:ring-1 focus:ring-[#2E2721]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleAddScheduleSubtask(selectedScheduleItem.id)}
+                            className="p-1.5 rounded-xl bg-[#2E2721] text-[#FAF6EE] hover:bg-[#463D34] transition-colors"
+                            title="Add subtask"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Comments Thread (Matching Reference Screenshot 2) */}
+                      <div className="space-y-2.5 pt-2 border-t border-[#E8DEC9]">
+                        <div className="flex items-center justify-between text-xs font-bold text-[#554A3E]">
+                          <span className="flex items-center space-x-1.5">
+                            <MessageSquare className="w-3.5 h-3.5 text-[#7A6E5F]" />
+                            <span>Discussion ({ (selectedScheduleItem.comments || []).length })</span>
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          {(selectedScheduleItem.comments || []).map(c => (
+                            <div key={c.id} className="p-2.5 bg-white/70 rounded-xl border border-[#E5DBCA] text-xs space-y-1">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-1.5">
+                                  <img src={c.avatar} alt={c.author} className="w-4 h-4 rounded-full object-cover" />
+                                  <span className="font-bold text-[#2A211A]">{c.author}</span>
+                                </div>
+                                <span className="text-[10px] text-[#8C7F70]">{c.time}</span>
+                              </div>
+                              <p className="text-[#4E4337] pl-5 leading-relaxed">{c.content}</p>
+                            </div>
+                          ))}
+
+                          {(selectedScheduleItem.comments || []).length === 0 && (
+                            <p className="text-xs text-[#998B7C] italic py-1">No comments posted yet.</p>
+                          )}
+                        </div>
+
+                        {/* Add Comment Input */}
+                        <div className="flex items-center space-x-1.5 pt-1">
+                          <input
+                            type="text"
+                            value={timelineCommentInput}
+                            onChange={(e) => setTimelineCommentInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddScheduleComment(selectedScheduleItem.id);
+                              }
+                            }}
+                            placeholder="Add a comment to this schedule item..."
+                            className="flex-1 px-3 py-1.5 rounded-xl border border-[#D5CABB] bg-white text-xs text-[#2A211A] placeholder-[#9C8F80] focus:outline-hidden focus:ring-1 focus:ring-[#2E2721]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleAddScheduleComment(selectedScheduleItem.id)}
+                            className="px-3 py-1.5 rounded-xl bg-[#2E2721] text-[#FAF6EE] text-xs font-bold hover:bg-[#463D34] transition-colors"
+                          >
+                            Post
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="hidden xl:flex w-80 flex-shrink-0 bg-[#F5EFEB] rounded-2xl border border-dashed border-[#D5CABB] p-6 flex-col items-center justify-center text-center text-xs text-[#887A6A] space-y-2">
+                      <Layers className="w-8 h-8 text-[#A89B8B]" />
+                      <p className="font-bold text-[#3B3127]">No Task Selected</p>
+                      <p>Click on any timeline bar or roadmap task row to inspect checklist, dates, and discussions.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* CALENDAR & AGENDA VIEW MODE (Matches Screenshot 1) */}
+              {timelineViewMode === 'calendar' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* May 2026 Calendar Grid (Vintage Paper Stationery Theme) */}
+                  <div className="bg-[#F5EFEB] rounded-2xl border border-[#DCD1BC] p-5 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#DCD1BC]">
+                      <h2 className="text-sm font-black text-[#2C241E]">May 2026</h2>
+                      <span className="text-xs px-2.5 py-0.5 bg-[#E4DAC7] text-[#52473A] font-bold rounded-md">
+                        Week 19
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-[#867A6B] mb-2">
+                      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-semibold">
+                      {Array.from({ length: 31 }).map((_, i) => {
+                        const day = i + 1;
+                        const isToday = day === 10;
+                        const hasEvent = [5, 6, 7, 8, 9, 10, 11, 14, 18].includes(day);
+                        return (
+                          <div
+                            key={day}
+                            className={`h-9 flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer ${
+                              isToday
+                                ? 'bg-[#2E2721] text-[#FAF6EE] font-black shadow-sm'
+                                : hasEvent
+                                ? 'bg-[#EAE0CF] text-[#2C241E] border border-[#D5CABB]'
+                                : 'text-[#695D50] hover:bg-[#EAE0CF]/50'
+                            }`}
+                          >
+                            <span>{day}</span>
+                            {hasEvent && !isToday && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 -mt-0.5"></span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Scheduled Events List */}
+                  <div className="lg:col-span-2 space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <h2 className="text-sm font-black text-[#2C241E]">Upcoming Deliverables & Events ({schedules.length})</h2>
+                      <span className="text-xs text-[#7A6D5E]">Sorted by date & phase</span>
+                    </div>
+                    <div className="space-y-3">
+                      {schedules.map(event => {
+                        const style = getColorStyles(event.color);
+                        return (
+                          <div
+                            key={event.id}
+                            onClick={() => {
+                              setSelectedScheduleItem(event);
+                              setTimelineViewMode('gantt');
+                            }}
+                            className={`${style.bg} border ${style.border} rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs cursor-pointer hover:shadow-md transition-all`}
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${style.tagBg} ${style.tagText}`}>
+                                  {event.category}
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/60 text-[#54483C]">
+                                  Phase: {event.phase || 'General'}
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/60 text-[#54483C]">
+                                  Priority: {event.priority}
+                                </span>
+                              </div>
+                              <h3 className={`text-sm font-bold ${style.textColor}`}>{event.title}</h3>
+                              <div className="flex items-center space-x-3 text-xs text-[#7A6D5E]">
+                                <span className="flex items-center space-x-1">
+                                  <CalendarIcon className="w-3.5 h-3.5" />
+                                  <span>{event.startDate || event.date} → {event.endDate || event.date}</span>
+                                </span>
+                                <span className="flex items-center space-x-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>{event.time}</span>
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 self-end sm:self-center">
+                              <span className="text-xs px-2.5 py-1 rounded-lg bg-white/70 font-semibold text-[#44382C] border border-black/5 flex items-center space-x-1.5">
+                                <img
+                                  src={event.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
+                                  alt={event.assignee}
+                                  className="w-4 h-4 rounded-full object-cover"
+                                />
+                                <span>{event.assignee}</span>
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -3285,6 +4058,42 @@ export default function App() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-[#5C5042] mb-1">Roadmap Phase</label>
+                <select
+                  value={newSchedulePhase}
+                  onChange={(e) => setNewSchedulePhase(e.target.value)}
+                  className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
+                >
+                  <option value="Discovery & Research">Discovery & Research</option>
+                  <option value="Design & Planning">Design & Planning</option>
+                  <option value="Development">Development</option>
+                  <option value="Review & QA">Review & QA</option>
+                  <option value="Launch">Launch</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#5C5042] mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={newScheduleStartDate}
+                    onChange={(e) => setNewScheduleStartDate(e.target.value)}
+                    className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#5C5042] mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={newScheduleEndDate}
+                    onChange={(e) => setNewScheduleEndDate(e.target.value)}
+                    className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#5C5042] mb-1">Category</label>
@@ -3297,6 +4106,7 @@ export default function App() {
                     <option value="Milestone">Milestone</option>
                     <option value="Review">Review</option>
                     <option value="Deadline">Deadline</option>
+                    <option value="Research">Research</option>
                   </select>
                 </div>
                 <div>
