@@ -1833,9 +1833,71 @@ export default function App() {
             </p>
           </div>
 
-          {/* Auth Card */}
-          <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-[#FAF6EE] py-8 px-6 sm:px-8 shadow-sm border border-[#DCD1BC] rounded-2xl">
+          {/* Auth Dossier Folder Card */}
+          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative">
+            {/* Top Cutout Folder Tab Slips */}
+            <div className="flex items-end justify-between px-2 -mb-px relative z-20">
+              {/* Main Folder Tab (Mode Switcher) */}
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signin')}
+                  className={`px-4 py-2 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-1.5 border-t-2 border-l-2 border-r-2 ${
+                    authMode === 'signin'
+                      ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
+                      : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
+                  }`}
+                >
+                  <Folder className="w-3.5 h-3.5" />
+                  <span>SIGN IN</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#E4DAC7] text-[#554A3D] font-mono">D-01</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signup')}
+                  className={`px-4 py-2 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-1.5 border-t-2 border-l-2 border-r-2 ${
+                    authMode === 'signup'
+                      ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
+                      : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
+                  }`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>NEW ACCOUNT</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#E4DAC7] text-[#554A3D] font-mono">D-02</span>
+                </button>
+              </div>
+
+              {/* Archival Stamp / Clearance Tag on Folder Tab */}
+              <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-t-lg bg-[#E5D9C4] border-t border-l border-r border-[#CFBF9F] text-[9px] font-mono font-bold text-[#70624E] tracking-widest uppercase">
+                <Lock className="w-2.5 h-2.5 text-amber-800" />
+                <span>CONFIDENTIAL</span>
+              </div>
+            </div>
+
+            {/* Folder Main Pocket Body */}
+            <div className="bg-[#FAF6EE] border-2 border-[#D5CABB] rounded-2xl rounded-tl-none py-7 px-6 sm:px-8 shadow-xl relative z-10 overflow-hidden">
+              {/* Folder Internal Paper Watermark & Line Details */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(#D5CABB_1px,transparent_1px)] [background-size:12px_12px] opacity-40 pointer-events-none" />
+              <div className="absolute top-2.5 right-4 pointer-events-none select-none text-right">
+                <span className="text-[8px] font-mono uppercase tracking-widest text-[#A89C8C] block">REF: DOSSIER-APEX-2026</span>
+                <span className="text-[9px] font-bold text-amber-800/80 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 inline-block mt-0.5">
+                  SEC-LEVEL 4
+                </span>
+              </div>
+
+              {/* Folder Pocket Header */}
+              <div className="mb-5 pb-3 border-b border-[#E8DEC9] flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-wider text-[#2C241E]">
+                    {authMode === 'signin' ? 'Archival Member Clearance' : 'Agent Dossier Registration'}
+                  </h3>
+                  <p className="text-[11px] text-[#7C6F60] mt-0.5 font-medium">
+                    {authMode === 'signin' ? 'Verify your credentials to unlock active workspaces.' : 'Enter your credentials to generate a classified workspace.'}
+                  </p>
+                </div>
+              </div>
+
               <form onSubmit={handleAuthSubmit} className="space-y-4">
                 {authMode === 'signup' && (
                   <div>
@@ -1848,7 +1910,7 @@ export default function App() {
                       placeholder="Mason Walker"
                       value={authName}
                       onChange={(e) => setAuthName(e.target.value)}
-                      className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-xl text-[#2C2621] placeholder-[#A4988A] focus:outline-hidden focus:ring-1 focus:ring-[#3F3730] shadow-2xs"
                     />
                   </div>
                 )}
@@ -1867,7 +1929,7 @@ export default function App() {
                       placeholder="you@company.com"
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                      className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-xl text-[#2C2621] placeholder-[#A4988A] focus:outline-hidden focus:ring-1 focus:ring-[#3F3730] shadow-2xs"
                     />
                   </div>
                 </div>
@@ -1893,7 +1955,7 @@ export default function App() {
                       placeholder="Enter your password"
                       value={authPassword}
                       onChange={(e) => setAuthPassword(e.target.value)}
-                      className="w-full pl-9 pr-9 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                      className="w-full pl-9 pr-9 py-2 text-xs bg-white border border-[#D5CABB] rounded-xl text-[#2C2621] placeholder-[#A4988A] focus:outline-hidden focus:ring-1 focus:ring-[#3F3730] shadow-2xs"
                     />
                     <button
                       type="button"
@@ -1908,20 +1970,23 @@ export default function App() {
                 <div>
                   <button
                     type="submit"
-                    className="w-full mt-2 py-2.5 px-4 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-sm"
+                    className="w-full mt-2 py-2.5 px-4 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-sm flex items-center justify-center space-x-1.5"
                   >
-                    {authMode === 'signin' ? 'Sign in' : 'Create account'}
+                    <Folder className="w-3.5 h-3.5" />
+                    <span>{authMode === 'signin' ? 'Sign in to Dossier' : 'Create Archival Workspace'}</span>
                   </button>
                 </div>
               </form>
 
-              {/* Divider */}
+              {/* Divider with vintage stitches */}
               <div className="relative my-5">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#E0D5C3]" />
+                  <div className="w-full border-t border-dashed border-[#D5CABB]" />
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-[#FAF6EE] text-[#8C8072]">or</span>
+                  <span className="px-3 bg-[#FAF6EE] text-[#8C8072] font-semibold uppercase text-[10px] tracking-wider">
+                    or authenticate with
+                  </span>
                 </div>
               </div>
 
@@ -1930,29 +1995,29 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
-                  className="w-full py-2.5 px-4 rounded-lg bg-white border border-[#D5CABB] text-xs font-semibold text-[#2C2621] hover:bg-[#F5EFEB] transition-colors flex items-center justify-center shadow-xs"
+                  className="w-full py-2.5 px-4 rounded-xl bg-white border border-[#D5CABB] text-xs font-semibold text-[#2C2621] hover:bg-[#F5EFEB] transition-colors flex items-center justify-center shadow-2xs"
                 >
                   <GoogleIcon />
                   <span>Continue with Google</span>
                 </button>
               </div>
 
-              {/* Toggle Sign Up / Sign In */}
-              <div className="text-center mt-5">
+              {/* Toggle Sign Up / Sign In footer */}
+              <div className="text-center mt-5 pt-3 border-t border-[#E8DEC9]">
                 <p className="text-xs text-[#7A7064]">
                   {authMode === 'signin' ? 'New to Archival PM? ' : 'Already have an account? '}
                   <button
                     type="button"
                     onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
-                    className="font-bold text-[#3F3730] hover:underline"
+                    className="font-black text-[#2E2721] hover:underline"
                   >
-                    {authMode === 'signin' ? 'Create account' : 'Sign in'}
+                    {authMode === 'signin' ? 'Create new account' : 'Sign in here'}
                   </button>
                 </p>
               </div>
 
-              {/* Replay splash button for convenience */}
-              <div className="text-center mt-3 pt-3 border-t border-[#E8DEC9]">
+              {/* Replay splash button */}
+              <div className="text-center mt-2.5">
                 <button
                   type="button"
                   onClick={() => setCurrentScreen('splash')}
