@@ -39,7 +39,9 @@ import {
   Sparkles,
   FolderOpen,
   Building2,
-  Layers
+  Layers,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -407,6 +409,7 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Modals
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
@@ -2017,12 +2020,8 @@ export default function App() {
           </nav>
         </div>
 
-        {/* Right Controls: Search, WebSockets, Notifications, Profile */}
+        {/* Right Controls: Search, Notifications, Profile */}
         <div className="flex items-center space-x-3 pb-3">
-          <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#E5DCBE]/60 border border-[#D4C8A8] text-xs font-medium text-[#4D4439]">
-            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-            <span>API & WebSockets Connected</span>
-          </div>
 
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
@@ -2122,15 +2121,32 @@ export default function App() {
       </header>
 
       {/* Main Body with Sidebar + Active View */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Left Sidebar (Image 1 Style) */}
-        <aside className="w-60 bg-[#EFE8DC]/80 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none">
+        <aside
+          className={`bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-20 shrink-0 ${
+            isSidebarOpen ? 'w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
+          }`}
+        >
           <div className="space-y-6">
-            <div className="flex items-center space-x-2 px-2 text-[#463D34]">
-              <button className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#463D34] transition-colors">
-                <ArrowLeft className="w-4 h-4" />
+            <div className="flex items-center justify-between px-2 text-[#463D34]">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentScreen('folder_hub')}
+                  className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#463D34] transition-colors"
+                  title="Return to Folder Hub"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-bold tracking-tight text-[#2B241E]">Activities</span>
+              </div>
+              <button
+                onClick={() => setIsSidebarOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#7A7064] hover:text-[#2C241E] transition-colors"
+                title="Hide sidebar"
+              >
+                <PanelLeftClose className="w-4 h-4" />
               </button>
-              <span className="text-sm font-bold tracking-tight text-[#2B241E]">Activities</span>
             </div>
 
             <div>
@@ -2220,7 +2236,18 @@ export default function App() {
         </aside>
 
         {/* Dynamic Main View */}
-        <main className="flex-1 bg-[#FAF6EE] overflow-y-auto p-6 flex flex-col">
+        <main className="flex-1 bg-[#FAF6EE] overflow-y-auto p-6 flex flex-col relative">
+          {/* Floating Show Sidebar Pill when hidden */}
+          {!isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="absolute left-4 top-4 z-30 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-sm flex items-center space-x-1.5 transition-all"
+              title="Show Activities sidebar"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+              <span>Show Activities</span>
+            </button>
+          )}
 
           {/* VIEW 1: KANBAN BOARD */}
           {activeTab === 'board' && (
