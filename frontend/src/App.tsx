@@ -1842,7 +1842,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setAuthMode('signin')}
-                  className={`px-4 py-2 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-1.5 border-t-2 border-l-2 border-r-2 ${
+                  className={`px-5 py-2.5 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-2 border-t-2 border-l-2 border-r-2 whitespace-nowrap ${
                     authMode === 'signin'
                       ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
                       : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
@@ -1850,13 +1850,12 @@ export default function App() {
                 >
                   <Folder className="w-3.5 h-3.5" />
                   <span>SIGN IN</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#E4DAC7] text-[#554A3D] font-mono">D-01</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setAuthMode('signup')}
-                  className={`px-4 py-2 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-1.5 border-t-2 border-l-2 border-r-2 ${
+                  className={`px-5 py-2.5 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-2 border-t-2 border-l-2 border-r-2 whitespace-nowrap ${
                     authMode === 'signup'
                       ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
                       : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
@@ -1864,7 +1863,6 @@ export default function App() {
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>NEW ACCOUNT</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#E4DAC7] text-[#554A3D] font-mono">D-02</span>
                 </button>
               </div>
 
