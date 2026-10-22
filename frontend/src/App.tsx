@@ -1380,6 +1380,35 @@ export default function App() {
     }).catch(() => {});
   };
 
+  // Real-time dynamic Date & Clock
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  useEffect(() => {
+    const clockInterval = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 10000);
+    return () => clearInterval(clockInterval);
+  }, []);
+
+  const getRealTimeDateFormatted = (date: Date = currentDateTime) => {
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const month = date.toLocaleDateString('en-US', { month: 'long' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    // Suffix (1st, 2nd, 3rd, 4th...)
+    const nth = (d: number) => {
+      if (d > 3 && d < 21) return 'th';
+      switch (d % 10) {
+        case 1:  return 'st';
+        case 2:  return 'nd';
+        case 3:  return 'rd';
+        default: return 'th';
+      }
+    };
+
+    return `Today is ${weekday}, ${month} ${day}${nth(day)}, ${year}`;
+  };
+
   // Card Color Switcher - changes color of existing task
   const handleTaskColorChange = (taskId: string, newColor: CardColor) => {
     setTasks(prev => prev.map(t => {
@@ -3486,7 +3515,7 @@ export default function App() {
                   <div>
                     <p className="text-xs text-[#7B7062] font-medium flex items-center space-x-1.5">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>Today is Wednesday, May 10th, 2026</span>
+                      <span>{getRealTimeDateFormatted()}</span>
                     </p>
                     <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-0.5 flex items-center space-x-2">
                       <span>Task Management Board</span>
