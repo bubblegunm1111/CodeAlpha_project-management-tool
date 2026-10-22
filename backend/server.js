@@ -189,8 +189,38 @@ const initializeDB = () => {
       projects TEXT DEFAULT '[]',
       workload INTEGER DEFAULT 50,
       last_active TEXT DEFAULT 'Just now',
+      organization_id INTEGER,
+      status TEXT DEFAULT 'active',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Organization Members table (links registered users to organizations they belong to)
+    db.run(`CREATE TABLE IF NOT EXISTS organization_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      organization_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      role TEXT DEFAULT 'member',
+      joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(organization_id, user_id)
+    )`);
+
+    // Organization Invitations table (ClickUp style email invites with unique token)
+    db.run(`CREATE TABLE IF NOT EXISTS organization_invitations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      organization_id INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      name TEXT,
+      role TEXT DEFAULT 'Developer',
+      projects TEXT DEFAULT '[]',
+      token TEXT UNIQUE NOT NULL,
+      status TEXT DEFAULT 'pending', -- 'pending' | 'accepted' | 'declined'
+      invited_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      accepted_at DATETIME,
+      FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
     )`);
 
     // Alter table migrations in case columns were missing in existing DB
@@ -210,6 +240,8 @@ const initializeDB = () => {
     db.run("ALTER TABLE schedules ADD COLUMN assignee_role TEXT", () => {});
     db.run("ALTER TABLE schedules ADD COLUMN subtasks TEXT DEFAULT '[]'", () => {});
     db.run("ALTER TABLE schedules ADD COLUMN comments TEXT DEFAULT '[]'", () => {});
+    db.run("ALTER TABLE team_members ADD COLUMN organization_id INTEGER", () => {});
+    db.run("ALTER TABLE team_members ADD COLUMN status TEXT DEFAULT 'active'", () => {});
   });
 };
 
@@ -1299,6 +1331,178 @@ app.delete('/api/v1/team-members/:id', authMiddleware, async (req, res) => {
   try {
     await runAsync('DELETE FROM team_members WHERE id = ?', [req.params.id]);
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ INVITATION & EMAIL ONBOARDING ENDPOINTS (ClickUp Style) ============
+
+// 1. Send invite to a team member by work email
+app.post('/api/v1/organizations/:orgId/invites', authMiddleware, async (req, res) => {
+  try {
+    const { email, name, role, projects } = req.body;
+    const orgId = req.params.orgId;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const org = await getAsync('SELECT * FROM organizations WHERE id = ?', [orgId]);
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Generate unique ClickUp-style secure token
+    const token = 'inv_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+
+    // Save invitation record
+    const result = await runAsync(
+      `INSERT INTO organization_invitations (organization_id, email, name, role, projects, token, status, invited_by)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
+      [
+        orgId,
+        email.trim().toLowerCase(),
+        name || email.split('@')[0],
+        role || 'Developer',
+        JSON.stringify(projects || ['Acme Digital Revamp']),
+        token,
+        req.userId
+      ]
+    );
+
+    // Also register or update in team_members as "Pending Invite"
+    const existingMember = await getAsync('SELECT id FROM team_members WHERE email = ?', [email.trim().toLowerCase()]);
+    if (!existingMember) {
+      await runAsync(
+        `INSERT INTO team_members (name, email, role, avatar, projects, workload, last_active, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          name || email.split('@')[0],
+          email.trim().toLowerCase(),
+          role || 'Developer',
+          `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 1000)}?w=80&h=80&fit=crop`,
+          JSON.stringify(projects || ['Acme Digital Revamp']),
+          40,
+          'Invite pending',
+          'pending'
+        ]
+      );
+    }
+
+    const invitation = await getAsync('SELECT * FROM organization_invitations WHERE id = ?', [result.lastID]);
+    invitation.projects = JSON.parse(invitation.projects || '[]');
+    invitation.organization_name = org.name;
+    invitation.invite_url = `http://localhost:5173/?invite=${token}`;
+
+    res.status(201).json(invitation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. Get pending invites for an organization
+app.get('/api/v1/organizations/:orgId/invites', authMiddleware, async (req, res) => {
+  try {
+    const invites = await allAsync(
+      'SELECT * FROM organization_invitations WHERE organization_id = ? ORDER BY created_at DESC',
+      [req.params.orgId]
+    );
+    const formatted = invites.map(i => ({
+      ...i,
+      projects: JSON.parse(i.projects || '[]')
+    }));
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 3. Inspect invitation details by token (public endpoint for invited user opening email link)
+app.get('/api/v1/invites/:token', async (req, res) => {
+  try {
+    const invite = await getAsync(`
+      SELECT i.*, o.name as organization_name, o.description as organization_description
+      FROM organization_invitations i
+      JOIN organizations o ON i.organization_id = o.id
+      WHERE i.token = ?
+    `, [req.params.token]);
+
+    if (!invite) {
+      return res.status(404).json({ error: 'Invitation link is invalid or expired' });
+    }
+
+    invite.projects = JSON.parse(invite.projects || '[]');
+    res.json(invite);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 4. Accept invitation (creates or attaches user account and joins them to the organization workspace)
+app.post('/api/v1/invites/:token/accept', async (req, res) => {
+  try {
+    const { name, password } = req.body;
+    const invite = await getAsync('SELECT * FROM organization_invitations WHERE token = ?', [req.params.token]);
+
+    if (!invite) {
+      return res.status(404).json({ error: 'Invitation not found or expired' });
+    }
+
+    if (invite.status === 'accepted') {
+      return res.status(400).json({ error: 'This invitation has already been accepted' });
+    }
+
+    // Find or create user with the invited email
+    let user = await getAsync('SELECT * FROM users WHERE email = ?', [invite.email.toLowerCase()]);
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+      const userRes = await runAsync(
+        'INSERT INTO users (email, name, password, avatar_url) VALUES (?, ?, ?, ?)',
+        [
+          invite.email.toLowerCase(),
+          name || invite.name || invite.email.split('@')[0],
+          hashedPassword,
+          `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 1000)}?w=80&h=80&fit=crop`
+        ]
+      );
+      user = await getAsync('SELECT id, email, name, avatar_url FROM users WHERE id = ?', [userRes.lastID]);
+    }
+
+    // Add user to organization_members
+    await runAsync(
+      'INSERT OR IGNORE INTO organization_members (organization_id, user_id, role) VALUES (?, ?, ?)',
+      [invite.organization_id, user.id, invite.role || 'member']
+    );
+
+    // Update invitation status
+    await runAsync(
+      `UPDATE organization_invitations 
+       SET status = 'accepted', accepted_at = CURRENT_TIMESTAMP 
+       WHERE id = ?`,
+      [invite.id]
+    );
+
+    // Update team_members directory status to active
+    await runAsync(
+      `UPDATE team_members 
+       SET status = 'active', last_active = 'Just now', name = ?
+       WHERE email = ?`,
+      [user.name, user.email]
+    );
+
+    // Fetch the organization details so the user enters straight into it
+    const org = await getAsync('SELECT * FROM organizations WHERE id = ?', [invite.organization_id]);
+    org.folders = await allAsync('SELECT * FROM folders WHERE organization_id = ? ORDER BY id ASC', [org.id]);
+
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({
+      success: true,
+      message: `Welcome to ${org.name}!`,
+      user: { id: user.id, email: user.email, name: user.name, avatar_url: user.avatar_url },
+      token,
+      organization: org
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

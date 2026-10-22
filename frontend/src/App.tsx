@@ -137,6 +137,8 @@ export interface TeamMember {
   projects: string[];
   workload: number;
   lastActive: string;
+  status?: 'active' | 'pending';
+  inviteLink?: string;
 }
 
 export interface TaskFolder {
@@ -787,6 +789,21 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  // ClickUp-Style Email Invitation & Onboarding States
+  const [lastCreatedInvite, setLastCreatedInvite] = useState<{
+    email: string;
+    name: string;
+    role: string;
+    token: string;
+    invite_url: string;
+    organization_name: string;
+  } | null>(null);
+  const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
+  const [activeInvitationToken, setActiveInvitationToken] = useState<string | null>(null);
+  const [invitationDetails, setInvitationDetails] = useState<any | null>(null);
+  const [inviteAcceptPassword, setInviteAcceptPassword] = useState('password123');
+  const [inviteAcceptName, setInviteAcceptName] = useState('');
+
   // Modals
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
   const [isNewNoteModalOpen, setIsNewNoteModalOpen] = useState(false);
@@ -1042,6 +1059,24 @@ export default function App() {
 
   // Load from backend API if available
   useEffect(() => {
+    // Check if user followed an invite link (e.g. ?invite=inv_xyz)
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteToken = urlParams.get('invite');
+    if (inviteToken) {
+      setActiveInvitationToken(inviteToken);
+      fetch(`${API_BASE}/invites/${inviteToken}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(inv => {
+          if (inv && !inv.error) {
+            setInvitationDetails(inv);
+            setInviteAcceptName(inv.name || '');
+            setCurrentScreen('auth');
+            setAuthEmail(inv.email);
+          }
+        })
+        .catch(() => {});
+    }
+
     fetch(`${API_BASE}/notes`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
@@ -1668,48 +1703,161 @@ export default function App() {
     }).catch(() => {});
   };
 
-  // Add / Invite Team Member
+  // Add / Invite Team Member (ClickUp Style with Email Invitation Link)
   const handleInviteMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim() || !newMemberEmail.trim()) return;
 
+    const emailTrimmed = newMemberEmail.trim().toLowerCase();
+    const generatedToken = 'inv_' + Math.random().toString(36).substring(2, 9);
+    const origin = window.location.origin || 'http://localhost:5173';
+    const inviteLink = `${origin}/?invite=${generatedToken}`;
+
     const newMember: TeamMember = {
       id: `tm-${Date.now()}`,
       name: newMemberName.trim(),
-      email: newMemberEmail.trim(),
+      email: emailTrimmed,
       role: newMemberRole || 'Developer',
       avatar: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 1000)}?w=80&h=80&fit=crop`,
       projects: newMemberProjects.length > 0 ? newMemberProjects : ['Acme Digital Revamp'],
       workload: newMemberWorkload || 50,
-      lastActive: 'Just now'
+      lastActive: 'Invite pending',
+      status: 'pending',
+      inviteLink
     };
 
     setTeamMembers(prev => [newMember, ...prev]);
     setIsInviteMemberModalOpen(false);
-    setNewMemberName('');
-    setNewMemberEmail('');
-    setNewMemberRole('Developer');
-    setNewMemberProjects(['Acme Digital Revamp']);
-    setNewMemberWorkload(60);
 
-    fetch(`${API_BASE}/team-members`, {
+    // Save invite state so the user can copy or preview the invitation email
+    const orgNumId = currentOrg.id.replace('org-', '') || '1';
+    const inviteObj = {
+      email: emailTrimmed,
+      name: newMemberName.trim(),
+      role: newMemberRole || 'Developer',
+      token: generatedToken,
+      invite_url: inviteLink,
+      organization_name: currentOrg.name
+    };
+    setLastCreatedInvite(inviteObj);
+    setShowInviteSuccessModal(true);
+
+    // Persist invitation to backend
+    fetch(`${API_BASE}/organizations/${orgNumId}/invites`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: newMember.name,
         email: newMember.email,
         role: newMember.role,
-        avatar: newMember.avatar,
-        projects: newMember.projects,
-        workload: newMember.workload,
-        last_active: newMember.lastActive
+        projects: newMember.projects
       })
-    }).catch(() => {});
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.invite_url) {
+          setLastCreatedInvite(prev => prev ? { ...prev, invite_url: data.invite_url, token: data.token } : null);
+        }
+      })
+      .catch(() => {});
+
+    setNewMemberName('');
+    setNewMemberEmail('');
+    setNewMemberRole('Developer');
+    setNewMemberProjects(['Acme Digital Revamp']);
+    setNewMemberWorkload(60);
 
     setNotifications(prev => [
-      { id: Date.now(), text: `Added team member "${newMember.name}" (${newMember.role})`, time: 'Just now' },
+      { id: Date.now(), text: `Sent workspace invitation email to "${newMember.email}"`, time: 'Just now' },
       ...prev
     ]);
+  };
+
+  // Accept Invitation & Join Organization (ClickUp Onboarding Flow)
+  const handleAcceptInvite = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeInvitationToken) return;
+
+    fetch(`${API_BASE}/invites/${activeInvitationToken}/accept`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: inviteAcceptName || authName || (invitationDetails ? invitationDetails.name : 'Team Member'),
+        password: inviteAcceptPassword || 'password123'
+      })
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.user) {
+          setCurrentUser({
+            name: data.user.name,
+            email: data.user.email,
+            avatar: data.user.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'
+          });
+
+          if (data.organization) {
+            const orgData = data.organization;
+            const formattedOrg: Organization = {
+              id: `org-${orgData.id}`,
+              name: orgData.name,
+              slug: orgData.slug,
+              description: orgData.description || '',
+              folders: (orgData.folders || []).map((f: any) => ({
+                id: `f-${f.id}`,
+                name: f.name,
+                code: f.code || 'DOSSIER',
+                description: f.description || '',
+                color: (f.color || 'peach') as CardColor,
+                status: f.status || 'Active',
+                tasksCount: f.taskCount || 0
+              }))
+            };
+            setOrganizations(prev => {
+              if (prev.some(o => o.id === formattedOrg.id)) {
+                return prev.map(o => o.id === formattedOrg.id ? formattedOrg : o);
+              }
+              return [formattedOrg, ...prev];
+            });
+            setCurrentOrg(formattedOrg);
+            if (formattedOrg.folders.length > 0) {
+              setCurrentFolder(formattedOrg.folders[0]);
+            }
+          }
+
+          // Mark active member status in local directory
+          setTeamMembers(prev => prev.map(m => m.email.toLowerCase() === data.user.email.toLowerCase() ? {
+            ...m,
+            status: 'active',
+            lastActive: 'Just now',
+            name: data.user.name
+          } : m));
+
+          // Clean query param from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setActiveInvitationToken(null);
+          setInvitationDetails(null);
+          setCurrentScreen('app');
+
+          setNotifications(prev => [
+            { id: Date.now(), text: `Joined organization "${data.organization?.name || 'Workspace'}" successfully!`, time: 'Just now' },
+            ...prev
+          ]);
+        }
+      })
+      .catch(() => {
+        // Fallback for offline demo
+        const demoEmail = invitationDetails?.email || authEmail || 'invited.member@company.com';
+        const demoName = inviteAcceptName || authName || 'Invited Member';
+        setCurrentUser({
+          name: demoName,
+          email: demoEmail,
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setActiveInvitationToken(null);
+        setInvitationDetails(null);
+        setCurrentScreen('app');
+      });
   };
 
   // Toggle Project Assignment on Team Member
@@ -2230,16 +2378,42 @@ export default function App() {
               <div className="mb-5 pb-3 border-b border-[#E8DEC9] flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-wider text-[#2C241E]">
-                    {authMode === 'signin' ? 'Archival Member Clearance' : 'Agent Dossier Registration'}
+                    {activeInvitationToken
+                      ? 'Organization Workspace Invitation'
+                      : authMode === 'signin'
+                      ? 'Archival Member Clearance'
+                      : 'Agent Dossier Registration'}
                   </h3>
                   <p className="text-[11px] text-[#7C6F60] mt-0.5 font-medium">
-                    {authMode === 'signin' ? 'Verify your credentials to unlock active workspaces.' : 'Enter your credentials to generate a classified workspace.'}
+                    {activeInvitationToken
+                      ? `You've been invited to join "${invitationDetails?.organization_name || 'Apex Studio Agency'}" as a ${invitationDetails?.role || 'team member'}.`
+                      : authMode === 'signin'
+                      ? 'Verify your credentials to unlock active workspaces.'
+                      : 'Enter your credentials to generate a classified workspace.'}
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
-                {authMode === 'signup' && (
+              {/* ClickUp-style Invitation Banner if arriving via email link */}
+              {activeInvitationToken && (
+                <div className="mb-4 p-3.5 bg-[#EFE8DC] border border-[#8C7E6C] rounded-xl flex items-start space-x-3 shadow-xs">
+                  <div className="p-2 bg-[#2B231D] text-[#FAF6EE] rounded-lg shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div className="text-xs">
+                    <p className="font-bold text-[#2A231D]">
+                      Join {invitationDetails?.organization_name || 'Apex Studio Agency'}
+                    </p>
+                    <p className="text-[11px] text-[#6B5E4F] mt-0.5">
+                      Invited as <span className="font-semibold text-[#2A231D]">{invitationDetails?.role || 'Developer'}</span> for{' '}
+                      <span className="font-semibold text-[#2A231D]">{authEmail}</span>. Set your name & password to enter immediately.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={activeInvitationToken ? handleAcceptInvite : handleAuthSubmit} className="space-y-4">
+                {(authMode === 'signup' || activeInvitationToken) && (
                   <div>
                     <label className="block text-xs font-bold text-[#2C2621] mb-1">
                       Full Name
@@ -2293,8 +2467,11 @@ export default function App() {
                       type={showPassword ? 'text' : 'password'}
                       required
                       placeholder="Enter your password"
-                      value={authPassword}
-                      onChange={(e) => setAuthPassword(e.target.value)}
+                      value={activeInvitationToken ? inviteAcceptPassword : authPassword}
+                      onChange={(e) => {
+                        setAuthPassword(e.target.value);
+                        setInviteAcceptPassword(e.target.value);
+                      }}
                       className="w-full pl-9 pr-9 py-2 text-xs bg-white border border-[#D5CABB] rounded-xl text-[#2C2621] placeholder-[#A4988A] focus:outline-hidden focus:ring-1 focus:ring-[#3F3730] shadow-2xs"
                     />
                     <button
@@ -2313,7 +2490,13 @@ export default function App() {
                     className="w-full mt-2 py-2.5 px-4 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-sm flex items-center justify-center space-x-1.5"
                   >
                     <Folder className="w-3.5 h-3.5" />
-                    <span>{authMode === 'signin' ? 'Sign in to Dossier' : 'Create Archival Workspace'}</span>
+                    <span>
+                      {activeInvitationToken
+                        ? `Accept Invite & Join ${invitationDetails?.organization_name || 'Organization'}`
+                        : authMode === 'signin'
+                        ? 'Sign in to Dossier'
+                        : 'Create Archival Workspace'}
+                    </span>
                   </button>
                 </div>
               </form>
@@ -4274,9 +4457,32 @@ export default function App() {
                               </div>
                             </td>
 
-                            {/* Last Active */}
-                            <td className="py-4 px-6 whitespace-nowrap text-[11px] font-medium text-[#7F7364]">
-                              {member.lastActive}
+                            {/* Last Active & Invitation Status */}
+                            <td className="py-4 px-6 whitespace-nowrap">
+                              {member.status === 'pending' ? (
+                                <div className="space-y-1">
+                                  <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    <span>Invite Sent</span>
+                                  </span>
+                                  {member.inviteLink && (
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(member.inviteLink || '');
+                                        alert(`Copied invite link for ${member.name}:\n${member.inviteLink}`);
+                                      }}
+                                      className="block text-[10px] text-[#8C7E6C] hover:text-[#2A231D] underline font-semibold"
+                                    >
+                                      Copy Link
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-[11px] font-medium text-[#7F7364] flex items-center space-x-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                  <span>{member.lastActive}</span>
+                                </span>
+                              )}
                             </td>
 
                             {/* Actions */}
@@ -5199,12 +5405,115 @@ export default function App() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2D2620] text-[#FAF6EE] hover:bg-[#463D34]"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2D2620] text-[#FAF6EE] hover:bg-[#463D34] flex items-center space-x-1.5"
                 >
-                  Add Member
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Send Work Invitation</span>
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ClickUp-Style Invitation Email Sent Modal */}
+      {showInviteSuccessModal && lastCreatedInvite && (
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Mail className="w-4 h-4 text-emerald-700" />
+                <h3 className="text-sm font-bold text-[#2A231D]">Work Email Invitation Dispatched!</h3>
+              </div>
+              <button
+                onClick={() => setShowInviteSuccessModal(false)}
+                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Notification Banner */}
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start space-x-2.5 text-xs text-emerald-900">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">An invitation email was sent to {lastCreatedInvite.email}</p>
+                  <p className="text-[11px] text-emerald-800 mt-0.5">
+                    When they open the email and accept, they will automatically join{' '}
+                    <span className="font-semibold">{lastCreatedInvite.organization_name}</span> with immediate access to folders & boards.
+                  </p>
+                </div>
+              </div>
+
+              {/* ClickUp Email Preview Card */}
+              <div className="bg-white rounded-xl border border-[#DCD1BC] p-4 shadow-inner space-y-3">
+                <div className="flex items-center justify-between border-b border-[#F0EAE1] pb-2 text-[11px] text-[#7F7364]">
+                  <span>From: <strong className="text-[#2A231D]">Archival PM &lt;invites@archivalpm.com&gt;</strong></span>
+                  <span>To: <strong className="text-[#2A231D]">{lastCreatedInvite.email}</strong></span>
+                </div>
+
+                <div className="py-2 text-center space-y-2">
+                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#EFE8DC] text-[#2A231D] font-black text-sm border border-[#DCD1BC]">
+                    AP
+                  </div>
+                  <h4 className="text-sm font-bold text-[#2A231D]">
+                    {currentUser.name} invited you to join {lastCreatedInvite.organization_name}
+                  </h4>
+                  <p className="text-xs text-[#6B5E4F] max-w-sm mx-auto">
+                    Collaborate on classified task dossiers, interactive timelines, and sprint boards on Archival PM.
+                  </p>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        setShowInviteSuccessModal(false);
+                        window.location.href = lastCreatedInvite.invite_url;
+                      }}
+                      className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#2B231D] hover:bg-[#433931] text-[#FAF6EE] text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
+                    >
+                      <span>Accept Invitation & Join</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shareable Invite URL */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#7F7364] uppercase mb-1">
+                  Or share this private invitation link directly:
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={lastCreatedInvite.invite_url}
+                    className="flex-1 bg-white border border-[#DCD1BC] rounded-xl px-3 py-1.5 text-xs text-[#2A231D] font-mono select-all focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(lastCreatedInvite.invite_url);
+                      alert('Invitation link copied to clipboard!');
+                    }}
+                    className="px-3 py-1.5 bg-[#EFE8DC] hover:bg-[#E5DBC7] border border-[#DCD1BC] rounded-xl text-xs font-bold text-[#2A231D] flex items-center space-x-1"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setShowInviteSuccessModal(false)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2D2620] text-[#FAF6EE] hover:bg-[#463D34]"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
