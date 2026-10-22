@@ -313,6 +313,7 @@ export default function App() {
   // Screen Management: 'splash' | 'auth' | 'app'
   const [currentScreen, setCurrentScreen] = useState<'splash' | 'auth' | 'app'>('splash');
   const [isFolderOpened, setIsFolderOpened] = useState(false);
+  const [splashStep, setSplashStep] = useState<number>(0);
 
   // Auth form states (matching user screenshot)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -379,21 +380,16 @@ export default function App() {
     return () => window.removeEventListener('click', handleDocumentClick);
   }, []);
 
-  // Splash Screen Animation sequence
+  // Splash Screen Animation sequence: opens folder smoothly without rushing user away
   useEffect(() => {
     if (currentScreen === 'splash') {
       setIsFolderOpened(false);
       const timerOpen = setTimeout(() => {
         setIsFolderOpened(true);
-      }, 400);
-
-      const timerAuth = setTimeout(() => {
-        setCurrentScreen('auth');
-      }, 3600);
+      }, 500);
 
       return () => {
         clearTimeout(timerOpen);
-        clearTimeout(timerAuth);
       };
     }
   }, [currentScreen]);
@@ -922,104 +918,263 @@ export default function App() {
     t.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // 1. Splash Screen: 3D Folder Opening Animation
+  // 1. Splash & Onboarding Screen: Cinematic 3D Folder Dossier & Interactive Walkthrough
   if (currentScreen === 'splash') {
+    const onboardingSteps = [
+      {
+        badge: 'Archival PM Dossier',
+        title: 'Tactile Project Management',
+        description: 'Experience your work through an analog-inspired, vintage file-folder aesthetic engineered for focus, clarity, and rapid execution.',
+        statLabel: 'CONFIDENTIAL DOSSIER',
+        statValue: 'VOL. 2026'
+      },
+      {
+        badge: 'Interactive Cards & Checklist',
+        title: 'Real-time Progress & Color Coding',
+        description: 'Organize priorities with pastel-washed vintage card themes, subtask checklists that advance progress meters, and instant status updates.',
+        statLabel: 'ORGANIZATION',
+        statValue: '6 COLOR CODES'
+      },
+      {
+        badge: 'Unified Dossier Workspace',
+        title: 'Kanban, Timeline & Dossier Notes',
+        description: 'Seamlessly shift between Kanban boards, scheduling timelines, and classified project notes inside cutout folder tabs.',
+        statLabel: 'CONNECTED WORKSPACE',
+        statValue: 'SYNCED & SECURE'
+      }
+    ];
+
     return (
-      <div className="min-h-screen bg-[#F5EFEB] flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
-        {/* Vintage Paper Texture Overlay */}
+      <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-between p-6 sm:p-10 relative overflow-hidden select-none">
+        {/* Subtle Vintage Texture Background */}
         <div className="absolute inset-0 bg-[#F5EFEB] opacity-90 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1.2px,transparent_1.2px)] [background-size:20px_20px] opacity-40 pointer-events-none" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[#E8DECA] opacity-30 blur-3xl pointer-events-none glow-ambient" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[#E5D7BF] opacity-30 blur-3xl pointer-events-none glow-ambient" />
 
-        <div className="relative z-10 flex flex-col items-center max-w-md w-full">
-          {/* Tag & Title */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#E8DECA] text-[#5A5046] border border-[#D5CABB] text-xs font-semibold uppercase tracking-wider mb-3 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-              <span>Vintage Project Workspace</span>
+        {/* Top Bar: Brand + Direct Skip to Sign In */}
+        <header className="relative z-20 flex items-center justify-between max-w-5xl mx-auto w-full">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-md border border-[#2C241E]">
+              <Folder className="w-5 h-5" />
             </div>
-            <h1 className="text-3xl font-extrabold text-[#2C241E] tracking-tight">Archival PM</h1>
-            <p className="text-xs text-[#7A7064] mt-1 font-medium">Opening project dossier files...</p>
-          </div>
-
-          {/* 3D Manila Folder Container */}
-          <div className="folder-perspective w-72 h-52 relative flex items-center justify-center my-6">
-            {/* Back Flap / Folder Body */}
-            <div className="absolute inset-0 bg-[#D8CAAE] rounded-2xl shadow-xl border border-[#C6B798] flex flex-col justify-between p-4 overflow-hidden">
-              {/* Folder tab notch at top-left */}
-              <div className="absolute -top-3 left-4 bg-[#D8CAAE] border-t border-l border-r border-[#C6B798] w-24 h-5 rounded-t-lg" />
-              <div className="flex justify-between items-start pt-1 text-[11px] font-mono text-[#8C7D68] tracking-widest uppercase">
-                <span>CONFIDENTIAL // 2026</span>
-                <span>VOL. IV</span>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-lg tracking-tight text-[#2C241E]">Archival PM</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#E8DECA] text-[#5A5046] border border-[#D5CABB]">
+                  System Onboarding
+                </span>
               </div>
-              <div className="text-center py-4">
-                <Folder className="w-12 h-12 text-[#9A876B] mx-auto opacity-40" />
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-[#7A6D5A] border-t border-[#C6B798]/60 pt-2 font-mono">
-                <span>CLASSIFIED TASKS</span>
-                <span>06 ITEMS</span>
-              </div>
-            </div>
-
-            {/* Cascading Task Cards Floating Out When Folder Opens */}
-            {isFolderOpened && (
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                {/* Floating Card 1: Blue */}
-                <div className="absolute w-56 p-3 rounded-xl bg-[#EBF2FE] border border-[#CADCFE] shadow-lg animate-float-card-1">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D6E6FE] text-[#1E429F]">#mobile app</span>
-                  <p className="text-xs font-bold text-[#1E293B] mt-1 leading-snug">Design system & icons</p>
-                  <div className="flex items-center justify-between mt-2 pt-1 border-t border-[#D6E6FE]/60 text-[10px] text-[#475569]">
-                    <span className="font-semibold text-emerald-600">✓ Done</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-
-                {/* Floating Card 2: Peach (Center hero) */}
-                <div className="absolute w-60 p-3.5 rounded-xl bg-[#FFF3E5] border border-[#FDD9B5] shadow-2xl animate-float-card-2 z-20">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FFE2C2] text-[#9A3412]">#product</span>
-                    <span className="text-[10px] font-mono text-[#9A3412] font-bold">Urgent</span>
-                  </div>
-                  <p className="text-xs font-bold text-[#431407] mt-1.5 leading-snug">Wehiu product task & process</p>
-                  <div className="w-full bg-[#FED7AA] h-1.5 rounded-full mt-2.5 overflow-hidden">
-                    <div className="bg-[#D97706] h-full rounded-full" style={{ width: '90%' }} />
-                  </div>
-                </div>
-
-                {/* Floating Card 3: Mint */}
-                <div className="absolute w-56 p-3 rounded-xl bg-[#E8FAF0] border border-[#C2F0D5] shadow-lg animate-float-card-3 z-10">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D1F7E2] text-[#065F46]">#crm #client</span>
-                  <p className="text-xs font-bold text-[#064E3B] mt-1 leading-snug">Responsive CRM shop page</p>
-                  <div className="flex items-center justify-between mt-2 text-[10px] text-[#047857]">
-                    <span>In Progress</span>
-                    <span>40%</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Front Manila Flap with 3D Opening Effect */}
-            <div
-              className={`absolute inset-0 bg-[#E8DECA] rounded-2xl shadow-md border-2 border-[#D5CABB] folder-flap-open flex flex-col items-center justify-center p-6 ${
-                isFolderOpened ? 'folder-open-active opacity-30 pointer-events-none' : ''
-              }`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-[#3F3730] flex items-center justify-center text-[#FAF6EE] shadow mb-2">
-                <FolderOpen className="w-6 h-6" />
-              </div>
-              <p className="text-sm font-bold text-[#2C241E]">Archival Project Files</p>
-              <p className="text-[11px] text-[#7A7064] mt-0.5">Click or wait to unlock dossier</p>
+              <p className="text-[11px] text-[#7A7064] font-medium hidden sm:block">Tactile Dossier & Project Workflow</p>
             </div>
           </div>
 
-          {/* Quick Action Button */}
           <button
             onClick={() => setCurrentScreen('auth')}
-            className="mt-8 px-6 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-semibold hover:bg-[#2C2621] transition-all shadow-md flex items-center space-x-2"
+            className="px-4 py-2 rounded-xl bg-[#FAF6EE] hover:bg-[#EFE8DC] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] transition-all shadow-xs flex items-center space-x-1.5"
           >
-            <span>Proceed to Sign In</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Skip to Sign In</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
-        </div>
+        </header>
+
+        {/* Main Interactive Stage */}
+        <main className="relative z-20 max-w-5xl mx-auto w-full my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          {/* Left Column: Onboarding Copy, Features, and Navigation */}
+          <div className="lg:col-span-6 space-y-6 text-left">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#E8DECA]/90 text-[#4D4236] border border-[#D5CABB] text-xs font-bold tracking-wide">
+              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <span>{onboardingSteps[splashStep].badge}</span>
+            </div>
+
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#2C241E] tracking-tight leading-tight transition-all duration-300">
+                {onboardingSteps[splashStep].title}
+              </h1>
+              <p className="text-sm sm:text-base text-[#6E6356] leading-relaxed max-w-lg font-normal transition-all duration-300">
+                {onboardingSteps[splashStep].description}
+              </p>
+            </div>
+
+            {/* Micro Dossier Spec Info */}
+            <div className="flex items-center space-x-6 py-3 border-y border-[#DCD1BC]/70">
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-[#8C8072]">Specification</p>
+                <p className="text-xs font-bold text-[#2C241E] mt-0.5">{onboardingSteps[splashStep].statLabel}</p>
+              </div>
+              <div className="h-7 w-px bg-[#DCD1BC]" />
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-[#8C8072]">Status</p>
+                <p className="text-xs font-bold text-[#8A4A1C] mt-0.5">{onboardingSteps[splashStep].statValue}</p>
+              </div>
+              <div className="h-7 w-px bg-[#DCD1BC]" />
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-[#8C8072]">Active Step</p>
+                <p className="text-xs font-bold text-[#2C241E] mt-0.5">{splashStep + 1} of 3</p>
+              </div>
+            </div>
+
+            {/* Stepper Dots & Action Controls */}
+            <div className="flex items-center space-x-4 pt-2">
+              <div className="flex space-x-1.5">
+                {onboardingSteps.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSplashStep(idx)}
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      splashStep === idx ? 'w-8 bg-[#3F3730]' : 'w-2.5 bg-[#D5CABB] hover:bg-[#B8AA94]'
+                    }`}
+                    title={`Go to step ${idx + 1}`}
+                  />
+                ))}
+              </div>
+
+              {splashStep < onboardingSteps.length - 1 ? (
+                <button
+                  onClick={() => setSplashStep(prev => prev + 1)}
+                  className="px-5 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C241E] transition-all shadow-md flex items-center space-x-2"
+                >
+                  <span>Next Feature</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentScreen('auth')}
+                  className="px-6 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C241E] transition-all shadow-md flex items-center space-x-2"
+                >
+                  <span>Enter Archival PM</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+
+              <button
+                onClick={() => setIsFolderOpened(!isFolderOpened)}
+                className="px-3.5 py-2.5 rounded-xl bg-[#FAF6EE] hover:bg-[#EFE8DC] border border-[#D5CABB] text-xs font-semibold text-[#5A5046] transition-colors"
+                title="Toggle 3D folder flap opening"
+              >
+                {isFolderOpened ? 'Close Folder' : 'Open Folder'}
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: 3D Folder Dossier Presentation with Floating Cards */}
+          <div className="lg:col-span-6 flex justify-center items-center py-10">
+            <div className="folder-perspective relative w-80 sm:w-96 h-64 flex items-center justify-center">
+              {/* Folder Shadow Glow */}
+              <div className="absolute -bottom-8 w-72 sm:w-80 h-10 bg-[#2C2621]/15 rounded-full blur-xl pointer-events-none" />
+
+              {/* Folder Back Body */}
+              <div className="absolute inset-0 bg-[#D8CAAE] rounded-2xl border-2 border-[#C5B595] folder-emboss flex flex-col justify-between p-5 overflow-hidden">
+                {/* Folder Top Manila Cutout Notch */}
+                <div className="absolute -top-3.5 left-6 bg-[#D8CAAE] border-t-2 border-l-2 border-r-2 border-[#C5B595] w-28 h-5 rounded-t-lg flex items-center px-2">
+                  <span className="text-[9px] font-mono font-bold text-[#7E6F59] tracking-widest uppercase">DOSSIER #01</span>
+                </div>
+
+                <div className="flex justify-between items-start pt-1 text-[10px] font-mono text-[#7E6F59] tracking-widest uppercase">
+                  <span>CONFIDENTIAL ARCHIVE</span>
+                  <span>SYSTEM v1.0</span>
+                </div>
+
+                <div className="text-center my-auto opacity-35">
+                  <Folder className="w-16 h-16 text-[#8F7E66] mx-auto" />
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-[#6E604D] border-t border-[#C5B595]/80 pt-2 font-mono">
+                  <span>CLASSIFIED TASKS: 06</span>
+                  <span>SECURITY CLEARANCE: LVL 4</span>
+                </div>
+              </div>
+
+              {/* Emerging Task Cards when Folder Opens */}
+              {isFolderOpened && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
+                  {/* Left Floating Card: Blue */}
+                  <div className="absolute w-52 p-3.5 rounded-xl bg-[#EBF2FE] border border-[#CADCFE] paper-shadow anim-card-left pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D6E6FE] text-[#1E429F]">#mobile app</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    </div>
+                    <p className="text-xs font-bold text-[#1E293B] mt-1.5 leading-snug">Design system & icons</p>
+                    <div className="flex items-center justify-between mt-2.5 pt-1.5 border-t border-[#CADCFE]/70 text-[10px] text-[#475569]">
+                      <span className="font-semibold text-emerald-700">✓ Completed</span>
+                      <span className="font-bold">100%</span>
+                    </div>
+                  </div>
+
+                  {/* Center Hero Floating Card: Peach (Priority) */}
+                  <div className="absolute w-64 p-4 rounded-xl bg-[#FFF3E5] border border-[#FDD9B5] paper-shadow anim-card-center z-30 pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FFE2C2] text-[#9A3412]">#product task</span>
+                      <span className="text-[10px] font-mono font-bold text-[#9A3412] bg-[#FDD9B5]/80 px-1.5 py-0.5 rounded">Urgent</span>
+                    </div>
+                    <p className="text-sm font-bold text-[#431407] mt-2 leading-snug">Wehiu product task & process</p>
+                    <div className="mt-3">
+                      <div className="flex justify-between text-[10px] font-semibold text-[#7C2D12] mb-1">
+                        <span>Checklist progress</span>
+                        <span>90%</span>
+                      </div>
+                      <div className="w-full bg-[#FED7AA] h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-[#D97706] h-full rounded-full transition-all duration-500" style={{ width: '90%' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Floating Card: Mint */}
+                  <div className="absolute w-52 p-3.5 rounded-xl bg-[#E8FAF0] border border-[#C2F0D5] paper-shadow anim-card-right pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D1F7E2] text-[#065F46]">#crm #client</span>
+                      <span className="text-[10px] text-emerald-800 font-medium">In Progress</span>
+                    </div>
+                    <p className="text-xs font-bold text-[#064E3B] mt-1.5 leading-snug">Responsive CRM shop page</p>
+                    <div className="flex items-center justify-between mt-2.5 pt-1.5 border-t border-[#C2F0D5]/70 text-[10px] text-[#047857]">
+                      <span>3 of 5 subtasks</span>
+                      <span className="font-bold">40%</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Front Manila Flap with 3D Opening Effect */}
+              <div
+                onClick={() => setIsFolderOpened(!isFolderOpened)}
+                className={`absolute inset-0 bg-[#E8DECA] rounded-2xl border-2 border-[#D5CABB] folder-flap-3d cursor-pointer flex flex-col items-center justify-center p-6 select-none ${
+                  isFolderOpened ? 'folder-flap-open-active opacity-20 pointer-events-none' : 'hover:scale-[1.01]'
+                }`}
+              >
+                <div className="w-14 h-14 rounded-2xl bg-[#3F3730] flex items-center justify-center text-[#FAF6EE] shadow-md mb-3 border border-[#2C241E]">
+                  <FolderOpen className="w-7 h-7" />
+                </div>
+                <p className="text-base font-extrabold text-[#2C241E] tracking-tight">Archival Project Dossier</p>
+                <p className="text-xs text-[#7A7064] mt-1 font-medium">Click to unlock and reveal task cards</p>
+                <div className="mt-4 inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#DCD1BC]/60 text-[#4D4236] text-[11px] font-semibold border border-[#C5B595]">
+                  <span>Touch or click to open</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Bottom Footer: Feature Highlights */}
+        <footer className="relative z-20 max-w-5xl mx-auto w-full pt-4 border-t border-[#DCD1BC]/60 flex flex-col sm:flex-row items-center justify-between text-xs text-[#7A7064] gap-2">
+          <div className="flex items-center space-x-4">
+            <span className="flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+              <span>Interactive Checklist Physics</span>
+            </span>
+            <span>•</span>
+            <span>6 Pastel Card Palettes</span>
+            <span>•</span>
+            <span>Schedule Timeline & Dossier Notes</span>
+          </div>
+          <button
+            onClick={() => setCurrentScreen('auth')}
+            className="text-xs font-bold text-[#3F3730] hover:underline flex items-center space-x-1"
+          >
+            <span>Ready? Sign in or Create Account</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </footer>
       </div>
     );
   }
