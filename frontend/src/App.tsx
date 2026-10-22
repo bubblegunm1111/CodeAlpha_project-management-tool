@@ -300,192 +300,293 @@ const INITIAL_NOTES: NoteItem[] = [
 ];
 
 const INITIAL_SCHEDULE: ScheduleItem[] = [
+  // Discovery & Research
   {
     id: 's-1',
-    title: 'Market research & competitive analysis',
+    title: 'Market research',
     phase: 'Discovery & Research',
     date: '2026-05-05',
     startDate: '2026-05-05',
     endDate: '2026-05-07',
-    time: '09:00 AM',
+    time: '10:00 AM',
     category: 'Research',
-    color: 'blue',
+    color: 'purple',
     priority: 'High',
-    status: 'Done',
-    assignee: 'Sarah Lin',
-    assigneeRole: 'Lead UX Researcher',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
-    description: 'Comprehensive benchmark of rival project management & vintage workspace interfaces, surveying 40+ user pain points.',
+    status: 'In Progress',
+    assignee: 'Alex Carter',
+    assigneeRole: 'Product Manager',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    description: 'Analyze market trends, competitors, and user needs to inform the product strategy.',
     subtasks: [
-      { id: 'sub-1', text: 'Identify top 5 industry competitors', completed: true },
-      { id: 'sub-2', text: 'Conduct 10 in-depth stakeholder interviews', completed: true },
-      { id: 'sub-3', text: 'Compile synthesis report into Dossier', completed: true }
+      { id: 'sub-1', text: 'Review industry reports', completed: true },
+      { id: 'sub-2', text: 'Analyze competitors', completed: true },
+      { id: 'sub-3', text: 'Summarize findings', completed: false }
     ],
     comments: [
-      { id: 'c-1', author: 'Sarah Lin', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop', time: 'May 5, 11:30 AM', content: 'Synthesis complete and attached to Dossier 01.' }
+      { id: 'c-1', author: 'Alex Carter', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop', time: 'May 6, 2026, 10:24 AM', content: 'Initial research shows strong demand in the SMB segment. I\'ll share the full report in the dossier.' },
+      { id: 'c-2', author: 'Taylor Kim', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop', time: 'May 6, 2026, 2:17 PM', content: 'Great! Let\'s focus on the top 3 competitors for the next step.' },
+      { id: 'c-3', author: 'Jordan Lee', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop', time: 'May 6, 2026, 4:03 PM', content: 'Sounds good. I\'ve added the links to the research folder.' }
     ]
   },
   {
     id: 's-2',
-    title: 'User interviews & personas synthesis',
+    title: 'User interviews',
     phase: 'Discovery & Research',
-    date: '2026-05-06',
-    startDate: '2026-05-06',
-    endDate: '2026-05-08',
+    date: '2026-05-05',
+    startDate: '2026-05-05',
+    endDate: '2026-05-06',
     time: '02:00 PM',
-    category: 'Milestone',
+    category: 'Research',
     color: 'purple',
     priority: 'Medium',
-    status: 'In Progress',
-    assignee: 'Alex Rivera',
-    assigneeRole: 'UX Strategist',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
-    description: 'Define target persona archetypes, user journey mapping, and core motivation cards for the archival filing system.',
-    subtasks: [
-      { id: 'sub-4', text: 'Draft 3 primary archetype profiles', completed: true },
-      { id: 'sub-5', text: 'Review customer journey mapping with PM', completed: false }
-    ],
-    comments: [
-      { id: 'c-2', author: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop', time: 'May 6, 04:15 PM', content: 'Second persona drafted. Reviewing friction points on task nesting.' }
-    ]
+    status: 'Scheduled',
+    assignee: 'Alex Carter',
+    assigneeRole: 'Product Manager',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    description: 'Conduct 5 remote user interviews focusing on workspace archival needs.',
+    subtasks: [],
+    comments: []
   },
   {
     id: 's-3',
-    title: 'Information architecture & folder taxonomy',
+    title: 'Competitive analysis',
+    phase: 'Discovery & Research',
+    date: '2026-05-06',
+    startDate: '2026-05-06',
+    endDate: '2026-05-07',
+    time: '04:00 PM',
+    category: 'Research',
+    color: 'purple',
+    priority: 'Medium',
+    status: 'Scheduled',
+    assignee: 'Taylor Kim',
+    assigneeRole: 'UX Researcher',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop',
+    description: 'Matrix comparison of competitive filing and calendar timeline interfaces.',
+    subtasks: [],
+    comments: []
+  },
+
+  // Design & Planning
+  {
+    id: 's-4',
+    title: 'Create wireframes',
     phase: 'Design & Planning',
     date: '2026-05-07',
     startDate: '2026-05-07',
-    endDate: '2026-05-08',
+    endDate: '2026-05-09',
     time: '11:00 AM',
-    category: 'Sprint',
+    category: 'Review',
     color: 'peach',
     priority: 'High',
     status: 'In Progress',
-    assignee: 'Elena Rostova',
-    assigneeRole: 'Lead Information Architect',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
-    description: 'Establish the physical folder hierarchical metaphor: Organizations -> Folders (Dossiers) -> Kanban Boards & Timelines.',
+    assignee: 'Taylor Kim',
+    assigneeRole: 'Lead Product Designer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop',
+    description: 'Wireframe user flows, timeline navigation grids, and task detail inspect drawers.',
     subtasks: [
-      { id: 'sub-6', text: 'Define tab slip navigation schema', completed: true },
-      { id: 'sub-7', text: 'Finalize URL routing structure', completed: true },
-      { id: 'sub-8', text: 'Produce interactive sitemap tree', completed: false }
+      { id: 'sub-w1', text: 'Low-fi layout sketches', completed: true },
+      { id: 'sub-w2', text: 'High-fi desktop & drawer screens', completed: true }
     ],
     comments: []
   },
   {
-    id: 's-4',
-    title: 'Wireframing & design system tokens',
+    id: 's-5',
+    title: 'Design system',
     phase: 'Design & Planning',
     date: '2026-05-08',
     startDate: '2026-05-08',
     endDate: '2026-05-10',
-    time: '10:00 AM',
+    time: '01:30 PM',
     category: 'Sprint',
     color: 'peach',
-    priority: 'High',
-    status: 'In Progress',
-    assignee: 'Mason Walker',
-    assigneeRole: 'Design Lead',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
-    description: 'Develop the vintage physical stationery palette (#FAF6EE, #F5EFEB, #3F3730) and high-fidelity interactive Figma component set.',
-    subtasks: [
-      { id: 'sub-9', text: 'Color swatch & typography tokens', completed: true },
-      { id: 'sub-10', text: 'Gantt timeline bar interactions', completed: false },
-      { id: 'sub-11', text: 'Detail drawer checklist specs', completed: false }
-    ],
-    comments: [
-      { id: 'c-3', author: 'Mason Walker', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop', time: 'May 8, 09:20 AM', content: 'Warm parchment tones verified on Retina and standard monitors.' }
-    ]
-  },
-  {
-    id: 's-5',
-    title: 'Frontend timeline view & Gantt engine',
-    phase: 'Development',
-    date: '2026-05-08',
-    startDate: '2026-05-08',
-    endDate: '2026-05-11',
-    time: '01:00 PM',
-    category: 'Sprint',
-    color: 'blue',
-    priority: 'Urgent',
-    status: 'In Progress',
-    assignee: 'David Kim',
-    assigneeRole: 'Senior Frontend Engineer',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop',
-    description: 'Construct the dynamic date-spanning bar calculations, task connector lines, and drawer sync.',
-    subtasks: [
-      { id: 'sub-12', text: 'Build 7-day Gantt grid view', completed: true },
-      { id: 'sub-13', text: 'Task status checklist toggle API', completed: true },
-      { id: 'sub-14', text: 'Comments thread real-time feed', completed: true }
-    ],
-    comments: [
-      { id: 'c-4', author: 'David Kim', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop', time: 'May 9, 10:15 AM', content: 'Gantt horizontal bar offsets calculated based on May 5–11 window.' }
-    ]
-  },
-  {
-    id: 's-6',
-    title: 'Backend SQLite timeline & subtasks persistence',
-    phase: 'Development',
-    date: '2026-05-09',
-    startDate: '2026-05-09',
-    endDate: '2026-05-10',
-    time: '03:30 PM',
-    category: 'Sprint',
-    color: 'mint',
-    priority: 'High',
-    status: 'Done',
-    assignee: 'Mason Walker',
-    assigneeRole: 'Fullstack Engineer',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
-    description: 'Provide RESTful endpoints for phases, subtasks checklists, comments, and date range filters.',
-    subtasks: [
-      { id: 'sub-15', text: 'Migrate schedules schema in SQLite', completed: true },
-      { id: 'sub-16', text: 'CRUD routes for schedule tasks', completed: true }
-    ],
+    priority: 'Medium',
+    status: 'Scheduled',
+    assignee: 'Taylor Kim',
+    assigneeRole: 'Lead Product Designer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop',
+    description: 'Parchment and charcoal color swatches, button states, and badge styling.',
+    subtasks: [],
     comments: []
   },
   {
-    id: 's-7',
-    title: 'End-to-end integration & QA testing',
-    phase: 'Review & QA',
-    date: '2026-05-10',
-    startDate: '2026-05-10',
-    endDate: '2026-05-11',
-    time: '11:00 AM',
-    category: 'Deadline',
-    color: 'coral',
-    priority: 'High',
+    id: 's-6',
+    title: 'Prototype',
+    phase: 'Design & Planning',
+    date: '2026-05-09',
+    startDate: '2026-05-09',
+    endDate: '2026-05-10',
+    time: '03:00 PM',
+    category: 'Sprint',
+    color: 'peach',
+    priority: 'Medium',
     status: 'Scheduled',
-    assignee: 'Maya Patel',
-    assigneeRole: 'QA Automation Lead',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop',
-    description: 'Cross-browser testing, drawer responsiveness, keyboard navigation, and edge case checklist verification.',
+    assignee: 'Alex Carter',
+    assigneeRole: 'Product Manager',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    description: 'Clickable interactive walkthrough prototype for client signoff.',
+    subtasks: [],
+    comments: []
+  },
+
+  // Development
+  {
+    id: 's-7',
+    title: 'Frontend development',
+    phase: 'Development',
+    date: '2026-05-09',
+    startDate: '2026-05-09',
+    endDate: '2026-05-12',
+    time: '09:00 AM',
+    category: 'Sprint',
+    color: 'mint',
+    priority: 'Urgent',
+    status: 'In Progress',
+    assignee: 'Jordan Lee',
+    assigneeRole: 'Frontend Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+    description: 'Construct the Gantt timeline layout, connected connector lines, and inspect drawer state.',
     subtasks: [
-      { id: 'sub-17', text: 'Verify timeline drag and click triggers', completed: false },
-      { id: 'sub-18', text: 'Check mobile & tablet viewport layouts', completed: false }
+      { id: 'sub-f1', text: '7-day date grid', completed: true },
+      { id: 'sub-f2', text: 'Horizontal timeline bar offsets', completed: true }
     ],
     comments: []
   },
   {
     id: 's-8',
-    title: 'Production release & dossier archive handover',
+    title: 'Backend development',
+    phase: 'Development',
+    date: '2026-05-09',
+    startDate: '2026-05-09',
+    endDate: '2026-05-11',
+    time: '11:00 AM',
+    category: 'Sprint',
+    color: 'mint',
+    priority: 'High',
+    status: 'In Progress',
+    assignee: 'Jordan Lee',
+    assigneeRole: 'Fullstack Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+    description: 'REST API endpoints for tasks, subtasks toggle, comments stream, and sqlite persistence.',
+    subtasks: [],
+    comments: []
+  },
+  {
+    id: 's-9',
+    title: 'API integration',
+    phase: 'Development',
+    date: '2026-05-10',
+    startDate: '2026-05-10',
+    endDate: '2026-05-11',
+    time: '02:00 PM',
+    category: 'Sprint',
+    color: 'mint',
+    priority: 'Medium',
+    status: 'Scheduled',
+    assignee: 'Jordan Lee',
+    assigneeRole: 'Frontend Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+    description: 'Hook frontend Schedule tab directly with live Express endpoints.',
+    subtasks: [],
+    comments: []
+  },
+
+  // Review & QA
+  {
+    id: 's-10',
+    title: 'Testing',
+    phase: 'Review & QA',
+    date: '2026-05-11',
+    startDate: '2026-05-11',
+    endDate: '2026-05-12',
+    time: '10:00 AM',
+    category: 'Review',
+    color: 'blue',
+    priority: 'High',
+    status: 'Scheduled',
+    assignee: 'Taylor Kim',
+    assigneeRole: 'QA Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop',
+    description: 'End-to-end user testing across date spans, checklists, and responsiveness.',
+    subtasks: [],
+    comments: []
+  },
+  {
+    id: 's-11',
+    title: 'Client review',
+    phase: 'Review & QA',
+    date: '2026-05-11',
+    startDate: '2026-05-11',
+    endDate: '2026-05-12',
+    time: '01:00 PM',
+    category: 'Review',
+    color: 'blue',
+    priority: 'High',
+    status: 'Scheduled',
+    assignee: 'Alex Carter',
+    assigneeRole: 'Product Manager',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    description: 'Walkthrough demonstration with stakeholder steering committee.',
+    subtasks: [],
+    comments: []
+  },
+  {
+    id: 's-12',
+    title: 'Fixes',
+    phase: 'Review & QA',
+    date: '2026-05-11',
+    startDate: '2026-05-11',
+    endDate: '2026-05-12',
+    time: '04:00 PM',
+    category: 'Review',
+    color: 'blue',
+    priority: 'Medium',
+    status: 'Scheduled',
+    assignee: 'Jordan Lee',
+    assigneeRole: 'Frontend Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+    description: 'Address any styling refinements or bug fixes identified during testing.',
+    subtasks: [],
+    comments: []
+  },
+
+  // Launch
+  {
+    id: 's-13',
+    title: 'Deploy to production',
     phase: 'Launch',
     date: '2026-05-11',
     startDate: '2026-05-11',
-    endDate: '2026-05-11',
-    time: '05:00 PM',
+    endDate: '2026-05-12',
+    time: '09:00 AM',
     category: 'Milestone',
-    color: 'canary',
+    color: 'purple',
     priority: 'Urgent',
     status: 'Scheduled',
-    assignee: 'Mason Walker',
-    assigneeRole: 'Studio Principal',
-    assigneeAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
-    description: 'Final deployment to production servers and customer workspace documentation archival.',
-    subtasks: [
-      { id: 'sub-19', text: 'Push build to live cloud servers', completed: false },
-      { id: 'sub-20', text: 'Publish release changelog', completed: false }
-    ],
+    assignee: 'Alex Carter',
+    assigneeRole: 'Product Manager',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    description: 'Execute deployment pipeline and archive release documentation.',
+    subtasks: [],
+    comments: []
+  },
+  {
+    id: 's-14',
+    title: 'Monitor & support',
+    phase: 'Launch',
+    date: '2026-05-11',
+    startDate: '2026-05-11',
+    endDate: '2026-05-12',
+    time: '02:00 PM',
+    category: 'Milestone',
+    color: 'purple',
+    priority: 'Medium',
+    status: 'Scheduled',
+    assignee: 'Jordan Lee',
+    assigneeRole: 'Lead Engineer',
+    assigneeAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+    description: 'Live telemetry and telemetry monitor post-launch.',
+    subtasks: [],
     comments: []
   }
 ];
@@ -612,7 +713,7 @@ export default function App() {
   // Interactive Timeline / Gantt State
   const [timelineViewMode, setTimelineViewMode] = useState<'gantt' | 'calendar'>('gantt');
   const [timelineZoom, setTimelineZoom] = useState<'Week' | 'Month' | 'Quarter'>('Week');
-  const [selectedScheduleItem, setSelectedScheduleItem] = useState<ScheduleItem | null>(null);
+  const [selectedScheduleItem, setSelectedScheduleItem] = useState<ScheduleItem | null>(INITIAL_SCHEDULE[0]);
   const [timelineCommentInput, setTimelineCommentInput] = useState('');
   const [timelineNewSubtaskInput, setTimelineNewSubtaskInput] = useState('');
   const [timelineCollapsedPhases, setTimelineCollapsedPhases] = useState<Record<string, boolean>>({});
@@ -3111,23 +3212,36 @@ export default function App() {
                                   </div>
 
                                   {/* Right: Gantt bar spanning calculated days */}
-                                  <div className="flex-1 relative py-2.5 px-1 bg-[linear-gradient(to_right,#EFE8DC_1px,transparent_1px)] bg-[size:14.285%_100%]">
+                                  <div className="flex-1 relative py-2 px-1 bg-[linear-gradient(to_right,#EFE8DC_1px,transparent_1px)] bg-[size:14.285%_100%] min-h-[44px] flex items-center">
                                     <div
                                       style={{
                                         marginLeft: `${leftPercent}%`,
-                                        width: `calc(${widthPercent}% - 8px)`
+                                        width: `calc(${widthPercent}% - 12px)`
                                       }}
-                                      className={`h-7 rounded-xl border flex items-center justify-between px-2.5 text-xs font-bold shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
-                                        isSelected ? 'ring-2 ring-[#2E2721] scale-[1.01]' : 'hover:opacity-90'
+                                      className={`h-9 rounded-2xl border px-3 flex items-center justify-between shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
+                                        isSelected ? 'ring-2 ring-[#2E2721] shadow-md scale-[1.01]' : 'hover:shadow-sm hover:scale-[1.005]'
                                       }`}
                                     >
-                                      <span className="truncate text-[11px] font-extrabold pr-2">
-                                        {item.title}
-                                      </span>
-                                      <div className="flex items-center space-x-1 flex-shrink-0">
-                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${style.tagBg} ${style.tagText}`}>
-                                          {item.category}
+                                      <div className="flex flex-col min-w-0 pr-2">
+                                        <span className="text-[11px] font-black tracking-tight truncate leading-tight">
+                                          {item.category || item.title}
                                         </span>
+                                        <span className="text-[9px] font-bold opacity-75 truncate leading-tight">
+                                          {item.startDate ? `${new Date(item.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date((item.endDate || item.startDate) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : item.date}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center -space-x-1.5 flex-shrink-0">
+                                        <img
+                                          src={item.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
+                                          alt={item.assignee}
+                                          className="w-5 h-5 rounded-full border border-white object-cover shadow-xs"
+                                          title={item.assignee}
+                                        />
+                                        <img
+                                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop"
+                                          alt="Team"
+                                          className="w-5 h-5 rounded-full border border-white object-cover shadow-xs"
+                                        />
                                       </div>
                                     </div>
                                   </div>
