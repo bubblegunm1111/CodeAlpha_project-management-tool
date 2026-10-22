@@ -282,9 +282,14 @@ const initializeDB = () => {
     db.run("ALTER TABLE schedules ADD COLUMN assignee_avatar TEXT", () => {});
     db.run("ALTER TABLE schedules ADD COLUMN assignee_role TEXT", () => {});
     db.run("ALTER TABLE schedules ADD COLUMN subtasks TEXT DEFAULT '[]'", () => {});
-    db.run("ALTER TABLE schedules ADD COLUMN comments TEXT DEFAULT '[]'", () => {});
     db.run("ALTER TABLE team_members ADD COLUMN organization_id INTEGER", () => {});
     db.run("ALTER TABLE team_members ADD COLUMN status TEXT DEFAULT 'active'", () => {});
+    db.run("ALTER TABLE tasks ADD COLUMN time_spent INTEGER DEFAULT 0", () => {}); // in seconds
+    db.run("ALTER TABLE tasks ADD COLUMN estimated_hours REAL DEFAULT 4.0", () => {}); // realistic target hours
+    db.run("ALTER TABLE tasks ADD COLUMN ai_risk_score TEXT DEFAULT 'Low'", () => {}); // 'Low' | 'Medium' | 'High' | 'Overdue'
+    db.run("ALTER TABLE tasks ADD COLUMN ai_risk_reason TEXT", () => {});
+    db.run("ALTER TABLE tasks ADD COLUMN is_timer_running BOOLEAN DEFAULT 0", () => {});
+    db.run("ALTER TABLE tasks ADD COLUMN timer_started_at DATETIME", () => {});
   });
 };
 
@@ -628,6 +633,11 @@ app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
     if (subtasks !== undefined) { updates.push('subtasks = ?'); params.push(JSON.stringify(subtasks)); }
     if (note !== undefined) { updates.push('note = ?'); params.push(note); }
     if (assignees !== undefined) { updates.push('assignees = ?'); params.push(JSON.stringify(assignees)); }
+    if (req.body.time_spent !== undefined) { updates.push('time_spent = ?'); params.push(req.body.time_spent); }
+    if (req.body.estimated_hours !== undefined) { updates.push('estimated_hours = ?'); params.push(req.body.estimated_hours); }
+    if (req.body.ai_risk_score !== undefined) { updates.push('ai_risk_score = ?'); params.push(req.body.ai_risk_score); }
+    if (req.body.ai_risk_reason !== undefined) { updates.push('ai_risk_reason = ?'); params.push(req.body.ai_risk_reason); }
+    if (req.body.is_timer_running !== undefined) { updates.push('is_timer_running = ?'); params.push(req.body.is_timer_running ? 1 : 0); }
 
     updates.push('updated_at = CURRENT_TIMESTAMP');
     params.push(req.params.id);
@@ -639,6 +649,62 @@ app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
     task.subtasks = JSON.parse(task.subtasks || '[]');
     task.assignees = JSON.parse(task.assignees || '[]');
     res.json(task);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Toggle or sync Task Stopwatch Time Tracker
+app.post('/api/v1/tasks/:id/timer', authMiddleware, async (req, res) => {
+  try {
+    const { action, time_spent } = req.body; // action: 'start' | 'stop' | 'sync' | 'reset'
+    const task = await getAsync('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    let newTimeSpent = time_spent !== undefined ? time_spent : (task.time_spent || 0);
+    let isRunning = task.is_timer_running ? 1 : 0;
+    let timerStartedAt = task.timer_started_at;
+
+    if (action === 'start') {
+      isRunning = 1;
+      timerStartedAt = new Date().toISOString();
+    } else if (action === 'stop') {
+      if (isRunning && timerStartedAt) {
+        const elapsedSec = Math.max(0, Math.round((Date.now() - new Date(timerStartedAt).getTime()) / 1000));
+        newTimeSpent += elapsedSec;
+      }
+      isRunning = 0;
+      timerStartedAt = null;
+    } else if (action === 'reset') {
+      newTimeSpent = 0;
+      isRunning = 0;
+      timerStartedAt = null;
+    }
+
+    // Dynamic AI Realistic Deadline & Pacing Risk Calculation
+    const estHours = task.estimated_hours || 4.0;
+    const spentHours = newTimeSpent / 3600;
+    let riskScore = 'Low';
+    let riskReason = 'On track based on sprint velocity';
+
+    if (spentHours > estHours) {
+      riskScore = 'High';
+      riskReason = `Exceeded target estimate by ${(spentHours - estHours).toFixed(1)}h. Pacing indicates scope creep or blockers.`;
+    } else if (spentHours > estHours * 0.75 && (task.progress || 0) < 50) {
+      riskScore = 'Medium';
+      riskReason = `Spent 75% of realistic budget with only ${task.progress}% completion. Risk of deadline slip.`;
+    }
+
+    await runAsync(
+      `UPDATE tasks SET time_spent = ?, is_timer_running = ?, timer_started_at = ?, ai_risk_score = ?, ai_risk_reason = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [newTimeSpent, isRunning, timerStartedAt, riskScore, riskReason, req.params.id]
+    );
+
+    const updatedTask = await getAsync('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+    updatedTask.tags = JSON.parse(updatedTask.tags || '[]');
+    updatedTask.subtasks = JSON.parse(updatedTask.subtasks || '[]');
+    updatedTask.assignees = JSON.parse(updatedTask.assignees || '[]');
+    res.json(updatedTask);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

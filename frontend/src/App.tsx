@@ -44,7 +44,14 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ChevronDown,
-  CheckSquare
+  CheckSquare,
+  Play,
+  Pause,
+  RotateCcw,
+  Timer,
+  AlertTriangle,
+  ShieldAlert,
+  Flame
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -81,6 +88,11 @@ interface Task {
   dueDate?: string;
   priority?: 'Low' | 'Medium' | 'High' | 'Urgent';
   comments: Comment[];
+  timeSpent?: number; // Total seconds spent on this task
+  estimatedHours?: number; // Realistic budget in hours (e.g. 4.0h)
+  isTimerRunning?: boolean;
+  aiRiskScore?: 'Low' | 'Medium' | 'High' | 'Overdue';
+  aiRiskReason?: string;
 }
 
 interface NoteItem {
@@ -176,6 +188,11 @@ const INITIAL_TASKS: Task[] = [
     attachmentsCount: 8,
     dueDate: 'May 18, 2026',
     priority: 'Medium',
+    timeSpent: 3600, // 1h 00m
+    estimatedHours: 3.5,
+    isTimerRunning: false,
+    aiRiskScore: 'Low',
+    aiRiskReason: 'Sprint pace matches team velocity. Expected on time.',
     comments: [
       { id: 'c1', author: 'Sarah L.', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces', time: '2 hours ago', content: 'Collected 14 clean moodboards from Dribbble and Behance.' },
       { id: 'c2', author: 'David K.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces', time: '35 mins ago', content: 'The typography palette in Mise matches client expectations closely.' }
@@ -189,6 +206,11 @@ const INITIAL_TASKS: Task[] = [
     color: 'purple',
     note: 'Note: We have a meeting 2:34 AM',
     progress: 15,
+    timeSpent: 7200, // 2h 00m
+    estimatedHours: 5.0,
+    isTimerRunning: false,
+    aiRiskScore: 'Medium',
+    aiRiskReason: 'Multiple wireframe iterations pending review. Approaching 40% time limit.',
     subtasks: [
       { id: 'st-1', text: 'Create user flow', completed: true },
       { id: 'st-2', text: 'Make wireframe', completed: false },
@@ -215,6 +237,11 @@ const INITIAL_TASKS: Task[] = [
     color: 'peach',
     note: 'Have to finish this before weekend',
     progress: 90,
+    timeSpent: 16200, // 4h 30m
+    estimatedHours: 4.0,
+    isTimerRunning: false,
+    aiRiskScore: 'High',
+    aiRiskReason: 'Over original budget by 30 mins. Finishing touches in progress.',
     hasImagePreview: true,
     assignees: [
       { name: 'David K.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces' },
@@ -235,6 +262,11 @@ const INITIAL_TASKS: Task[] = [
     tags: ['#products', '#client'],
     color: 'mint',
     progress: 40,
+    timeSpent: 5400, // 1h 30m
+    estimatedHours: 6.0,
+    isTimerRunning: false,
+    aiRiskScore: 'Low',
+    aiRiskReason: 'Healthy progress within allotted workload budget.',
     assignees: [
       { name: 'Sarah L.', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces' },
       { name: 'Alex T.', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=80&h=80&fit=crop&crop=faces' }
@@ -252,6 +284,11 @@ const INITIAL_TASKS: Task[] = [
     tags: ['#development', '#client'],
     color: 'coral',
     progress: 60,
+    timeSpent: 9000,
+    estimatedHours: 4.5,
+    isTimerRunning: false,
+    aiRiskScore: 'Medium',
+    aiRiskReason: 'Review gatekeepers have not approved mobile viewport tests.',
     assignees: [
       { name: 'Alex T.', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=80&h=80&fit=crop&crop=faces' },
       { name: 'David K.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces' }
@@ -269,6 +306,11 @@ const INITIAL_TASKS: Task[] = [
     tags: ['#product', '#client'],
     color: 'blue',
     progress: 80,
+    timeSpent: 14400,
+    estimatedHours: 8.0,
+    isTimerRunning: false,
+    aiRiskScore: 'Low',
+    aiRiskReason: 'Final QA validation underway.',
     assignees: [
       { name: 'Sarah L.', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces' }
     ],
@@ -1171,6 +1213,11 @@ export default function App() {
                   attachmentsCount: 0,
                   dueDate: t.due_date || 'May 30, 2026',
                   priority: (t.priority as any) || 'Medium',
+                  timeSpent: t.time_spent || 0,
+                  estimatedHours: t.estimated_hours || 4.0,
+                  isTimerRunning: !!t.is_timer_running,
+                  aiRiskScore: (t.ai_risk_score as any) || 'Low',
+                  aiRiskReason: t.ai_risk_reason || 'Sprint pace on track',
                   comments: Array.isArray(t.comments) ? t.comments : []
                 });
               });
@@ -1186,6 +1233,151 @@ export default function App() {
       })
       .catch(() => {});
   }, []);
+
+  // Live Stopwatch Ticker for Running Timers (1s interval)
+  useEffect(() => {
+    const timerInterval = setInterval(() => {
+      setTasks(prev => {
+        let hasRunning = false;
+        const updated = prev.map(t => {
+          if (t.isTimerRunning) {
+            hasRunning = true;
+            const newTime = (t.timeSpent || 0) + 1;
+            const estHours = t.estimatedHours || 4.0;
+            const spentHours = newTime / 3600;
+            let risk = t.aiRiskScore;
+            let reason = t.aiRiskReason;
+
+            if (spentHours > estHours) {
+              risk = 'High';
+              reason = `Over realistic estimate by ${(spentHours - estHours).toFixed(1)}h. Pace needs attention.`;
+            } else if (spentHours > estHours * 0.75 && t.progress < 50) {
+              risk = 'Medium';
+              reason = `Used 75% of budget with ${t.progress}% completion. Risk of deadline slip.`;
+            }
+
+            return {
+              ...t,
+              timeSpent: newTime,
+              aiRiskScore: risk,
+              aiRiskReason: reason
+            };
+          }
+          return t;
+        });
+
+        if (hasRunning && selectedTask && selectedTask.isTimerRunning) {
+          const freshSelected = updated.find(u => u.id === selectedTask.id);
+          if (freshSelected) {
+            setSelectedTask(freshSelected);
+          }
+        }
+
+        return updated;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [selectedTask]);
+
+  // Format seconds to HH:MM:SS or MM:SS
+  const formatTimeSpent = (totalSeconds: number = 0) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    if (hours > 0) {
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+    return `${pad(minutes)}:${pad(seconds)}`;
+  };
+
+  // Toggle Stopwatch Timer on a Task
+  const handleToggleTimer = (taskId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    let targetAction: 'start' | 'stop' = 'start';
+    let updatedTaskObj: Task | null = null;
+
+    setTasks(prev => prev.map(t => {
+      if (t.id === taskId) {
+        const nextRunning = !t.isTimerRunning;
+        targetAction = nextRunning ? 'start' : 'stop';
+        updatedTaskObj = { ...t, isTimerRunning: nextRunning };
+        return updatedTaskObj;
+      }
+      return t;
+    }));
+
+    if (selectedTask && selectedTask.id === taskId && updatedTaskObj) {
+      setSelectedTask(updatedTaskObj);
+    }
+
+    const numId = taskId.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}/timer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: targetAction })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      {
+        id: Date.now(),
+        text: `${targetAction === 'start' ? '⏱️ Stopwatch Started' : '⏸️ Stopwatch Paused'} on "${(updatedTaskObj as any)?.title?.slice(0, 22) || 'task'}..."`,
+        time: 'Just now'
+      },
+      ...prev
+    ]);
+  };
+
+  // Reset Stopwatch Timer
+  const handleResetTimer = (taskId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
+    let updatedTaskObj: Task | null = null;
+    setTasks(prev => prev.map(t => {
+      if (t.id === taskId) {
+        updatedTaskObj = { ...t, timeSpent: 0, isTimerRunning: false, aiRiskScore: 'Low', aiRiskReason: 'Timer reset. On track.' };
+        return updatedTaskObj;
+      }
+      return t;
+    }));
+
+    if (selectedTask && selectedTask.id === taskId && updatedTaskObj) {
+      setSelectedTask(updatedTaskObj);
+    }
+
+    const numId = taskId.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}/timer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset' })
+    }).catch(() => {});
+  };
+
+  // Update Estimated Hours (Realistic Deadline Budget)
+  const handleSetEstimatedHours = (taskId: string, hours: number) => {
+    const val = Math.max(0.5, Math.min(100, hours));
+    let updatedTaskObj: Task | null = null;
+    setTasks(prev => prev.map(t => {
+      if (t.id === taskId) {
+        updatedTaskObj = { ...t, estimatedHours: val };
+        return updatedTaskObj;
+      }
+      return t;
+    }));
+
+    if (selectedTask && selectedTask.id === taskId && updatedTaskObj) {
+      setSelectedTask(updatedTaskObj);
+    }
+
+    const numId = taskId.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estimated_hours: val })
+    }).catch(() => {});
+  };
 
   // Card Color Switcher - changes color of existing task
   const handleTaskColorChange = (taskId: string, newColor: CardColor) => {
@@ -3557,6 +3749,47 @@ export default function App() {
                                 </div>
                               </div>
 
+                              {/* AI Realistic Deadline & Stopwatch Time Tracker Pill */}
+                              <div className="mb-2.5 p-2 bg-white/70 rounded-xl border border-black/5 flex items-center justify-between text-xs shadow-2xs">
+                                <div className="flex items-center space-x-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleToggleTimer(task.id, e)}
+                                    className={`p-1 rounded-md transition-all flex items-center space-x-1 font-bold ${
+                                      task.isTimerRunning
+                                        ? 'bg-amber-600 text-white animate-pulse'
+                                        : 'bg-[#EAE0D0] text-[#3F362C] hover:bg-[#DCD0BE]'
+                                    }`}
+                                    title={task.isTimerRunning ? 'Pause tracking' : 'Start stopwatch'}
+                                  >
+                                    {task.isTimerRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 fill-current" />}
+                                    <span className="text-[10px] font-mono">{formatTimeSpent(task.timeSpent || 0)}</span>
+                                  </button>
+                                  <span className="text-[10px] text-[#8C7E6C] font-semibold">
+                                    / {task.estimatedHours || 4}h est.
+                                  </span>
+                                </div>
+
+                                {/* AI Risk Badge */}
+                                {task.aiRiskScore && (
+                                  <span
+                                    title={task.aiRiskReason || `Pacing risk: ${task.aiRiskScore}`}
+                                    className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md flex items-center space-x-1 ${
+                                      task.aiRiskScore === 'High'
+                                        ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                        : task.aiRiskScore === 'Medium'
+                                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                        : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                    }`}
+                                  >
+                                    {task.aiRiskScore === 'High' && <Flame className="w-2.5 h-2.5" />}
+                                    {task.aiRiskScore === 'Medium' && <AlertTriangle className="w-2.5 h-2.5" />}
+                                    {task.aiRiskScore === 'Low' && <ShieldAlert className="w-2.5 h-2.5" />}
+                                    <span>AI: {task.aiRiskScore}</span>
+                                  </span>
+                                )}
+                              </div>
+
                               <div className="flex items-center justify-between pt-2 border-t border-black/5 text-xs text-[#7B6E5F]">
                                 <div className="flex items-center -space-x-1.5 overflow-hidden">
                                   {task.assignees && task.assignees.length > 0 ? (
@@ -4450,18 +4683,31 @@ export default function App() {
                               </div>
                             </td>
 
-                            {/* Workload Progress Bar */}
+                            {/* Workload Progress Bar & AI Capacity Assumption */}
                             <td className="py-4 px-6 whitespace-nowrap">
-                              <div className="w-32">
-                                <div className="flex items-center justify-between text-[11px] mb-1 font-bold text-[#4B3E32]">
+                              <div className="w-36 space-y-1">
+                                <div className="flex items-center justify-between text-[11px] font-bold text-[#4B3E32]">
                                   <span>{member.workload}%</span>
+                                  {member.workload >= 75 ? (
+                                    <span className="text-[9px] font-black uppercase text-rose-700 bg-rose-100 px-1.5 py-0.2 rounded border border-rose-200">
+                                      High Load
+                                    </span>
+                                  ) : member.workload <= 50 ? (
+                                    <span className="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200">
+                                      Available
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] font-black uppercase text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200">
+                                      Balanced
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="w-full bg-[#E5DBC7] h-2 rounded-full overflow-hidden">
                                   <div
                                     className={`h-full rounded-full transition-all duration-300 ${getWorkloadColor(
                                       member.workload
                                     )}`}
-                                    style={{ width: `${member.workload}%` }}
+                                    style={{ width: `${Math.min(100, member.workload)}%` }}
                                   />
                                 </div>
                               </div>
@@ -4609,6 +4855,112 @@ export default function App() {
                 <h2 className="text-xl font-bold text-[#2C241E] leading-snug">
                   {selectedTask.title}
                 </h2>
+              </div>
+
+              {/* LIVE STOPWATCH TIME TRACKER & REALISTIC DEADLINE (P2 User Request!) */}
+              <div className="bg-[#FAF6EE] p-5 rounded-2xl border-2 border-[#DCD1BC] shadow-inner space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8DEC9]">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-2 rounded-xl bg-[#2B231D] text-[#FAF6EE]">
+                      <Timer className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-[#2B231D]">Stopwatch Time Tracker</h4>
+                      <p className="text-[11px] text-[#786D60]">Track real-time effort dedicated to this task dossier</p>
+                    </div>
+                  </div>
+
+                  {/* AI Risk Score Pill */}
+                  <div className="flex items-center space-x-1.5 self-start sm:self-auto">
+                    <span className="text-[11px] font-bold text-[#7A6D5E]">Pacing Radar:</span>
+                    <span
+                      className={`text-xs font-black uppercase px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 ${
+                        selectedTask.aiRiskScore === 'High'
+                          ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                          : selectedTask.aiRiskScore === 'Medium'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      }`}
+                    >
+                      {selectedTask.aiRiskScore === 'High' && <Flame className="w-3.5 h-3.5" />}
+                      {selectedTask.aiRiskScore === 'Medium' && <AlertTriangle className="w-3.5 h-3.5" />}
+                      {selectedTask.aiRiskScore === 'Low' && <ShieldAlert className="w-3.5 h-3.5" />}
+                      <span>{selectedTask.aiRiskScore || 'Low'} Risk</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Big Stopwatch Display & Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 rounded-xl border border-[#D5CABB] shadow-2xs gap-4">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#8A7D6F]">Time Spent on Task</span>
+                    <div className="text-3xl font-black font-mono text-[#2B231D] tracking-tight flex items-baseline space-x-1">
+                      <span>{formatTimeSpent(selectedTask.timeSpent || 0)}</span>
+                      <span className="text-xs font-sans font-bold text-[#8C7E6C]">
+                        / {selectedTask.estimatedHours || 4}h target
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleTimer(selectedTask.id)}
+                      className={`px-4 py-2.5 rounded-xl font-bold text-xs shadow flex items-center space-x-2 transition-all ${
+                        selectedTask.isTimerRunning
+                          ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
+                          : 'bg-[#2B231D] hover:bg-[#43382F] text-[#FAF6EE]'
+                      }`}
+                    >
+                      {selectedTask.isTimerRunning ? (
+                        <>
+                          <Pause className="w-4 h-4" />
+                          <span>Pause Timer</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 fill-current" />
+                          <span>Start Stopwatch</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleResetTimer(selectedTask.id)}
+                      className="p-2.5 rounded-xl border border-[#DCD1BC] hover:bg-[#EFE8DC] text-[#7A6D5E] transition-colors"
+                      title="Reset stopwatch to 0"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* AI Realistic Assumption Insights & Target Estimator */}
+                <div className="p-3 bg-[#EFE8DC] rounded-xl border border-[#DCD1BC] text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#3B3228] flex items-center space-x-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#B26B00]" />
+                      <span>AI Realistic Capacity Assumption</span>
+                    </span>
+                    <div className="flex items-center space-x-1.5">
+                      <span className="text-[11px] text-[#7F7263]">Target Hours:</span>
+                      <input
+                        type="number"
+                        min="0.5"
+                        max="80"
+                        step="0.5"
+                        value={selectedTask.estimatedHours || 4}
+                        onChange={(e) => handleSetEstimatedHours(selectedTask.id, parseFloat(e.target.value) || 1)}
+                        className="w-14 px-1.5 py-0.5 text-center bg-white border border-[#DCD1BC] rounded-lg font-bold text-[#2A231D] text-xs"
+                      />
+                      <span className="text-[11px] font-bold text-[#6B5E4F]">hrs</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#635749] leading-relaxed">
+                    {selectedTask.aiRiskReason || 'AI analysis: Sprint pacing is within expected productivity bounds.'}
+                  </p>
+                </div>
               </div>
 
               {/* CARD COLOR CHANGER SWATCHES (Core User Requirement!) */}
