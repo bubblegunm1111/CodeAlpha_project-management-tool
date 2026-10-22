@@ -23,6 +23,7 @@ import {
   Send,
   Folder,
   ChevronRight,
+  ChevronLeft,
   Pin,
   CalendarCheck,
   Palette,
@@ -125,6 +126,17 @@ interface ScheduleItem {
   assigneeAvatar?: string;
   subtasks?: ScheduleSubtask[];
   comments?: ScheduleComment[];
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar: string;
+  projects: string[];
+  workload: number;
+  lastActive: string;
 }
 
 export interface TaskFolder {
@@ -591,6 +603,89 @@ const INITIAL_SCHEDULE: ScheduleItem[] = [
   }
 ];
 
+const INITIAL_TEAM: TeamMember[] = [
+  {
+    id: 'tm-1',
+    name: 'Emma Carter',
+    email: 'emma@archivalpm.com',
+    role: 'Product Owner',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    projects: ['Acme Digital Revamp', 'CRM Platform'],
+    workload: 80,
+    lastActive: '2h ago'
+  },
+  {
+    id: 'tm-2',
+    name: 'Liam Johnson',
+    email: 'liam@archivalpm.com',
+    role: 'Developer',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+    projects: ['Web Platform', 'Mobile App'],
+    workload: 60,
+    lastActive: '4h ago'
+  },
+  {
+    id: 'tm-3',
+    name: 'Olivia Martinez',
+    email: 'olivia@archivalpm.com',
+    role: 'Designer',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop',
+    projects: ['Acme Digital Revamp', 'Brand Refresh'],
+    workload: 45,
+    lastActive: '1h ago'
+  },
+  {
+    id: 'tm-4',
+    name: 'Noah Wilson',
+    email: 'noah@archivalpm.com',
+    role: 'Developer',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop',
+    projects: ['Web Platform', 'API Integration'],
+    workload: 70,
+    lastActive: '3h ago'
+  },
+  {
+    id: 'tm-5',
+    name: 'Sophia Lee',
+    email: 'sophia@archivalpm.com',
+    role: 'QA Engineer',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
+    projects: ['CRM Platform', 'Mobile App'],
+    workload: 50,
+    lastActive: '5h ago'
+  },
+  {
+    id: 'tm-6',
+    name: 'Daniel Kim',
+    email: 'daniel@archivalpm.com',
+    role: 'Backend Engineer',
+    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=80&h=80&fit=crop',
+    projects: ['API Integration', 'Web Platform'],
+    workload: 75,
+    lastActive: '2h ago'
+  },
+  {
+    id: 'tm-7',
+    name: 'Ava Thompson',
+    email: 'ava@archivalpm.com',
+    role: 'Project Manager',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop',
+    projects: ['Acme Digital Revamp', 'Brand Refresh'],
+    workload: 55,
+    lastActive: '6h ago'
+  },
+  {
+    id: 'tm-8',
+    name: 'Ethan Davis',
+    email: 'ethan@archivalpm.com',
+    role: 'Frontend Engineer',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop',
+    projects: ['Mobile App', 'CRM Platform'],
+    workload: 65,
+    lastActive: '1h ago'
+  }
+];
+
 const GoogleIcon = () => (
   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -675,7 +770,19 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
   const [schedules, setSchedules] = useState<ScheduleItem[]>(INITIAL_SCHEDULE);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(INITIAL_TEAM);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Team Management Filters & Modal State
+  const [teamRoleFilter, setTeamRoleFilter] = useState<string>('All Roles');
+  const [teamProjectFilter, setTeamProjectFilter] = useState<string>('All Projects');
+  const [teamSearchQuery, setTeamSearchQuery] = useState<string>('');
+  const [isInviteMemberModalOpen, setIsInviteMemberModalOpen] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState('Developer');
+  const [newMemberProjects, setNewMemberProjects] = useState<string[]>(['Acme Digital Revamp']);
+  const [newMemberWorkload, setNewMemberWorkload] = useState<number>(60);
   const [newCommentText, setNewCommentText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -975,6 +1082,25 @@ export default function App() {
             comments: Array.isArray(d.comments) ? d.comments : []
           }));
           setSchedules(apiSchedules);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/team-members`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          const apiTeam: TeamMember[] = data.map((d: any) => ({
+            id: `tm-${d.id}`,
+            name: d.name,
+            email: d.email,
+            role: d.role || 'Developer',
+            avatar: d.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+            projects: Array.isArray(d.projects) ? d.projects : ['Acme Digital Revamp'],
+            workload: d.workload || 50,
+            lastActive: d.last_active || 'Just now'
+          }));
+          setTeamMembers(apiTeam);
         }
       })
       .catch(() => {});
@@ -1457,6 +1583,139 @@ export default function App() {
         avatar: newComment.avatar
       })
     }).catch(() => {});
+  };
+
+  // Add / Invite Team Member
+  const handleInviteMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemberName.trim() || !newMemberEmail.trim()) return;
+
+    const newMember: TeamMember = {
+      id: `tm-${Date.now()}`,
+      name: newMemberName.trim(),
+      email: newMemberEmail.trim(),
+      role: newMemberRole || 'Developer',
+      avatar: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 1000)}?w=80&h=80&fit=crop`,
+      projects: newMemberProjects.length > 0 ? newMemberProjects : ['Acme Digital Revamp'],
+      workload: newMemberWorkload || 50,
+      lastActive: 'Just now'
+    };
+
+    setTeamMembers(prev => [newMember, ...prev]);
+    setIsInviteMemberModalOpen(false);
+    setNewMemberName('');
+    setNewMemberEmail('');
+    setNewMemberRole('Developer');
+    setNewMemberProjects(['Acme Digital Revamp']);
+    setNewMemberWorkload(60);
+
+    fetch(`${API_BASE}/team-members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: newMember.name,
+        email: newMember.email,
+        role: newMember.role,
+        avatar: newMember.avatar,
+        projects: newMember.projects,
+        workload: newMember.workload,
+        last_active: newMember.lastActive
+      })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Added team member "${newMember.name}" (${newMember.role})`, time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  // Toggle Project Assignment on Team Member
+  const handleToggleProjectAssignment = (memberId: string, projectName: string) => {
+    let updatedMember: TeamMember | null = null;
+    setTeamMembers(prev => prev.map(m => {
+      if (m.id === memberId) {
+        const hasProj = m.projects.includes(projectName);
+        const newProjects = hasProj
+          ? (m.projects.length > 1 ? m.projects.filter(p => p !== projectName) : m.projects)
+          : [...m.projects, projectName];
+        updatedMember = { ...m, projects: newProjects };
+        return updatedMember;
+      }
+      return m;
+    }));
+
+    const numId = memberId.replace('tm-', '');
+    if (updatedMember) {
+      const mem = updatedMember as TeamMember;
+      fetch(`${API_BASE}/team-members/${numId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projects: mem.projects })
+      }).catch(() => {});
+    }
+  };
+
+  // Delete / Remove Team Member
+  const handleRemoveMember = (memberId: string) => {
+    setTeamMembers(prev => prev.filter(m => m.id !== memberId));
+    const numId = memberId.replace('tm-', '');
+    fetch(`${API_BASE}/team-members/${numId}`, {
+      method: 'DELETE'
+    }).catch(() => {});
+    setNotifications(prev => [
+      { id: Date.now(), text: 'Team member removed from directory', time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  // Role Badge Styling Helper
+  const getRoleBadgeStyle = (role: string) => {
+    switch (role) {
+      case 'Product Owner':
+        return 'bg-[#EDE9FE] text-[#6D28D9] border-[#DDD6FE]';
+      case 'Project Manager':
+        return 'bg-[#EDE9FE] text-[#7C3AED] border-[#DDD6FE]';
+      case 'Developer':
+        return 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]';
+      case 'Frontend Engineer':
+        return 'bg-[#DBEAFE] text-[#2563EB] border-[#BFDBFE]';
+      case 'Backend Engineer':
+        return 'bg-[#DBEAFE] text-[#1E40AF] border-[#BFDBFE]';
+      case 'Designer':
+        return 'bg-[#FFEDD5] text-[#C2410C] border-[#FED7AA]';
+      case 'QA Engineer':
+        return 'bg-[#D1FAE5] text-[#047857] border-[#A7F3D0]';
+      default:
+        return 'bg-[#F3F4F6] text-[#374151] border-[#E5E7EB]';
+    }
+  };
+
+  // Project Tag Styling Helper
+  const getProjectTagStyle = (proj: string) => {
+    switch (proj) {
+      case 'Acme Digital Revamp':
+        return 'bg-[#F3E8FF] text-[#7E22CE] border-[#E9D5FF]';
+      case 'CRM Platform':
+        return 'bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0]';
+      case 'Web Platform':
+        return 'bg-[#DBEAFE] text-[#1E40AF] border-[#BFDBFE]';
+      case 'Mobile App':
+        return 'bg-[#FCE7F3] text-[#BE185D] border-[#FBCFE8]';
+      case 'Brand Refresh':
+        return 'bg-[#FFEDD5] text-[#9A3412] border-[#FED7AA]';
+      case 'API Integration':
+        return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
+      default:
+        return 'bg-[#F5EFEB] text-[#4F4438] border-[#DCD1BC]';
+    }
+  };
+
+  // Workload Bar Color Helper
+  const getWorkloadColor = (percent: number) => {
+    if (percent >= 75) return 'bg-[#8B5CF6]';
+    if (percent >= 60) return 'bg-[#3B82F6]';
+    if (percent >= 50) return 'bg-[#10B981]';
+    return 'bg-[#F97316]';
   };
 
   // Color Styles Mapping (matching vintage pastel paper aesthetics)
@@ -3695,12 +3954,279 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW 4: ACTIVITY LOGS & REPORTS */}
-          {(activeTab === 'reports' || activeTab === 'team') && (
+          {/* VIEW 4: TEAM MEMBERS & PERMISSIONS */}
+          {activeTab === 'team' && (
+            <div className="space-y-6">
+              {/* Header & Controls matching user mockup */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+                <div>
+                  <div className="flex items-center space-x-3">
+                    <h1 className="text-2xl font-black text-[#2A231D] tracking-tight">Team members</h1>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EFE8DC] text-[#6B5E4F] border border-[#DCD1BC]">
+                      {teamMembers.length}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#7F7364] mt-1">
+                    Manage your team, roles, and project assignments. Keep everyone aligned and productive.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-[#8C7E6C] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search team members..."
+                      value={teamSearchQuery}
+                      onChange={(e) => setTeamSearchQuery(e.target.value)}
+                      className="pl-9 pr-4 py-2 bg-white/90 border border-[#DCD1BC] rounded-xl text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C] focus:bg-white w-48 md:w-64 shadow-xs transition-all"
+                    />
+                  </div>
+
+                  {/* Invite Member CTA */}
+                  <button
+                    onClick={() => setIsInviteMemberModalOpen(true)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-colors shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Invite Member</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters Row */}
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <select
+                    value={teamRoleFilter}
+                    onChange={(e) => setTeamRoleFilter(e.target.value)}
+                    className="appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
+                  >
+                    <option value="All Roles">All Roles</option>
+                    <option value="Product Owner">Product Owner</option>
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="Developer">Developer</option>
+                    <option value="Frontend Engineer">Frontend Engineer</option>
+                    <option value="Backend Engineer">Backend Engineer</option>
+                    <option value="Designer">Designer</option>
+                    <option value="QA Engineer">QA Engineer</option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#8C7E6C] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                <div className="relative">
+                  <select
+                    value={teamProjectFilter}
+                    onChange={(e) => setTeamProjectFilter(e.target.value)}
+                    className="appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
+                  >
+                    <option value="All Projects">All Projects</option>
+                    <option value="Acme Digital Revamp">Acme Digital Revamp</option>
+                    <option value="CRM Platform">CRM Platform</option>
+                    <option value="Web Platform">Web Platform</option>
+                    <option value="Mobile App">Mobile App</option>
+                    <option value="Brand Refresh">Brand Refresh</option>
+                    <option value="API Integration">API Integration</option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#8C7E6C] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                {(teamRoleFilter !== 'All Roles' || teamProjectFilter !== 'All Projects' || teamSearchQuery) && (
+                  <button
+                    onClick={() => {
+                      setTeamRoleFilter('All Roles');
+                      setTeamProjectFilter('All Projects');
+                      setTeamSearchQuery('');
+                    }}
+                    className="text-xs font-bold text-[#8C7E6C] hover:text-[#2A231D] underline px-2 py-1"
+                  >
+                    Reset filters
+                  </button>
+                )}
+              </div>
+
+              {/* Members Table */}
+              <div className="bg-[#FAF7F2] rounded-2xl border border-[#DCD1BC] shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#E8DEC9] bg-[#F4EDE2]/80 text-[11px] font-bold text-[#7F7364] uppercase tracking-wider">
+                        <th className="py-3 px-6">Name</th>
+                        <th className="py-3 px-6">Role</th>
+                        <th className="py-3 px-6">Projects</th>
+                        <th className="py-3 px-6">Workload</th>
+                        <th className="py-3 px-6">Last Active</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EFE7D8] text-xs text-[#2A231D]">
+                      {teamMembers
+                        .filter(m => {
+                          const matchesSearch =
+                            m.name.toLowerCase().includes(teamSearchQuery.toLowerCase()) ||
+                            m.email.toLowerCase().includes(teamSearchQuery.toLowerCase());
+                          const matchesRole = teamRoleFilter === 'All Roles' || m.role === teamRoleFilter;
+                          const matchesProject =
+                            teamProjectFilter === 'All Projects' || m.projects.includes(teamProjectFilter);
+                          return matchesSearch && matchesRole && matchesProject;
+                        })
+                        .map(member => (
+                          <tr key={member.id} className="hover:bg-[#F3EBDD]/50 transition-colors group">
+                            {/* Name & Avatar */}
+                            <td className="py-4 px-6">
+                              <div className="flex items-center space-x-3">
+                                <img
+                                  src={member.avatar}
+                                  alt={member.name}
+                                  className="w-9 h-9 rounded-full object-cover border border-[#DCD1BC] shadow-2xs"
+                                />
+                                <div>
+                                  <div className="font-bold text-[#2A231D] flex items-center space-x-1.5">
+                                    <span>{member.name}</span>
+                                  </div>
+                                  <div className="text-[11px] text-[#7F7364]">{member.email}</div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Role Badge */}
+                            <td className="py-4 px-6 whitespace-nowrap">
+                              <span
+                                className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold border ${getRoleBadgeStyle(
+                                  member.role
+                                )}`}
+                              >
+                                {member.role}
+                              </span>
+                            </td>
+
+                            {/* Assigned Projects */}
+                            <td className="py-4 px-6">
+                              <div className="flex flex-wrap items-center gap-1.5 max-w-xs">
+                                {member.projects.map(proj => (
+                                  <button
+                                    key={proj}
+                                    title="Click to toggle project assignment"
+                                    onClick={() => handleToggleProjectAssignment(member.id, proj)}
+                                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border transition-all hover:opacity-80 ${getProjectTagStyle(
+                                      proj
+                                    )}`}
+                                  >
+                                    {proj}
+                                  </button>
+                                ))}
+                                {/* Quick Add Project Dropdown */}
+                                <div className="relative inline-block group/add">
+                                  <button
+                                    type="button"
+                                    className="p-1 rounded-full text-[#8C7E6C] hover:bg-[#EAE0D0] hover:text-[#2A231D] transition-colors"
+                                    title="Assign another project"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                  <div className="hidden group-hover/add:block absolute left-0 top-full mt-1 w-44 bg-white border border-[#DCD1BC] rounded-xl shadow-lg p-1 z-30">
+                                    <div className="text-[10px] font-bold text-[#8C7E6C] px-2 py-1 uppercase">Assign project</div>
+                                    {['Acme Digital Revamp', 'CRM Platform', 'Web Platform', 'Mobile App', 'Brand Refresh', 'API Integration'].map(pName => {
+                                      const isAssigned = member.projects.includes(pName);
+                                      return (
+                                        <button
+                                          key={pName}
+                                          type="button"
+                                          onClick={() => handleToggleProjectAssignment(member.id, pName)}
+                                          className={`w-full text-left px-2 py-1 rounded text-[11px] flex items-center justify-between hover:bg-[#F5EFEB] ${
+                                            isAssigned ? 'font-bold text-[#2A231D]' : 'text-[#6B5E4F]'
+                                          }`}
+                                        >
+                                          <span>{pName}</span>
+                                          {isAssigned && <Check className="w-3 h-3 text-[#10B981]" />}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Workload Progress Bar */}
+                            <td className="py-4 px-6 whitespace-nowrap">
+                              <div className="w-32">
+                                <div className="flex items-center justify-between text-[11px] mb-1 font-bold text-[#4B3E32]">
+                                  <span>{member.workload}%</span>
+                                </div>
+                                <div className="w-full bg-[#E5DBC7] h-2 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-300 ${getWorkloadColor(
+                                      member.workload
+                                    )}`}
+                                    style={{ width: `${member.workload}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Last Active */}
+                            <td className="py-4 px-6 whitespace-nowrap text-[11px] font-medium text-[#7F7364]">
+                              {member.lastActive}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-4 px-4 whitespace-nowrap text-right">
+                              <div className="relative inline-block group/opt">
+                                <button
+                                  type="button"
+                                  className="p-1.5 rounded-lg text-[#8C7E6C] hover:text-[#2A231D] hover:bg-[#EAE0D0] transition-colors"
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                                <div className="hidden group-hover/opt:block absolute right-0 top-full mt-1 w-36 bg-white border border-[#DCD1BC] rounded-xl shadow-lg p-1 z-30">
+                                  <button
+                                    onClick={() => handleRemoveMember(member.id)}
+                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-1.5"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Remove Member</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Table Pagination Footer */}
+                <div className="px-6 py-3.5 border-t border-[#E8DEC9] bg-[#F7F2E9]/60 flex items-center justify-between text-xs text-[#7F7364]">
+                  <span>
+                    Showing 1–{teamMembers.length} of {teamMembers.length} members
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      disabled
+                      className="p-1 rounded text-[#B5A896] cursor-not-allowed"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="w-6 h-6 rounded-full bg-[#2B231D] text-[#FAF6EE] flex items-center justify-center font-bold text-xs">
+                      1
+                    </span>
+                    <button
+                      disabled
+                      className="p-1 rounded text-[#B5A896] cursor-not-allowed"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 5: ACTIVITY LOGS & REPORTS */}
+          {activeTab === 'reports' && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-[#2A231D]">
-                {activeTab === 'reports' ? 'Activity Logs & System Telemetry' : 'Team Members & Permissions'}
-              </h2>
+              <h2 className="text-xl font-bold text-[#2A231D]">Activity Logs & System Telemetry</h2>
               <div className="bg-[#F5EFEB] rounded-2xl border border-[#DCD1BC] p-6 space-y-3">
                 <p className="text-xs text-[#6A5E51]">
                   All database activities, user permissions, and real-time events are tracked via the backend API.
@@ -4332,6 +4858,137 @@ export default function App() {
                   className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2D2620] text-[#FAF6EE] hover:bg-[#463D34]"
                 >
                   Schedule Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Team Member Modal */}
+      {isInviteMemberModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-[#665A4E]" />
+                <h3 className="text-sm font-bold text-[#2A231D]">Invite Team Member</h3>
+              </div>
+              <button
+                onClick={() => setIsInviteMemberModalOpen(false)}
+                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleInviteMember} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#5C5042] mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Maya Lin"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#5C5042] mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. maya@archivalpm.com"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#5C5042] mb-1">Role</label>
+                  <select
+                    value={newMemberRole}
+                    onChange={(e) => setNewMemberRole(e.target.value)}
+                    className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  >
+                    <option value="Product Owner">Product Owner</option>
+                    <option value="Project Manager">Project Manager</option>
+                    <option value="Developer">Developer</option>
+                    <option value="Frontend Engineer">Frontend Engineer</option>
+                    <option value="Backend Engineer">Backend Engineer</option>
+                    <option value="Designer">Designer</option>
+                    <option value="QA Engineer">QA Engineer</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#5C5042] mb-1">
+                    Initial Workload ({newMemberWorkload}%)
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="5"
+                    value={newMemberWorkload}
+                    onChange={(e) => setNewMemberWorkload(Number(e.target.value))}
+                    className="w-full accent-[#2B231D] mt-2 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#5C5042] mb-1.5">Assign Projects</label>
+                <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1 bg-white/60 border border-[#DCD1BC] rounded-xl">
+                  {['Acme Digital Revamp', 'CRM Platform', 'Web Platform', 'Mobile App', 'Brand Refresh', 'API Integration'].map((proj) => {
+                    const isSelected = newMemberProjects.includes(proj);
+                    return (
+                      <label
+                        key={proj}
+                        className={`flex items-center space-x-2 p-2 rounded-lg border text-xs cursor-pointer transition-colors ${
+                          isSelected
+                            ? 'bg-[#EFE8DC] border-[#8C7E6C] font-bold text-[#2A231D]'
+                            : 'bg-white border-[#E8DEC9] text-[#6B5E4F] hover:bg-[#FAF6EE]'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {
+                            if (isSelected) {
+                              if (newMemberProjects.length > 1) {
+                                setNewMemberProjects(newMemberProjects.filter((p) => p !== proj));
+                              }
+                            } else {
+                              setNewMemberProjects([...newMemberProjects, proj]);
+                            }
+                          }}
+                          className="accent-[#2B231D] rounded"
+                        />
+                        <span className="truncate">{proj}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsInviteMemberModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-[#6B5E4F] hover:bg-[#EAE0CD]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2D2620] text-[#FAF6EE] hover:bg-[#463D34]"
+                >
+                  Add Member
                 </button>
               </div>
             </form>

@@ -179,6 +179,20 @@ const initializeDB = () => {
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )`);
 
+    // Team Members table
+    db.run(`CREATE TABLE IF NOT EXISTS team_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      role TEXT DEFAULT 'Developer',
+      avatar TEXT,
+      projects TEXT DEFAULT '[]',
+      workload INTEGER DEFAULT 50,
+      last_active TEXT DEFAULT 'Just now',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
     // Alter table migrations in case columns were missing in existing DB
     db.run("ALTER TABLE tasks ADD COLUMN color TEXT DEFAULT 'blue'", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN tags TEXT DEFAULT '[]'", () => {});
@@ -1116,9 +1130,168 @@ app.post('/api/v1/schedules/:id/comments', authMiddleware, async (req, res) => {
   }
 });
 
-app.delete('/api/v1/schedules/:id', authMiddleware, async (req, res) => {
+// ============ TEAM MEMBERS ENDPOINTS ============
+
+app.get('/api/v1/team-members', authMiddleware, async (req, res) => {
   try {
-    await runAsync('DELETE FROM schedules WHERE id = ?', [req.params.id]);
+    let members = await allAsync('SELECT * FROM team_members ORDER BY id ASC');
+
+    if (members.length === 0) {
+      const initialTeam = [
+        {
+          name: 'Emma Carter',
+          email: 'emma@archivalpm.com',
+          role: 'Product Owner',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['Acme Digital Revamp', 'CRM Platform']),
+          workload: 80,
+          last_active: '2h ago'
+        },
+        {
+          name: 'Liam Johnson',
+          email: 'liam@archivalpm.com',
+          role: 'Developer',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['Web Platform', 'Mobile App']),
+          workload: 60,
+          last_active: '4h ago'
+        },
+        {
+          name: 'Olivia Martinez',
+          email: 'olivia@archivalpm.com',
+          role: 'Designer',
+          avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['Acme Digital Revamp', 'Brand Refresh']),
+          workload: 45,
+          last_active: '1h ago'
+        },
+        {
+          name: 'Noah Wilson',
+          email: 'noah@archivalpm.com',
+          role: 'Developer',
+          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['Web Platform', 'API Integration']),
+          workload: 70,
+          last_active: '3h ago'
+        },
+        {
+          name: 'Sophia Lee',
+          email: 'sophia@archivalpm.com',
+          role: 'QA Engineer',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['CRM Platform', 'Mobile App']),
+          workload: 50,
+          last_active: '5h ago'
+        },
+        {
+          name: 'Daniel Kim',
+          email: 'daniel@archivalpm.com',
+          role: 'Backend Engineer',
+          avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['API Integration', 'Web Platform']),
+          workload: 75,
+          last_active: '2h ago'
+        },
+        {
+          name: 'Ava Thompson',
+          email: 'ava@archivalpm.com',
+          role: 'Project Manager',
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['Acme Digital Revamp', 'Brand Refresh']),
+          workload: 55,
+          last_active: '6h ago'
+        },
+        {
+          name: 'Ethan Davis',
+          email: 'ethan@archivalpm.com',
+          role: 'Frontend Engineer',
+          avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop',
+          projects: JSON.stringify(['Mobile App', 'CRM Platform']),
+          workload: 65,
+          last_active: '1h ago'
+        }
+      ];
+
+      for (let m of initialTeam) {
+        await runAsync(
+          'INSERT INTO team_members (name, email, role, avatar, projects, workload, last_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [m.name, m.email, m.role, m.avatar, m.projects, m.workload, m.last_active]
+        );
+      }
+
+      members = await allAsync('SELECT * FROM team_members ORDER BY id ASC');
+    }
+
+    const formatted = members.map(m => ({
+      ...m,
+      projects: JSON.parse(m.projects || '[]')
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/v1/team-members', authMiddleware, async (req, res) => {
+  try {
+    const { name, email, role, avatar, projects, workload, last_active } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Name and email are required' });
+    }
+
+    const result = await runAsync(
+      'INSERT INTO team_members (name, email, role, avatar, projects, workload, last_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        name,
+        email,
+        role || 'Developer',
+        avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+        JSON.stringify(projects || ['Acme Digital Revamp']),
+        workload !== undefined ? workload : 50,
+        last_active || 'Just now'
+      ]
+    );
+
+    const member = await getAsync('SELECT * FROM team_members WHERE id = ?', [result.lastID]);
+    member.projects = JSON.parse(member.projects || '[]');
+    res.json(member);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/v1/team-members/:id', authMiddleware, async (req, res) => {
+  try {
+    const { name, email, role, avatar, projects, workload, last_active } = req.body;
+    const updates = [];
+    const params = [];
+
+    if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+    if (email !== undefined) { updates.push('email = ?'); params.push(email); }
+    if (role !== undefined) { updates.push('role = ?'); params.push(role); }
+    if (avatar !== undefined) { updates.push('avatar = ?'); params.push(avatar); }
+    if (projects !== undefined) { updates.push('projects = ?'); params.push(JSON.stringify(projects)); }
+    if (workload !== undefined) { updates.push('workload = ?'); params.push(workload); }
+    if (last_active !== undefined) { updates.push('last_active = ?'); params.push(last_active); }
+
+    if (updates.length > 0) {
+      params.push(req.params.id);
+      await runAsync(`UPDATE team_members SET ${updates.join(', ')} WHERE id = ?`, params);
+    }
+
+    const member = await getAsync('SELECT * FROM team_members WHERE id = ?', [req.params.id]);
+    if (!member) return res.status(404).json({ error: 'Team member not found' });
+    member.projects = JSON.parse(member.projects || '[]');
+    res.json(member);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/v1/team-members/:id', authMiddleware, async (req, res) => {
+  try {
+    await runAsync('DELETE FROM team_members WHERE id = ?', [req.params.id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
