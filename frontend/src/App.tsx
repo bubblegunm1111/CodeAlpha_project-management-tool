@@ -26,7 +26,8 @@ import {
   Pin,
   CalendarCheck,
   Palette,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -325,6 +326,11 @@ export default function App() {
   const [newScheduleColor, setNewScheduleColor] = useState<CardColor>('peach');
   const [newSchedulePriority, setNewSchedulePriority] = useState<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
 
+  // Subtask & Checklist state
+  const [newSubtaskInput, setNewSubtaskInput] = useState('');
+  const [createTaskSubtasks, setCreateTaskSubtasks] = useState<string[]>([]);
+  const [createTaskSubtaskInput, setCreateTaskSubtaskInput] = useState('');
+
   // Notifications
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'Backend connected to SQLite API server', time: 'Just now' },
@@ -402,6 +408,66 @@ export default function App() {
     ]);
   };
 
+  // Add a subtask to selectedTask in modal
+  const handleAddSubtaskToSelectedTask = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newSubtaskInput.trim() || !selectedTask) return;
+
+    const newSt: Subtask = {
+      id: `st-${Date.now()}`,
+      text: newSubtaskInput.trim(),
+      completed: false
+    };
+
+    const currentSubtasks = selectedTask.subtasks || [];
+    const updatedSubtasks = [...currentSubtasks, newSt];
+    const completedCount = updatedSubtasks.filter(st => st.completed).length;
+    const newProgress = Math.round((completedCount / updatedSubtasks.length) * 100);
+
+    const updatedTask = {
+      ...selectedTask,
+      subtasks: updatedSubtasks,
+      progress: newProgress
+    };
+
+    setTasks(prev => prev.map(t => t.id === selectedTask.id ? updatedTask : t));
+    setSelectedTask(updatedTask);
+    setNewSubtaskInput('');
+
+    // Persist to backend
+    const numId = selectedTask.id.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subtasks: updatedSubtasks, progress: newProgress })
+    }).catch(() => {});
+  };
+
+  // Delete subtask from selectedTask
+  const handleDeleteSubtask = (subtaskId: string) => {
+    if (!selectedTask) return;
+    const currentSubtasks = selectedTask.subtasks || [];
+    const updatedSubtasks = currentSubtasks.filter(st => st.id !== subtaskId);
+    const completedCount = updatedSubtasks.filter(st => st.completed).length;
+    const newProgress = updatedSubtasks.length > 0 ? Math.round((completedCount / updatedSubtasks.length) * 100) : 0;
+
+    const updatedTask = {
+      ...selectedTask,
+      subtasks: updatedSubtasks,
+      progress: newProgress
+    };
+
+    setTasks(prev => prev.map(t => t.id === selectedTask.id ? updatedTask : t));
+    setSelectedTask(updatedTask);
+
+    const numId = selectedTask.id.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subtasks: updatedSubtasks, progress: newProgress })
+    }).catch(() => {});
+  };
+
   // Subtask toggle
   const toggleSubtask = (taskId: string, subtaskId: string) => {
     setTasks(prev => prev.map(t => {
@@ -413,6 +479,15 @@ export default function App() {
       if (selectedTask && selectedTask.id === taskId) {
         setSelectedTask(updatedTask);
       }
+
+      // Persist to backend
+      const numId = taskId.replace('t-', '');
+      fetch(`${API_BASE}/tasks/${numId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subtasks: updatedSubtasks, progress: newProgress })
+      }).catch(() => {});
+
       return updatedTask;
     }));
   };
@@ -461,10 +536,16 @@ export default function App() {
     }
   };
 
-  // Create new task
+  // Create new task with initial subtasks
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
+
+    const initialSubtasks: Subtask[] = createTaskSubtasks.map((txt, idx) => ({
+      id: `st-${Date.now()}-${idx}`,
+      text: txt,
+      completed: false
+    }));
 
     const newTask: Task = {
       id: `t-${Date.now()}`,
@@ -473,6 +554,7 @@ export default function App() {
       tags: [newTaskTag],
       color: newTaskColor,
       progress: 0,
+      subtasks: initialSubtasks,
       assignees: [
         { name: 'Mason Walker', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces' }
       ],
@@ -486,6 +568,8 @@ export default function App() {
     setTasks(prev => [newTask, ...prev]);
     setIsNewTaskModalOpen(false);
     setNewTaskTitle('');
+    setCreateTaskSubtasks([]);
+    setCreateTaskSubtaskInput('');
 
     // Persist to backend
     fetch(`${API_BASE}/projects/1/tasks`, {
@@ -496,7 +580,9 @@ export default function App() {
         title: newTask.title,
         priority: newTask.priority,
         color: newTask.color,
-        tags: newTask.tags
+        tags: newTask.tags,
+        subtasks: newTask.subtasks,
+        progress: 0
       })
     }).catch(() => {});
 
@@ -1019,8 +1105,8 @@ export default function App() {
                                 </p>
                               )}
 
-                              {task.subtasks && task.subtasks.length > 0 && (
-                                <div className="space-y-1.5 mb-3 bg-white/40 p-2.5 rounded-xl border border-black/5">
+                              {task.subtasks && task.subtasks.length > 0 ? (
+                                <div className="space-y-1.5 mb-3 bg-white/50 p-2.5 rounded-xl border border-black/5 shadow-xs">
                                   {task.subtasks.map(st => (
                                     <div
                                       key={st.id}
@@ -1033,7 +1119,7 @@ export default function App() {
                                       {st.completed ? (
                                         <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
                                       ) : (
-                                        <Circle className="w-3.5 h-3.5 text-purple-300 flex-shrink-0" />
+                                        <Circle className="w-3.5 h-3.5 text-purple-300 hover:text-purple-600 flex-shrink-0" />
                                       )}
                                       <span className={st.completed ? 'line-through text-[#8E8072]' : 'font-medium'}>
                                         {st.text}
@@ -1041,6 +1127,18 @@ export default function App() {
                                     </div>
                                   ))}
                                 </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedTask(task);
+                                  }}
+                                  className="mb-2 text-[11px] font-semibold text-[#8C7F70] hover:text-[#2C241E] flex items-center space-x-1 opacity-75 hover:opacity-100 transition-opacity"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span>+ Add checklist</span>
+                                </button>
                               )}
 
                               {task.hasImagePreview && (
@@ -1381,38 +1479,85 @@ export default function App() {
               </div>
 
               {/* Progress & Subtasks */}
-              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-3">
+              <div className="bg-[#F5EFEB] p-5 rounded-2xl border border-[#DCD1BC] space-y-3.5">
                 <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
-                  <span>Checklist & Progress</span>
-                  <span>{selectedTask.progress}% Complete</span>
+                  <span className="flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#7A6E60]" />
+                    <span>Checklist & Progress</span>
+                  </span>
+                  <span className="font-extrabold text-[#2C241E]">
+                    {selectedTask.progress}% Complete
+                    {selectedTask.subtasks && selectedTask.subtasks.length > 0 && (
+                      <span className="text-[#877A6C] font-normal ml-1.5">
+                        ({selectedTask.subtasks.filter(s => s.completed).length}/{selectedTask.subtasks.length} done)
+                      </span>
+                    )}
+                  </span>
                 </div>
-                <div className="w-full bg-[#DCD1BC] h-2 rounded-full overflow-hidden">
+
+                <div className="w-full bg-[#DCD1BC] h-2.5 rounded-full overflow-hidden shadow-inner">
                   <div
                     className="bg-[#3D342C] h-full rounded-full transition-all duration-300"
                     style={{ width: `${selectedTask.progress}%` }}
                   />
                 </div>
 
-                {selectedTask.subtasks && (
-                  <div className="space-y-2 pt-2">
-                    {selectedTask.subtasks.map(st => (
-                      <div
-                        key={st.id}
-                        onClick={() => toggleSubtask(selectedTask.id, st.id)}
-                        className="flex items-center space-x-2.5 text-xs text-[#322A22] cursor-pointer hover:bg-black/5 p-1 rounded-md"
-                      >
-                        {st.completed ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        ) : (
-                          <Circle className="w-4 h-4 text-[#A89C8B] flex-shrink-0" />
-                        )}
-                        <span className={st.completed ? 'line-through text-[#8D7F6E]' : 'font-medium'}>
-                          {st.text}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* Checklist Container matching reference */}
+                <div className="bg-white/80 rounded-xl p-3 border border-[#E3D8C4] space-y-2">
+                  {selectedTask.subtasks && selectedTask.subtasks.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {selectedTask.subtasks.map(st => (
+                        <div
+                          key={st.id}
+                          className="flex items-center justify-between group p-1.5 rounded-lg hover:bg-black/5 transition-colors"
+                        >
+                          <div
+                            onClick={() => toggleSubtask(selectedTask.id, st.id)}
+                            className="flex items-center space-x-2.5 text-xs text-[#322A22] cursor-pointer flex-1"
+                          >
+                            {st.completed ? (
+                              <CheckCircle2 className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                            ) : (
+                              <Circle className="w-4 h-4 text-purple-300 hover:text-purple-600 flex-shrink-0" />
+                            )}
+                            <span className={st.completed ? 'line-through text-[#8D7F6E]' : 'font-medium'}>
+                              {st.text}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSubtask(st.id)}
+                            className="opacity-0 group-hover:opacity-100 text-[#9E9080] hover:text-red-700 p-1 transition-opacity"
+                            title="Delete item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#8C7F70] italic py-2 text-center">
+                      No todo checklist items yet. Add tasks below to start tracking progress!
+                    </p>
+                  )}
+
+                  {/* Add Subtask Input Form */}
+                  <form onSubmit={handleAddSubtaskToSelectedTask} className="flex space-x-2 pt-2 border-t border-[#E8DEC9]">
+                    <input
+                      type="text"
+                      placeholder="+ Add a todo item (e.g. Make wireframe, Setup database)..."
+                      value={newSubtaskInput}
+                      onChange={(e) => setNewSubtaskInput(e.target.value)}
+                      className="flex-1 bg-white border border-[#D5CABB] rounded-xl px-3 py-1.5 text-xs text-[#2A231D] placeholder-[#9D9181] focus:outline-none focus:ring-1 focus:ring-[#7D6F5E]"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3.5 py-1.5 bg-[#2E2721] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#463D34] transition-colors"
+                    >
+                      + Add
+                    </button>
+                  </form>
+                </div>
               </div>
 
               {/* Move Column Selector */}
@@ -1566,6 +1711,58 @@ export default function App() {
                   <option value="High">High</option>
                   <option value="Urgent">Urgent</option>
                 </select>
+              </div>
+
+              {/* Optional Checklist / Todo Tasks */}
+              <div>
+                <label className="block text-xs font-bold text-[#5C5042] mb-1">Checklist / Todo Tasks (Optional)</label>
+                <div className="flex space-x-2 mb-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. Create user flow, Make wireframe..."
+                    value={createTaskSubtaskInput}
+                    onChange={(e) => setCreateTaskSubtaskInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (createTaskSubtaskInput.trim()) {
+                          setCreateTaskSubtasks(prev => [...prev, createTaskSubtaskInput.trim()]);
+                          setCreateTaskSubtaskInput('');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-white border border-[#D5CABB] rounded-xl px-3 py-1.5 text-xs text-[#2A231D] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (createTaskSubtaskInput.trim()) {
+                        setCreateTaskSubtasks(prev => [...prev, createTaskSubtaskInput.trim()]);
+                        setCreateTaskSubtaskInput('');
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-[#E4DAC7] text-[#3A3026] text-xs font-bold rounded-xl hover:bg-[#D8CDBC]"
+                  >
+                    + Add
+                  </button>
+                </div>
+
+                {createTaskSubtasks.length > 0 && (
+                  <div className="space-y-1 bg-white/70 p-2 rounded-xl border border-[#D5CABB] max-h-28 overflow-y-auto">
+                    {createTaskSubtasks.map((st, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs py-1 px-1.5 bg-white rounded-lg border border-black/5">
+                        <span className="text-[#322A22] font-medium">• {st}</span>
+                        <button
+                          type="button"
+                          onClick={() => setCreateTaskSubtasks(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-[#9E9080] hover:text-red-700"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 flex justify-end space-x-2">
