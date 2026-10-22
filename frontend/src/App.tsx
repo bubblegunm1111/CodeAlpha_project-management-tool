@@ -1965,42 +1965,144 @@ export default function App() {
   // 3. Main Application Screen (Board for currentFolder)
   return (
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
-      {/* Top Manila Folder Cutout Tab Header (Image 2 Inspiration) */}
-      <header className="px-6 pt-3 pb-0 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
-        <div className="flex items-center space-x-6 min-w-0">
+      {/* Top Manila Folder Cutout Tab Header */}
+      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none">
+        {/* Upper Row: Breadcrumbs & Utility Actions */}
+        <div className="px-6 py-2.5 flex items-center justify-between border-b border-[#E4DAC7]">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
-          <div className="flex items-center space-x-3 pb-2.5 shrink-0">
+          <div className="flex items-center space-x-3 shrink-0">
             <button
               onClick={() => setCurrentScreen('folder_hub')}
-              className="w-9 h-9 rounded-xl bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
+              className="w-8 h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
               title="Return to Folder Hub"
             >
               <Folder className="w-4 h-4" />
             </button>
-            <div className="flex flex-col justify-center min-w-0">
-              <div className="flex items-center space-x-2 whitespace-nowrap">
-                <span className="font-extrabold text-sm tracking-tight text-[#2B241F]">
-                  {currentOrg.name}
-                </span>
-                <span className="text-[#8C8072] text-xs">/</span>
-                <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5 whitespace-nowrap">
-                  <span>{currentFolder.name}</span>
-                  <span className="font-mono text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1.5 py-0.2 rounded">
-                    {formatFolderCode(currentFolder.code)}
-                  </span>
-                </span>
-              </div>
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium text-left mt-0.5 inline-flex items-center space-x-1"
+                className="font-extrabold text-sm tracking-tight text-[#2B241F] hover:underline"
               >
-                <span>← Switch Folder or Org</span>
+                {currentOrg.name}
+              </button>
+              <span className="text-[#8C8072] text-xs">/</span>
+              <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5">
+                <span>{currentFolder.name}</span>
+                <span className="font-mono text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1.5 py-0.2 rounded">
+                  {formatFolderCode(currentFolder.code)}
+                </span>
+              </span>
+              <button
+                onClick={() => setCurrentScreen('folder_hub')}
+                className="text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium ml-2 px-2 py-0.5 rounded hover:bg-[#E5DCBE] transition-colors"
+              >
+                Switch
               </button>
             </div>
           </div>
 
-          {/* Vintage Folder Navigation Slips */}
-          <nav className="flex space-x-1.5 -mb-[1px] shrink-0">
+          {/* Right Controls: Search, Notifications, Profile */}
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
+              <input
+                type="text"
+                placeholder="Search tasks & tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-52 shadow-inner"
+              />
+            </div>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-1.5 bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#52493E] hover:bg-[#F2ECE0] relative transition-colors"
+                title="Notifications"
+              >
+                <Bell className="w-4 h-4" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-600 rounded-full border-2 border-[#FAF6EE]"></span>
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-72 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-3">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E8DEC9]">
+                    <span className="text-xs font-bold text-[#2C241E]">Live Events (WebSockets)</span>
+                    <span className="text-[11px] text-[#867B6F]">3 unread</span>
+                  </div>
+                  <div className="space-y-2">
+                    {notifications.map(n => (
+                      <div key={n.id} className="text-xs p-2 rounded-lg bg-[#F3ECDD] border border-[#E4DAC7]">
+                        <p className="text-[#322A23] font-medium leading-snug">{n.text}</p>
+                        <span className="text-[10px] text-[#8C8072] mt-0.5 block">{n.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="relative pl-2 border-l border-[#DCD1BC]">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-2 text-left hover:opacity-85 transition-opacity"
+              >
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-7 h-7 rounded-full border border-[#C5B8A1] object-cover"
+                />
+                <div className="hidden md:block text-left">
+                  <p className="text-xs font-bold text-[#2A231D] leading-none">{currentUser.name}</p>
+                  <p className="text-[10px] text-[#7A7064] leading-tight">{currentUser.email}</p>
+                </div>
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-52 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-3 py-2 border-b border-[#E8DEC9] mb-1">
+                    <p className="text-xs font-bold text-[#2C241E]">{currentUser.name}</p>
+                    <p className="text-[10px] text-[#7A7064] truncate">{currentUser.email}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setCurrentScreen('folder_hub');
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-[#73695F]" />
+                    <span>Folder Hub & Organizations</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setCurrentScreen('splash');
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 text-[#73695F]" />
+                    <span>Replay Folder Opening</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setCurrentScreen('auth');
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-rose-700 hover:bg-[#FBEBE8] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Lower Row: Full-width Folder Cutout Slips that dock cleanly into the canvas */}
+        <div className="px-6 pt-2 flex items-center">
+          <nav className="flex space-x-2 -mb-[1px]">
             {[
               { id: 'board' as const, label: 'Kanban Boards', count: tasks.length },
               { id: 'schedule' as const, label: 'Schedule & Timeline', count: schedules.length },
@@ -2011,10 +2113,10 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`folder-tab px-4 py-2.5 text-xs font-semibold rounded-t-lg border-t border-x transition-all flex items-center space-x-2 ${
+                className={`folder-tab px-5 py-2.5 text-xs font-semibold rounded-t-lg border-t border-x transition-all flex items-center space-x-2 ${
                   activeTab === tab.id
                     ? 'active bg-[#FAF6EE] text-[#2C241E] border-[#DCD1BC] shadow-sm font-bold'
-                    : 'bg-[#E5DCCB]/70 text-[#786D61] border-[#D9CEBC] hover:bg-[#EFE8DC] hover:text-[#3B332B]'
+                    : 'bg-[#E5DCCB]/60 text-[#786D61] border-[#D9CEBC] hover:bg-[#EFE8DC] hover:text-[#3B332B]'
                 }`}
               >
                 <span>{tab.label}</span>
@@ -2028,104 +2130,6 @@ export default function App() {
               </button>
             ))}
           </nav>
-        </div>
-
-        {/* Right Controls: Search, Notifications, Profile (spaced well away from folder tabs) */}
-        <div className="flex items-center space-x-3 pb-3 ml-6 shrink-0">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
-            <input
-              type="text"
-              placeholder="Search dossier..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-44 shadow-inner"
-            />
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-1.5 bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#52493E] hover:bg-[#F2ECE0] relative transition-colors"
-              title="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-600 rounded-full border-2 border-[#FAF6EE]"></span>
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-72 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-3">
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E8DEC9]">
-                  <span className="text-xs font-bold text-[#2C241E]">Live Events (WebSockets)</span>
-                  <span className="text-[11px] text-[#867B6F]">3 unread</span>
-                </div>
-                <div className="space-y-2">
-                  {notifications.map(n => (
-                    <div key={n.id} className="text-xs p-2 rounded-lg bg-[#F3ECDD] border border-[#E4DAC7]">
-                      <p className="text-[#322A23] font-medium leading-snug">{n.text}</p>
-                      <span className="text-[10px] text-[#8C8072] mt-0.5 block">{n.time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="relative pl-2 border-l border-[#DCD1BC]">
-            <button
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center space-x-2 text-left hover:opacity-85 transition-opacity"
-            >
-              <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
-                className="w-7 h-7 rounded-full border border-[#C5B8A1] object-cover"
-              />
-              <div className="hidden md:block text-left">
-                <p className="text-xs font-bold text-[#2A231D] leading-none">{currentUser.name}</p>
-                <p className="text-[10px] text-[#7A7064] leading-tight">{currentUser.email}</p>
-              </div>
-            </button>
-
-            {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-52 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100">
-                <div className="px-3 py-2 border-b border-[#E8DEC9] mb-1">
-                  <p className="text-xs font-bold text-[#2C241E]">{currentUser.name}</p>
-                  <p className="text-[10px] text-[#7A7064] truncate">{currentUser.email}</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsUserMenuOpen(false);
-                    setCurrentScreen('folder_hub');
-                  }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-[#73695F]" />
-                  <span>Folder Hub & Organizations</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setIsUserMenuOpen(false);
-                    setCurrentScreen('splash');
-                  }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
-                >
-                  <FolderOpen className="w-3.5 h-3.5 text-[#73695F]" />
-                  <span>Replay Folder Opening</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setIsUserMenuOpen(false);
-                    setCurrentScreen('auth');
-                  }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-rose-700 hover:bg-[#FBEBE8] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </header>
 
