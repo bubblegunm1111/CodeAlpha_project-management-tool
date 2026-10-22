@@ -30,7 +30,14 @@ import {
   Trash2,
   Pencil,
   Copy,
-  ArrowRight
+  ArrowRight,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogOut,
+  Sparkles,
+  FolderOpen
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -293,7 +300,33 @@ const INITIAL_SCHEDULE: ScheduleItem[] = [
   }
 ];
 
+const GoogleIcon = () => (
+  <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+  </svg>
+);
+
 export default function App() {
+  // Screen Management: 'splash' | 'auth' | 'app'
+  const [currentScreen, setCurrentScreen] = useState<'splash' | 'auth' | 'app'>('splash');
+  const [isFolderOpened, setIsFolderOpened] = useState(false);
+
+  // Auth form states (matching user screenshot)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState({
+    name: 'Mason Walker',
+    email: 'mason.walker@example.com',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
+  });
+
   const [activeTab, setActiveTab] = useState<'board' | 'schedule' | 'notes' | 'reports' | 'team'>('board');
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
@@ -345,6 +378,57 @@ export default function App() {
     window.addEventListener('click', handleDocumentClick);
     return () => window.removeEventListener('click', handleDocumentClick);
   }, []);
+
+  // Splash Screen Animation sequence
+  useEffect(() => {
+    if (currentScreen === 'splash') {
+      setIsFolderOpened(false);
+      const timerOpen = setTimeout(() => {
+        setIsFolderOpened(true);
+      }, 400);
+
+      const timerAuth = setTimeout(() => {
+        setCurrentScreen('auth');
+      }, 3600);
+
+      return () => {
+        clearTimeout(timerOpen);
+        clearTimeout(timerAuth);
+      };
+    }
+  }, [currentScreen]);
+
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalEmail = authEmail.trim() || 'mason.walker@company.com';
+    const finalName = authName.trim() || (authMode === 'signup' ? 'New Member' : 'Mason Walker');
+
+    setCurrentUser({
+      name: finalName,
+      email: finalEmail,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
+    });
+
+    setCurrentScreen('app');
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Authenticated as ${finalName}`, time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  const handleGoogleLogin = () => {
+    setCurrentUser({
+      name: 'Mason Walker',
+      email: 'mason.walker@gmail.com',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
+    });
+    setCurrentScreen('app');
+    setNotifications(prev => [
+      { id: Date.now(), text: 'Signed in with Google Account', time: 'Just now' },
+      ...prev
+    ]);
+  };
 
   // Notifications
   const [notifications, setNotifications] = useState([
@@ -838,6 +922,266 @@ export default function App() {
     t.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // 1. Splash Screen: 3D Folder Opening Animation
+  if (currentScreen === 'splash') {
+    return (
+      <div className="min-h-screen bg-[#F5EFEB] flex flex-col items-center justify-center p-4 relative overflow-hidden select-none">
+        {/* Vintage Paper Texture Overlay */}
+        <div className="absolute inset-0 bg-[#F5EFEB] opacity-90 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col items-center max-w-md w-full">
+          {/* Tag & Title */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#E8DECA] text-[#5A5046] border border-[#D5CABB] text-xs font-semibold uppercase tracking-wider mb-3 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <span>Vintage Project Workspace</span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-[#2C241E] tracking-tight">Archival PM</h1>
+            <p className="text-xs text-[#7A7064] mt-1 font-medium">Opening project dossier files...</p>
+          </div>
+
+          {/* 3D Manila Folder Container */}
+          <div className="folder-perspective w-72 h-52 relative flex items-center justify-center my-6">
+            {/* Back Flap / Folder Body */}
+            <div className="absolute inset-0 bg-[#D8CAAE] rounded-2xl shadow-xl border border-[#C6B798] flex flex-col justify-between p-4 overflow-hidden">
+              {/* Folder tab notch at top-left */}
+              <div className="absolute -top-3 left-4 bg-[#D8CAAE] border-t border-l border-r border-[#C6B798] w-24 h-5 rounded-t-lg" />
+              <div className="flex justify-between items-start pt-1 text-[11px] font-mono text-[#8C7D68] tracking-widest uppercase">
+                <span>CONFIDENTIAL // 2026</span>
+                <span>VOL. IV</span>
+              </div>
+              <div className="text-center py-4">
+                <Folder className="w-12 h-12 text-[#9A876B] mx-auto opacity-40" />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-[#7A6D5A] border-t border-[#C6B798]/60 pt-2 font-mono">
+                <span>CLASSIFIED TASKS</span>
+                <span>06 ITEMS</span>
+              </div>
+            </div>
+
+            {/* Cascading Task Cards Floating Out When Folder Opens */}
+            {isFolderOpened && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                {/* Floating Card 1: Blue */}
+                <div className="absolute w-56 p-3 rounded-xl bg-[#EBF2FE] border border-[#CADCFE] shadow-lg animate-float-card-1">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D6E6FE] text-[#1E429F]">#mobile app</span>
+                  <p className="text-xs font-bold text-[#1E293B] mt-1 leading-snug">Design system & icons</p>
+                  <div className="flex items-center justify-between mt-2 pt-1 border-t border-[#D6E6FE]/60 text-[10px] text-[#475569]">
+                    <span className="font-semibold text-emerald-600">✓ Done</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+
+                {/* Floating Card 2: Peach (Center hero) */}
+                <div className="absolute w-60 p-3.5 rounded-xl bg-[#FFF3E5] border border-[#FDD9B5] shadow-2xl animate-float-card-2 z-20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FFE2C2] text-[#9A3412]">#product</span>
+                    <span className="text-[10px] font-mono text-[#9A3412] font-bold">Urgent</span>
+                  </div>
+                  <p className="text-xs font-bold text-[#431407] mt-1.5 leading-snug">Wehiu product task & process</p>
+                  <div className="w-full bg-[#FED7AA] h-1.5 rounded-full mt-2.5 overflow-hidden">
+                    <div className="bg-[#D97706] h-full rounded-full" style={{ width: '90%' }} />
+                  </div>
+                </div>
+
+                {/* Floating Card 3: Mint */}
+                <div className="absolute w-56 p-3 rounded-xl bg-[#E8FAF0] border border-[#C2F0D5] shadow-lg animate-float-card-3 z-10">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D1F7E2] text-[#065F46]">#crm #client</span>
+                  <p className="text-xs font-bold text-[#064E3B] mt-1 leading-snug">Responsive CRM shop page</p>
+                  <div className="flex items-center justify-between mt-2 text-[10px] text-[#047857]">
+                    <span>In Progress</span>
+                    <span>40%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Front Manila Flap with 3D Opening Effect */}
+            <div
+              className={`absolute inset-0 bg-[#E8DECA] rounded-2xl shadow-md border-2 border-[#D5CABB] folder-flap-open flex flex-col items-center justify-center p-6 ${
+                isFolderOpened ? 'folder-open-active opacity-30 pointer-events-none' : ''
+              }`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-[#3F3730] flex items-center justify-center text-[#FAF6EE] shadow mb-2">
+                <FolderOpen className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-bold text-[#2C241E]">Archival Project Files</p>
+              <p className="text-[11px] text-[#7A7064] mt-0.5">Click or wait to unlock dossier</p>
+            </div>
+          </div>
+
+          {/* Quick Action Button */}
+          <button
+            onClick={() => setCurrentScreen('auth')}
+            className="mt-8 px-6 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-semibold hover:bg-[#2C2621] transition-all shadow-md flex items-center space-x-2"
+          >
+            <span>Proceed to Sign In</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Authentication Screen: Exact Match to User Screenshot
+  if (currentScreen === 'auth') {
+    return (
+      <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative selection:bg-[#E8DECA]">
+        {/* Vintage Paper Texture Background */}
+        <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+
+        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+          {/* Logo & Header */}
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center mx-auto shadow-sm">
+              <Folder className="w-6 h-6" />
+            </div>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#2C2621]">
+              {authMode === 'signin' ? 'Archival PM' : 'Create an Account'}
+            </h2>
+            <p className="mt-1 text-xs text-[#7A7064]">
+              Organize, track, and deliver your work. All in one place.
+            </p>
+          </div>
+
+          {/* Auth Card */}
+          <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="bg-[#FAF6EE] py-8 px-6 sm:px-8 shadow-sm border border-[#DCD1BC] rounded-2xl">
+              <form onSubmit={handleAuthSubmit} className="space-y-4">
+                {authMode === 'signup' && (
+                  <div>
+                    <label className="block text-xs font-bold text-[#2C2621] mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Mason Walker"
+                      value={authName}
+                      onChange={(e) => setAuthName(e.target.value)}
+                      className="w-full px-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2621] mb-1">
+                    Email address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="h-4 w-4 text-[#A4988A]" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      placeholder="you@company.com"
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-[#2C2621]">
+                      Password
+                    </label>
+                    {authMode === 'signin' && (
+                      <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('Password reset link sent to registered email.'); }} className="text-[11px] font-semibold text-[#6E6356] hover:underline">
+                        Forgot password?
+                      </a>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-4 w-4 text-[#A4988A]" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Enter your password"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="w-full pl-9 pr-9 py-2 text-xs bg-white border border-[#D5CABB] rounded-lg text-[#2C2621] placeholder-[#A4988A] focus:outline-none focus:ring-1 focus:ring-[#3F3730]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#A4988A] hover:text-[#2C2621]"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    className="w-full mt-2 py-2.5 px-4 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-sm"
+                  >
+                    {authMode === 'signin' ? 'Sign in' : 'Create account'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Divider */}
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-[#E0D5C3]" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2 bg-[#FAF6EE] text-[#8C8072]">or</span>
+                </div>
+              </div>
+
+              {/* Google OAuth Button */}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full py-2.5 px-4 rounded-lg bg-white border border-[#D5CABB] text-xs font-semibold text-[#2C2621] hover:bg-[#F5EFEB] transition-colors flex items-center justify-center shadow-xs"
+                >
+                  <GoogleIcon />
+                  <span>Continue with Google</span>
+                </button>
+              </div>
+
+              {/* Toggle Sign Up / Sign In */}
+              <div className="text-center mt-5">
+                <p className="text-xs text-[#7A7064]">
+                  {authMode === 'signin' ? 'New to Archival PM? ' : 'Already have an account? '}
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                    className="font-bold text-[#3F3730] hover:underline"
+                  >
+                    {authMode === 'signin' ? 'Create account' : 'Sign in'}
+                  </button>
+                </p>
+              </div>
+
+              {/* Replay splash button for convenience */}
+              <div className="text-center mt-3 pt-3 border-t border-[#E8DEC9]">
+                <button
+                  type="button"
+                  onClick={() => setCurrentScreen('splash')}
+                  className="text-[11px] text-[#8C8072] hover:text-[#3F3730] inline-flex items-center space-x-1"
+                >
+                  <Folder className="w-3 h-3" />
+                  <span>Replay folder opening animation</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Main Application Screen
   return (
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header (Image 2 Inspiration) */}
@@ -932,16 +1276,50 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex items-center space-x-2 pl-2 border-l border-[#DCD1BC]">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces"
-              alt="Mason Walker"
-              className="w-7 h-7 rounded-full border border-[#C5B8A1] object-cover"
-            />
-            <div className="hidden md:block text-left">
-              <p className="text-xs font-bold text-[#2A231D] leading-none">Mason Walker</p>
-              <p className="text-[10px] text-[#7A7064] leading-tight">Lead Architect</p>
-            </div>
+          <div className="relative pl-2 border-l border-[#DCD1BC]">
+            <button
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="flex items-center space-x-2 text-left hover:opacity-85 transition-opacity"
+            >
+              <img
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                className="w-7 h-7 rounded-full border border-[#C5B8A1] object-cover"
+              />
+              <div className="hidden md:block text-left">
+                <p className="text-xs font-bold text-[#2A231D] leading-none">{currentUser.name}</p>
+                <p className="text-[10px] text-[#7A7064] leading-tight">{currentUser.email}</p>
+              </div>
+            </button>
+
+            {isUserMenuOpen && (
+              <div className="absolute right-0 mt-2 w-52 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-2 border-b border-[#E8DEC9] mb-1">
+                  <p className="text-xs font-bold text-[#2C241E]">{currentUser.name}</p>
+                  <p className="text-[10px] text-[#7A7064] truncate">{currentUser.email}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    setCurrentScreen('splash');
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-[#433A31] hover:bg-[#F2ECE0] rounded-lg flex items-center space-x-2 transition-colors font-medium"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-[#73695F]" />
+                  <span>Replay Folder Opening</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    setCurrentScreen('auth');
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-rose-700 hover:bg-[#FBEBE8] rounded-lg flex items-center space-x-2 transition-colors font-medium mt-0.5"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>

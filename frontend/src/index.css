@@ -61,3 +61,44 @@
   height: 2px;
   background-color: #FAF6EE;
 }
+
+/* 3D Folder Opening Animation */
+.folder-perspective {
+  perspective: 1200px;
+}
+
+.folder-flap-open {
+  transform-origin: top;
+  transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.folder-open-active {
+  transform: rotateX(-140deg);
+}
+
+@keyframes floatCard1 {
+  0% { transform: translateY(50px) rotate(0deg) scale(0.85); opacity: 0; }
+  100% { transform: translateY(-70px) rotate(-8deg) scale(1); opacity: 1; }
+}
+
+@keyframes floatCard2 {
+  0% { transform: translateY(50px) rotate(0deg) scale(0.85); opacity: 0; }
+  100% { transform: translateY(-110px) rotate(2deg) scale(1.05); opacity: 1; }
+}
+
+@keyframes floatCard3 {
+  0% { transform: translateY(50px) rotate(0deg) scale(0.85); opacity: 0; }
+  100% { transform: translateY(-65px) rotate(9deg) scale(0.98); opacity: 1; }
+}
+
+.animate-float-card-1 {
+  animation: floatCard1 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float-card-2 {
+  animation: floatCard2 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float-card-3 {
+  animation: floatCard3 1.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
