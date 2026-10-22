@@ -348,7 +348,7 @@ export default function App() {
         {
           id: 'f-1',
           name: 'Client Deliverables',
-          code: 'DOSSIER-01',
+          code: 'D-01',
           description: 'Active client design systems & production builds',
           color: 'peach',
           status: 'Active',
@@ -357,7 +357,7 @@ export default function App() {
         {
           id: 'f-2',
           name: 'Internal Research & Labs',
-          code: 'DOSSIER-02',
+          code: 'D-02',
           description: 'Product specs, AI models & wireframes',
           color: 'mint',
           status: 'Active',
@@ -366,7 +366,7 @@ export default function App() {
         {
           id: 'f-3',
           name: 'Brand & Marketing Ops',
-          code: 'DOSSIER-03',
+          code: 'D-03',
           description: 'Press kits, typography guides & launch schedules',
           color: 'blue',
           status: 'Active',
@@ -589,15 +589,24 @@ export default function App() {
     setCurrentScreen('folder_hub');
   };
 
+  const formatFolderCode = (code?: string, index?: number) => {
+    if (!code) return `D-0${(index ?? 0) + 1}`;
+    // If it matches DOSSIER-XX or DOSSIER XX, turn it into D-XX
+    const match = code.match(/DOSSIER[_\-\s]*(\d+)/i);
+    if (match) return `D-${match[1].padStart(2, '0')}`;
+    return code;
+  };
+
   // Create new task folder handler
   const handleCreateFolder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFolderName.trim()) return;
 
+    const shortCode = newFolderCode.trim().toUpperCase() || `D-0${currentOrg.folders.length + 1}`;
     const newFld: TaskFolder = {
       id: `f-${Date.now()}`,
       name: newFolderName.trim(),
-      code: newFolderCode.trim().toUpperCase() || `DOSSIER-0${currentOrg.folders.length + 1}`,
+      code: formatFolderCode(shortCode, currentOrg.folders.length),
       description: newFolderDescription.trim() || 'Classified task folder',
       color: newFolderColor,
       status: 'Active',
@@ -1958,24 +1967,27 @@ export default function App() {
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header (Image 2 Inspiration) */}
       <header className="px-6 pt-3 pb-0 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
-        <div className="flex items-center space-x-8">
+        <div className="flex items-center space-x-6 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
-          <div className="flex items-center space-x-3 pb-2.5">
+          <div className="flex items-center space-x-3 pb-2.5 shrink-0">
             <button
               onClick={() => setCurrentScreen('folder_hub')}
-              className="w-9 h-9 rounded-xl bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105"
+              className="w-9 h-9 rounded-xl bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
               title="Return to Folder Hub"
             >
               <Folder className="w-4 h-4" />
             </button>
-            <div className="flex flex-col justify-center">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col justify-center min-w-0">
+              <div className="flex items-center space-x-2 whitespace-nowrap">
                 <span className="font-extrabold text-sm tracking-tight text-[#2B241F]">
                   {currentOrg.name}
                 </span>
                 <span className="text-[#8C8072] text-xs">/</span>
-                <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs">
-                  {currentFolder.name} <span className="font-mono text-[10px] text-[#A66030]">({currentFolder.code})</span>
+                <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5 whitespace-nowrap">
+                  <span>{currentFolder.name}</span>
+                  <span className="font-mono text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1.5 py-0.2 rounded">
+                    {formatFolderCode(currentFolder.code)}
+                  </span>
                 </span>
               </div>
               <button
@@ -1988,7 +2000,7 @@ export default function App() {
           </div>
 
           {/* Vintage Folder Navigation Slips */}
-          <nav className="flex space-x-1.5 -mb-[1px]">
+          <nav className="flex space-x-1.5 -mb-[1px] shrink-0">
             {[
               { id: 'board' as const, label: 'Kanban Boards', count: tasks.length },
               { id: 'schedule' as const, label: 'Schedule & Timeline', count: schedules.length },
@@ -2018,9 +2030,8 @@ export default function App() {
           </nav>
         </div>
 
-        {/* Right Controls: Search, Notifications, Profile */}
-        <div className="flex items-center space-x-3 pb-3">
-
+        {/* Right Controls: Search, Notifications, Profile (spaced well away from folder tabs) */}
+        <div className="flex items-center space-x-3 pb-3 ml-6 shrink-0">
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
             <input
@@ -2028,7 +2039,7 @@ export default function App() {
               placeholder="Search dossier..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-48 shadow-inner"
+              className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-44 shadow-inner"
             />
           </div>
 
@@ -2332,7 +2343,9 @@ export default function App() {
                             <div
                               key={task.id}
                               onClick={() => setSelectedTask(task)}
-                              className={`${style.bg} border ${style.border} rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.99] relative`}
+                              className={`${style.bg} border ${style.border} rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.99] relative ${
+                                cardMenuOpenId === task.id ? 'z-40 shadow-lg' : 'z-10'
+                              }`}
                             >
                               <div className="flex items-center justify-between mb-2.5">
                                 <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
