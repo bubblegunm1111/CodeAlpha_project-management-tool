@@ -1238,10 +1238,10 @@ export default function App() {
   useEffect(() => {
     const timerInterval = setInterval(() => {
       setTasks(prev => {
-        let hasRunning = false;
+        let hasChanges = false;
         const updated = prev.map(t => {
           if (t.isTimerRunning) {
-            hasRunning = true;
+            hasChanges = true;
             const newTime = (t.timeSpent || 0) + 1;
             const estHours = t.estimatedHours || 4.0;
             const spentHours = newTime / 3600;
@@ -1266,19 +1266,12 @@ export default function App() {
           return t;
         });
 
-        if (hasRunning && selectedTask && selectedTask.isTimerRunning) {
-          const freshSelected = updated.find(u => u.id === selectedTask.id);
-          if (freshSelected) {
-            setSelectedTask(freshSelected);
-          }
-        }
-
-        return updated;
+        return hasChanges ? updated : prev;
       });
     }, 1000);
 
     return () => clearInterval(timerInterval);
-  }, [selectedTask]);
+  }, []);
 
   // Format seconds to HH:MM:SS or MM:SS
   const formatTimeSpent = (totalSeconds: number = 0) => {
@@ -1294,24 +1287,32 @@ export default function App() {
 
   // Toggle Stopwatch Timer on a Task
   const handleToggleTimer = (taskId: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
 
     let targetAction: 'start' | 'stop' = 'start';
     let updatedTaskObj: Task | null = null;
 
-    setTasks(prev => prev.map(t => {
-      if (t.id === taskId) {
-        const nextRunning = !t.isTimerRunning;
-        targetAction = nextRunning ? 'start' : 'stop';
-        updatedTaskObj = { ...t, isTimerRunning: nextRunning };
-        return updatedTaskObj;
-      }
-      return t;
-    }));
+    setTasks(prev => {
+      return prev.map(t => {
+        if (t.id === taskId) {
+          const nextRunning = !t.isTimerRunning;
+          targetAction = nextRunning ? 'start' : 'stop';
+          updatedTaskObj = { ...t, isTimerRunning: nextRunning };
+          return updatedTaskObj;
+        }
+        return t;
+      });
+    });
 
-    if (selectedTask && selectedTask.id === taskId && updatedTaskObj) {
-      setSelectedTask(updatedTaskObj);
-    }
+    setSelectedTask(prev => {
+      if (prev && prev.id === taskId) {
+        return { ...prev, isTimerRunning: !prev.isTimerRunning };
+      }
+      return prev;
+    });
 
     const numId = taskId.replace('t-', '');
     fetch(`${API_BASE}/tasks/${numId}/timer`, {
@@ -1323,7 +1324,7 @@ export default function App() {
     setNotifications(prev => [
       {
         id: Date.now(),
-        text: `${targetAction === 'start' ? '⏱️ Stopwatch Started' : '⏸️ Stopwatch Paused'} on "${(updatedTaskObj as any)?.title?.slice(0, 22) || 'task'}..."`,
+        text: `${targetAction === 'start' ? '⏱️ Stopwatch Started' : '⏸️ Stopwatch Paused'} on task`,
         time: 'Just now'
       },
       ...prev
@@ -4818,14 +4819,16 @@ export default function App() {
       </div>
 
       {/* Task Detail Modal & Live Card Color Changer */}
-      {selectedTask && (
+      {selectedTask && (() => {
+        const currentModalTask = tasks.find(t => t.id === selectedTask.id) || selectedTask;
+        return (
         <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Folder className="w-4 h-4 text-[#665A4E]" />
                 <span className="text-xs font-bold text-[#7A6E60] uppercase tracking-wider">
-                  Dossier Card #{selectedTask.id}
+                  Dossier Card #{currentModalTask.id}
                 </span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#E5DBC7] font-semibold text-[#4F4437]">
                   Column: {selectedTask.columnId.toUpperCase()}
@@ -4875,17 +4878,17 @@ export default function App() {
                     <span className="text-[11px] font-bold text-[#7A6D5E]">Pacing Radar:</span>
                     <span
                       className={`text-xs font-black uppercase px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 ${
-                        selectedTask.aiRiskScore === 'High'
+                        currentModalTask.aiRiskScore === 'High'
                           ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                          : selectedTask.aiRiskScore === 'Medium'
+                          : currentModalTask.aiRiskScore === 'Medium'
                           ? 'bg-amber-100 text-amber-800 border border-amber-300'
                           : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       }`}
                     >
-                      {selectedTask.aiRiskScore === 'High' && <Flame className="w-3.5 h-3.5" />}
-                      {selectedTask.aiRiskScore === 'Medium' && <AlertTriangle className="w-3.5 h-3.5" />}
-                      {selectedTask.aiRiskScore === 'Low' && <ShieldAlert className="w-3.5 h-3.5" />}
-                      <span>{selectedTask.aiRiskScore || 'Low'} Risk</span>
+                      {currentModalTask.aiRiskScore === 'High' && <Flame className="w-3.5 h-3.5" />}
+                      {currentModalTask.aiRiskScore === 'Medium' && <AlertTriangle className="w-3.5 h-3.5" />}
+                      {currentModalTask.aiRiskScore === 'Low' && <ShieldAlert className="w-3.5 h-3.5" />}
+                      <span>{currentModalTask.aiRiskScore || 'Low'} Risk</span>
                     </span>
                   </div>
                 </div>
@@ -4895,9 +4898,9 @@ export default function App() {
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#8A7D6F]">Time Spent on Task</span>
                     <div className="text-3xl font-black font-mono text-[#2B231D] tracking-tight flex items-baseline space-x-1">
-                      <span>{formatTimeSpent(selectedTask.timeSpent || 0)}</span>
+                      <span>{formatTimeSpent(currentModalTask.timeSpent || 0)}</span>
                       <span className="text-xs font-sans font-bold text-[#8C7E6C]">
-                        / {selectedTask.estimatedHours || 4}h target
+                        / {currentModalTask.estimatedHours || 4}h target
                       </span>
                     </div>
                   </div>
@@ -4905,14 +4908,14 @@ export default function App() {
                   <div className="flex items-center space-x-2">
                     <button
                       type="button"
-                      onClick={() => handleToggleTimer(selectedTask.id)}
+                      onClick={() => handleToggleTimer(currentModalTask.id)}
                       className={`px-4 py-2.5 rounded-xl font-bold text-xs shadow flex items-center space-x-2 transition-all ${
-                        selectedTask.isTimerRunning
+                        currentModalTask.isTimerRunning
                           ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
                           : 'bg-[#2B231D] hover:bg-[#43382F] text-[#FAF6EE]'
                       }`}
                     >
-                      {selectedTask.isTimerRunning ? (
+                      {currentModalTask.isTimerRunning ? (
                         <>
                           <Pause className="w-4 h-4" />
                           <span>Pause Timer</span>
@@ -4927,7 +4930,7 @@ export default function App() {
 
                     <button
                       type="button"
-                      onClick={() => handleResetTimer(selectedTask.id)}
+                      onClick={() => handleResetTimer(currentModalTask.id)}
                       className="p-2.5 rounded-xl border border-[#DCD1BC] hover:bg-[#EFE8DC] text-[#7A6D5E] transition-colors"
                       title="Reset stopwatch to 0"
                     >
@@ -5195,7 +5198,8 @@ export default function App() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Modal: Create Task Card */}
       {isNewTaskModalOpen && (
