@@ -41,15 +41,31 @@
   background: #B4A487;
 }
 
-/* Folder tab cutout curves */
+/* Authentic Vintage Manila Folder Cutout Slips */
 .folder-tab {
   position: relative;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top-left-radius: 9px;
+  border-top-right-radius: 9px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.folder-tab::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  right: 6px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 1px;
 }
 
 .folder-tab.active {
   background-color: #FAF6EE;
-  border-color: #DCD1BC #DCD1BC transparent #DCD1BC;
+  border-color: #D8CDBC #D8CDBC transparent #D8CDBC;
+  box-shadow: 0 -2px 8px -2px rgba(44, 38, 33, 0.08), inset 0 1px 0 #FFFFFF;
+  z-index: 10;
 }
 
 .folder-tab.active::after {

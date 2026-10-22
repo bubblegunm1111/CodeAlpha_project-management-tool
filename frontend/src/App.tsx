@@ -1957,40 +1957,38 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header (Image 2 Inspiration) */}
-      <header className="px-6 pt-4 pb-0 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2.5 pb-3">
+      <header className="px-6 pt-3 pb-0 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+        <div className="flex items-center space-x-8">
+          {/* Organization & Active Folder Breadcrumb with Return to Hub */}
+          <div className="flex items-center space-x-3 pb-2.5">
             <button
               onClick={() => setCurrentScreen('folder_hub')}
-              className="w-8 h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-colors"
+              className="w-9 h-9 rounded-xl bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105"
               title="Return to Folder Hub"
             >
               <Folder className="w-4 h-4" />
             </button>
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <button
-                  onClick={() => setCurrentScreen('folder_hub')}
-                  className="font-bold text-sm tracking-tight text-[#2B241F] hover:underline"
-                >
+            <div className="flex flex-col justify-center">
+              <div className="flex items-center space-x-2">
+                <span className="font-extrabold text-sm tracking-tight text-[#2B241F]">
                   {currentOrg.name}
-                </button>
+                </span>
                 <span className="text-[#8C8072] text-xs">/</span>
-                <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2 py-0.5 rounded border border-[#DFD1B8]">
-                  {currentFolder.name} ({currentFolder.code})
+                <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs">
+                  {currentFolder.name} <span className="font-mono text-[10px] text-[#A66030]">({currentFolder.code})</span>
                 </span>
               </div>
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="text-[10px] text-[#7A7064] hover:text-[#2C241E] flex items-center space-x-1 mt-0.5"
+                className="text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium text-left mt-0.5 inline-flex items-center space-x-1"
               >
                 <span>← Switch Folder or Org</span>
               </button>
             </div>
           </div>
 
-          {/* Vintage Folder Navigation Tabs (Switches Views: Board, Schedule, Notes) */}
-          <nav className="flex space-x-1 -mb-[1px]">
+          {/* Vintage Folder Navigation Slips */}
+          <nav className="flex space-x-1.5 -mb-[1px]">
             {[
               { id: 'board' as const, label: 'Kanban Boards', count: tasks.length },
               { id: 'schedule' as const, label: 'Schedule & Timeline', count: schedules.length },
@@ -2001,15 +1999,15 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`folder-tab px-4 py-2 text-xs font-semibold rounded-t-lg border-t border-x transition-all flex items-center space-x-2 ${
+                className={`folder-tab px-4 py-2.5 text-xs font-semibold rounded-t-lg border-t border-x transition-all flex items-center space-x-2 ${
                   activeTab === tab.id
                     ? 'active bg-[#FAF6EE] text-[#2C241E] border-[#DCD1BC] shadow-sm font-bold'
-                    : 'bg-[#E7DFC/90] text-[#786D61] border-transparent hover:bg-[#EFE8DC] hover:text-[#3B332B]'
+                    : 'bg-[#E5DCCB]/70 text-[#786D61] border-[#D9CEBC] hover:bg-[#EFE8DC] hover:text-[#3B332B]'
                 }`}
               >
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
-                  <span className={`px-1.5 py-0.2 text-[11px] rounded-full font-bold ${
+                  <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold leading-none ${
                     activeTab === tab.id ? 'bg-[#3F3730] text-[#FAF6EE]' : 'bg-[#DCD1BC] text-[#554C42]'
                   }`}>
                     {tab.count}
@@ -2130,16 +2128,16 @@ export default function App() {
         >
           <div className="space-y-6">
             <div className="flex items-center justify-between px-2 text-[#463D34]">
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setCurrentScreen('folder_hub')}
-                  className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#463D34] transition-colors"
-                  title="Return to Folder Hub"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <span className="text-sm font-bold tracking-tight text-[#2B241E]">Activities</span>
-              </div>
+              <button
+                onClick={() => setCurrentScreen('folder_hub')}
+                className="flex items-center space-x-2 text-left hover:text-[#2C241E] group transition-colors"
+                title="Return to Folder Hub"
+              >
+                <div className="p-1 rounded-md bg-[#E5DCCB] group-hover:bg-[#DACBB0] text-[#463D34] transition-colors">
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-sm font-extrabold tracking-tight text-[#2B241E]">Folders Hub</span>
+              </button>
               <button
                 onClick={() => setIsSidebarOpen(false)}
                 className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#7A7064] hover:text-[#2C241E] transition-colors"
@@ -2237,33 +2235,33 @@ export default function App() {
 
         {/* Dynamic Main View */}
         <main className="flex-1 bg-[#FAF6EE] overflow-y-auto p-6 flex flex-col relative">
-          {/* Floating Show Sidebar Pill when hidden */}
-          {!isSidebarOpen && (
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="absolute left-4 top-4 z-30 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-sm flex items-center space-x-1.5 transition-all"
-              title="Show Activities sidebar"
-            >
-              <PanelLeftOpen className="w-4 h-4" />
-              <span>Show Activities</span>
-            </button>
-          )}
-
           {/* VIEW 1: KANBAN BOARD */}
           {activeTab === 'board' && (
             <>
               <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-[#E5DBCA] gap-4">
-                <div>
-                  <p className="text-xs text-[#7B7062] font-medium flex items-center space-x-1.5">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Today is Wednesday, May 10th, 2026</span>
-                  </p>
-                  <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-0.5 flex items-center space-x-2">
-                    <span>Task Management Board</span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F3ECDE] border border-[#D8CEBC] text-[#695D50]">
-                      Sprint #3
-                    </span>
-                  </h1>
+                <div className="flex items-start space-x-3.5">
+                  {!isSidebarOpen && (
+                    <button
+                      onClick={() => setIsSidebarOpen(true)}
+                      className="mt-0.5 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-2xs flex items-center space-x-1.5 transition-all shrink-0"
+                      title="Show Folders sidebar"
+                    >
+                      <PanelLeftOpen className="w-4 h-4" />
+                      <span>Show Folders</span>
+                    </button>
+                  )}
+                  <div>
+                    <p className="text-xs text-[#7B7062] font-medium flex items-center space-x-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Today is Wednesday, May 10th, 2026</span>
+                    </p>
+                    <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-0.5 flex items-center space-x-2">
+                      <span>Task Management Board</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F3ECDE] border border-[#D8CEBC] text-[#695D50]">
+                        Sprint #3
+                      </span>
+                    </h1>
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-3">
