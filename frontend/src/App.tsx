@@ -817,6 +817,17 @@ export default function App() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(INITIAL_TEAM);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+  // Theme Palette Toggle: 'vintage' (original cream manila) vs 'aubergine_marigold' (ice silver, deep aubergine, marigold)
+  const [appTheme, setAppTheme] = useState<'vintage' | 'aubergine_marigold'>(() => {
+    return (localStorage.getItem('app_theme') as any) || 'aubergine_marigold';
+  });
+
+  const handleToggleTheme = () => {
+    const nextTheme = appTheme === 'vintage' ? 'aubergine_marigold' : 'vintage';
+    setAppTheme(nextTheme);
+    localStorage.setItem('app_theme', nextTheme);
+  };
+
   // Team Management Filters & Modal State
   const [teamRoleFilter, setTeamRoleFilter] = useState<string>('All Roles');
   const [teamProjectFilter, setTeamProjectFilter] = useState<string>('All Projects');
@@ -2181,8 +2192,79 @@ export default function App() {
     return 'bg-[#F97316]';
   };
 
-  // Color Styles Mapping (matching vintage pastel paper aesthetics)
+  // Color Styles Mapping (supports 'vintage' and 'aubergine_marigold' palette combos)
   const getColorStyles = (color: CardColor) => {
+    if (appTheme === 'aubergine_marigold') {
+      switch (color) {
+        case 'blue': // Ice Silver Primary Accent
+          return {
+            bg: 'bg-[#E6ECF5]',
+            border: 'border-[#BDC9DE]',
+            tagBg: 'bg-[#D3DEED]',
+            tagText: 'text-[#24344D]',
+            dotActive: 'bg-[#2A0F34]',
+            dotInactive: 'bg-[#CBD5E1]',
+            textColor: 'text-[#192435]',
+            indicator: 'bg-[#BDC9DE]'
+          };
+        case 'peach': // Marigold Vibrant Gold (#EAAADD)
+          return {
+            bg: 'bg-[#FEF5E7]',
+            border: 'border-[#F8D595]',
+            tagBg: 'bg-[#FEE5B3]',
+            tagText: 'text-[#8A4F00]',
+            dotActive: 'bg-[#EAAADD]',
+            dotInactive: 'bg-[#FCEAC7]',
+            textColor: 'text-[#4A2B00]',
+            indicator: 'bg-[#EAAADD]'
+          };
+        case 'purple': // Deep Aubergine Accent (#2A0F34)
+          return {
+            bg: 'bg-[#F6EEFA]',
+            border: 'border-[#DEC8E8]',
+            tagBg: 'bg-[#EED8FA]',
+            tagText: 'text-[#2A0F34]',
+            dotActive: 'bg-[#2A0F34]',
+            dotInactive: 'bg-[#E2CEEB]',
+            textColor: 'text-[#2A0F34]',
+            indicator: 'bg-[#2A0F34]'
+          };
+        case 'mint': // Cool Sage Silver
+          return {
+            bg: 'bg-[#EBF3F1]',
+            border: 'border-[#C2DDD7]',
+            tagBg: 'bg-[#D3E9E4]',
+            tagText: 'text-[#1F453E]',
+            dotActive: 'bg-[#2A0F34]',
+            dotInactive: 'bg-[#CBE3DE]',
+            textColor: 'text-[#14322D]',
+            indicator: 'bg-[#2A7566]'
+          };
+        case 'coral': // Aubergine-tinted Crimson
+          return {
+            bg: 'bg-[#FAEEF1]',
+            border: 'border-[#F0C9D3]',
+            tagBg: 'bg-[#F9D6DF]',
+            tagText: 'text-[#6B182C]',
+            dotActive: 'bg-[#EAAADD]',
+            dotInactive: 'bg-[#F8D2DC]',
+            textColor: 'text-[#480E1B]',
+            indicator: 'bg-[#A82845]'
+          };
+        case 'canary': // Pure Marigold Highlight
+          return {
+            bg: 'bg-[#FFF9EE]',
+            border: 'border-[#FBE4AA]',
+            tagBg: 'bg-[#FEEFC4]',
+            tagText: 'text-[#7A4500]',
+            dotActive: 'bg-[#EAAADD]',
+            dotInactive: 'bg-[#FDF0CE]',
+            textColor: 'text-[#522E00]',
+            indicator: 'bg-[#EAAADD]'
+          };
+      }
+    }
+
     switch (color) {
       case 'blue':
         return {
@@ -3247,9 +3329,32 @@ export default function App() {
                 placeholder="Search tasks & tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-52 shadow-inner"
+                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-48 shadow-inner"
               />
             </div>
+
+            {/* Color Palette Switcher & Revert Button */}
+            <button
+              onClick={handleToggleTheme}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center space-x-2 shadow-2xs ${
+                appTheme === 'aubergine_marigold'
+                  ? 'bg-[#2A0F34] text-[#EAAADD] border-[#431B52] hover:bg-[#391547]'
+                  : 'bg-[#FAF6EE] text-[#4F4438] border-[#DCD1BC] hover:bg-[#EFE8DC]'
+              }`}
+              title="Click to toggle between Deep Aubergine/Marigold and Vintage Manila palette"
+            >
+              <div className="flex items-center space-x-1 shrink-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#EAAADD] border border-black/20" title="Marigold"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#2A0F34] border border-white/20" title="Deep Aubergine"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#DDE3EB] border border-black/20" title="Ice Silver"></span>
+              </div>
+              <span>
+                {appTheme === 'aubergine_marigold' ? 'Palette: Aubergine & Marigold' : 'Palette: Vintage Paper'}
+              </span>
+              <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.2 rounded bg-black/20">
+                {appTheme === 'aubergine_marigold' ? 'Revert ↺' : 'Try Combo ✨'}
+              </span>
+            </button>
 
             <div className="relative">
               <button
