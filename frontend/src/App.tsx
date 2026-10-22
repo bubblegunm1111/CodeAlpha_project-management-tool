@@ -798,6 +798,9 @@ export default function App() {
   const [newTaskColor, setNewTaskColor] = useState<CardColor>('blue');
   const [newTaskTag, setNewTaskTag] = useState('#client');
   const [newTaskPriority, setNewTaskPriority] = useState<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
+  const [newTaskAssignees, setNewTaskAssignees] = useState<{ name: string; avatar: string }[]>([
+    { name: 'Emma Carter', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop' }
+  ]);
 
   // New Note form fields
   const [newNoteTitle, setNewNoteTitle] = useState('');
@@ -1104,6 +1107,46 @@ export default function App() {
         }
       })
       .catch(() => {});
+
+    fetch(`${API_BASE}/projects/1`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.columns && Array.isArray(data.columns)) {
+          const loadedTasks: Task[] = [];
+          data.columns.forEach((col: any) => {
+            const colId = col.id === 1 ? 'todo' : col.id === 2 ? 'inprogress' : 'inreview';
+            if (col.tasks && Array.isArray(col.tasks)) {
+              col.tasks.forEach((t: any) => {
+                loadedTasks.push({
+                  id: `t-${t.id}`,
+                  columnId: colId,
+                  title: t.title,
+                  tags: Array.isArray(t.tags) ? t.tags : ['#client'],
+                  color: (t.color as any) || 'blue',
+                  note: t.note || undefined,
+                  progress: t.progress || 0,
+                  subtasks: Array.isArray(t.subtasks) ? t.subtasks : [],
+                  assignees: Array.isArray(t.assignees) && t.assignees.length > 0 ? t.assignees : [
+                    { name: 'Emma Carter', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop' }
+                  ],
+                  commentsCount: (t.comments && t.comments.length) || 0,
+                  attachmentsCount: 0,
+                  dueDate: t.due_date || 'May 30, 2026',
+                  priority: (t.priority as any) || 'Medium',
+                  comments: Array.isArray(t.comments) ? t.comments : []
+                });
+              });
+            }
+          });
+          if (loadedTasks.length > 0) {
+            setTasks(prev => {
+              const prevNonBackend = prev.filter(p => !loadedTasks.some(lt => lt.id === p.id));
+              return [...loadedTasks, ...prevNonBackend];
+            });
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Card Color Switcher - changes color of existing task
@@ -1131,6 +1174,42 @@ export default function App() {
       { id: Date.now(), text: `Card color changed to ${newColor.toUpperCase()}`, time: 'Just now' },
       ...prev
     ]);
+  };
+
+  // Toggle member assignment on a task
+  const handleToggleTaskAssignee = (taskId: string, member: TeamMember) => {
+    let updatedTask: Task | null = null;
+    setTasks(prev => prev.map(t => {
+      if (t.id === taskId) {
+        const hasMember = (t.assignees || []).some(a => a.name === member.name);
+        const newAssignees = hasMember
+          ? (t.assignees.length > 1 ? t.assignees.filter(a => a.name !== member.name) : t.assignees)
+          : [...(t.assignees || []), { name: member.name, avatar: member.avatar }];
+        
+        updatedTask = { ...t, assignees: newAssignees };
+        return updatedTask;
+      }
+      return t;
+    }));
+
+    if (selectedTask && selectedTask.id === taskId && updatedTask) {
+      setSelectedTask(updatedTask);
+    }
+
+    const numId = taskId.replace('t-', '');
+    if (updatedTask) {
+      const t = updatedTask as Task;
+      fetch(`${API_BASE}/tasks/${numId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignees: t.assignees })
+      }).catch(() => {});
+
+      setNotifications(prev => [
+        { id: Date.now(), text: `Updated assignees on "${t.title.slice(0, 24)}..."`, time: 'Just now' },
+        ...prev
+      ]);
+    }
   };
 
   // Add a subtask to selectedTask in modal
@@ -1336,6 +1415,10 @@ export default function App() {
       completed: false
     }));
 
+    const taskAssignees = newTaskAssignees.length > 0
+      ? newTaskAssignees
+      : [{ name: currentUser.name || 'Mason Walker', avatar: currentUser.avatar }];
+
     const newTask: Task = {
       id: `t-${Date.now()}`,
       columnId: newTaskTargetColumn,
@@ -1344,9 +1427,7 @@ export default function App() {
       color: newTaskColor,
       progress: 0,
       subtasks: initialSubtasks,
-      assignees: [
-        { name: 'Mason Walker', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces' }
-      ],
+      assignees: taskAssignees,
       commentsCount: 0,
       attachmentsCount: 0,
       dueDate: 'May 30, 2026',
@@ -1371,12 +1452,14 @@ export default function App() {
         color: newTask.color,
         tags: newTask.tags,
         subtasks: newTask.subtasks,
-        progress: 0
+        progress: 0,
+        assignees: newTask.assignees
       })
     }).catch(() => {});
 
+    const memberNames = taskAssignees.map(a => a.name).join(', ');
     setNotifications(prev => [
-      { id: Date.now(), text: `Task created: "${newTask.title}" in ${newTaskTargetColumn}`, time: 'Just now' },
+      { id: Date.now(), text: `Task created: "${newTask.title}" (assigned to ${memberNames})`, time: 'Just now' },
       ...prev
     ]);
   };
@@ -2847,7 +2930,7 @@ export default function App() {
               { id: 'schedule' as const, label: 'Schedule & Timeline', count: schedules.length },
               { id: 'notes' as const, label: 'Dossier Notes', count: notes.length },
               { id: 'reports' as const, label: 'Activity Logs' },
-              { id: 'team' as const, label: 'Team Members', count: 4 }
+              { id: 'team' as const, label: 'Team Members', count: teamMembers.length }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -2938,24 +3021,34 @@ export default function App() {
             <div>
               <p className="text-[10px] font-bold text-[#8C8072] tracking-wider px-2 uppercase mb-1.5">Records</p>
               <nav className="space-y-0.5">
-                {[
-                  { icon: Users, label: 'Team', hasChevron: true },
-                  { icon: Briefcase, label: 'Clients' }
-                ].map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={idx}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E] transition-all"
-                    >
-                      <div className="flex items-center space-x-2.5">
-                        <Icon className="w-4 h-4 text-[#756A5E]" />
-                        <span>{item.label}</span>
-                      </div>
-                      {item.hasChevron && <ChevronRight className="w-3.5 h-3.5 text-[#9C9081]" />}
-                    </button>
-                  );
-                })}
+                <button
+                  onClick={() => setActiveTab('team')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    activeTab === 'team'
+                      ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
+                      : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Users className="w-4 h-4 text-[#756A5E]" />
+                    <span>Team</span>
+                  </div>
+                  <span className="flex items-center space-x-1">
+                    <span className="px-1.5 py-0.2 text-[10px] rounded-full font-bold bg-[#DCD1BC] text-[#554C42]">
+                      {teamMembers.length}
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#9C9081]" />
+                  </span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('team')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E] transition-all"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Briefcase className="w-4 h-4 text-[#756A5E]" />
+                    <span>Clients</span>
+                  </div>
+                </button>
               </nav>
             </div>
 
@@ -3272,10 +3365,26 @@ export default function App() {
                               </div>
 
                               <div className="flex items-center justify-between pt-2 border-t border-black/5 text-xs text-[#7B6E5F]">
-                                <div className="flex items-center -space-x-1.5">
-                                  {task.assignees.map((assignee, idx) => (
-                                    <img key={idx} src={assignee.avatar} alt={assignee.name} className="w-5 h-5 rounded-full border border-white object-cover" title={assignee.name} />
-                                  ))}
+                                <div className="flex items-center -space-x-1.5 overflow-hidden">
+                                  {task.assignees && task.assignees.length > 0 ? (
+                                    task.assignees.map((assignee, idx) => (
+                                      <img
+                                        key={idx}
+                                        src={assignee.avatar}
+                                        alt={assignee.name}
+                                        className="w-5 h-5 rounded-full border border-white object-cover shadow-2xs hover:scale-125 transition-transform"
+                                        title={`Assigned: ${assignee.name}`}
+                                      />
+                                    ))
+                                  ) : (
+                                    <span className="text-[10px] text-[#9E9080] italic">Unassigned</span>
+                                  )}
+                                  {task.assignees && task.assignees.length > 0 && (
+                                    <span className="ml-2.5 text-[10px] font-bold text-[#6B5E4F] truncate max-w-[80px]" title={task.assignees.map(a => a.name).join(', ')}>
+                                      {task.assignees[0].name.split(' ')[0]}
+                                      {task.assignees.length > 1 && ` +${task.assignees.length - 1}`}
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="flex items-center space-x-3 text-[11px] font-semibold text-[#665B4E]">
                                   <span className="flex items-center space-x-1">
@@ -4315,6 +4424,64 @@ export default function App() {
                 </div>
               </div>
 
+              {/* ASSIGNED TEAM MEMBERS (User Requirement: Assign members to task) */}
+              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
+                  <span className="flex items-center space-x-1.5">
+                    <Users className="w-4 h-4 text-[#7A6E60]" />
+                    <span>Assigned Team Members</span>
+                  </span>
+                  <span className="text-[11px] text-[#8C7E6C] font-semibold">
+                    {selectedTask.assignees.length} assigned
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {selectedTask.assignees.map((assignee, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center space-x-2 bg-white px-2.5 py-1 rounded-full border border-[#DCD1BC] shadow-2xs"
+                    >
+                      <img
+                        src={assignee.avatar}
+                        alt={assignee.name}
+                        className="w-5 h-5 rounded-full object-cover border border-[#DCD1BC]"
+                      />
+                      <span className="text-xs font-bold text-[#2A231D]">{assignee.name}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2 border-t border-[#E8DEC9]">
+                  <p className="text-[10px] font-bold text-[#8C7E6C] uppercase mb-1.5">Click to Assign / Unassign Member:</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-1 bg-white/70 border border-[#DCD1BC] rounded-xl">
+                    {teamMembers.map(member => {
+                      const isAssigned = (selectedTask.assignees || []).some(a => a.name === member.name);
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          onClick={() => handleToggleTaskAssignee(selectedTask.id, member)}
+                          className={`flex items-center space-x-2 p-1.5 rounded-lg border text-xs text-left transition-all ${
+                            isAssigned
+                              ? 'bg-[#EFE8DC] border-[#8C7E6C] text-[#2A231D] font-bold'
+                              : 'bg-white border-[#E8DEC9] text-[#6B5E4F] hover:bg-[#FAF6EE]'
+                          }`}
+                        >
+                          <img
+                            src={member.avatar}
+                            alt={member.name}
+                            className="w-5 h-5 rounded-full object-cover border border-[#DCD1BC] shrink-0"
+                          />
+                          <span className="truncate flex-1 text-[11px]">{member.name}</span>
+                          {isAssigned && <Check className="w-3 h-3 text-[#2A231D] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
               {/* Progress & Subtasks */}
               <div className="bg-[#F5EFEB] p-5 rounded-2xl border border-[#DCD1BC] space-y-3.5">
                 <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
@@ -4600,6 +4767,52 @@ export default function App() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Assign Team Members (User Requirement) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-[#5C5042]">Assign Team Members</label>
+                  <span className="text-[11px] text-[#8C7E6C] font-semibold">
+                    {newTaskAssignees.length} assigned
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1.5 bg-white/80 border border-[#D5CABB] rounded-xl">
+                  {teamMembers.map(member => {
+                    const isAssigned = newTaskAssignees.some(a => a.name === member.name);
+                    return (
+                      <button
+                        type="button"
+                        key={member.id}
+                        onClick={() => {
+                          if (isAssigned) {
+                            if (newTaskAssignees.length > 1) {
+                              setNewTaskAssignees(newTaskAssignees.filter(a => a.name !== member.name));
+                            }
+                          } else {
+                            setNewTaskAssignees([...newTaskAssignees, { name: member.name, avatar: member.avatar }]);
+                          }
+                        }}
+                        className={`flex items-center space-x-2 p-1.5 rounded-lg border text-xs text-left transition-all ${
+                          isAssigned
+                            ? 'bg-[#EFE8DC] border-[#8C7E6C] text-[#2A231D] font-bold shadow-2xs'
+                            : 'bg-white border-[#E8DEC9] text-[#6B5E4F] hover:bg-[#FAF6EE]'
+                        }`}
+                      >
+                        <img
+                          src={member.avatar}
+                          alt={member.name}
+                          className="w-6 h-6 rounded-full object-cover border border-[#DCD1BC] shrink-0"
+                        />
+                        <div className="truncate flex-1">
+                          <p className="truncate leading-tight text-[11px]">{member.name}</p>
+                          <p className="text-[9px] text-[#8C7E6C] font-normal truncate">{member.role}</p>
+                        </div>
+                        {isAssigned && <Check className="w-3.5 h-3.5 text-[#2A231D] shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="pt-2 flex justify-end space-x-2">

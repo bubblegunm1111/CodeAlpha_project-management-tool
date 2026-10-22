@@ -198,6 +198,7 @@ const initializeDB = () => {
     db.run("ALTER TABLE tasks ADD COLUMN tags TEXT DEFAULT '[]'", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN progress INTEGER DEFAULT 0", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN subtasks TEXT DEFAULT '[]'", () => {});
+    db.run("ALTER TABLE tasks ADD COLUMN assignees TEXT DEFAULT '[]'", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN note TEXT", () => {});
     db.run("ALTER TABLE projects ADD COLUMN organization_id INTEGER", () => {});
     db.run("ALTER TABLE projects ADD COLUMN folder_id INTEGER", () => {});
@@ -477,6 +478,7 @@ app.get('/api/v1/projects/:id', authMiddleware, async (req, res) => {
       for (let t of tasks) {
         t.tags = typeof t.tags === 'string' ? JSON.parse(t.tags || '[]') : t.tags;
         t.subtasks = typeof t.subtasks === 'string' ? JSON.parse(t.subtasks || '[]') : t.subtasks;
+        t.assignees = typeof t.assignees === 'string' ? JSON.parse(t.assignees || '[]') : t.assignees;
         const comments = await allAsync(
           'SELECT c.*, u.name, u.avatar_url FROM comments c JOIN users u ON c.user_id = u.id WHERE c.task_id = ? ORDER BY c.created_at DESC',
           [t.id]
@@ -495,14 +497,14 @@ app.get('/api/v1/projects/:id', authMiddleware, async (req, res) => {
 
 // ============ TASKS ENDPOINTS ============
 
-// Create task with custom color, tags, checklist
+// Create task with custom color, tags, checklist, assignees
 app.post('/api/v1/projects/:projectId/tasks', authMiddleware, async (req, res) => {
   try {
-    const { column_id, title, description, priority, due_date, color, tags, progress, subtasks, note } = req.body;
+    const { column_id, title, description, priority, due_date, color, tags, progress, subtasks, note, assignees } = req.body;
 
     const result = await runAsync(
-      `INSERT INTO tasks (column_id, project_id, title, description, priority, due_date, color, tags, progress, subtasks, note, position)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO tasks (column_id, project_id, title, description, priority, due_date, color, tags, progress, subtasks, note, position, assignees)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         column_id,
         req.params.projectId,
@@ -515,13 +517,15 @@ app.post('/api/v1/projects/:projectId/tasks', authMiddleware, async (req, res) =
         progress || 0,
         JSON.stringify(subtasks || []),
         note || null,
-        0
+        0,
+        JSON.stringify(assignees || [])
       ]
     );
 
     const task = await getAsync('SELECT * FROM tasks WHERE id = ?', [result.lastID]);
     task.tags = JSON.parse(task.tags || '[]');
     task.subtasks = JSON.parse(task.subtasks || '[]');
+    task.assignees = JSON.parse(task.assignees || '[]');
     task.comments = [];
     res.json(task);
   } catch (error) {
@@ -529,10 +533,10 @@ app.post('/api/v1/projects/:projectId/tasks', authMiddleware, async (req, res) =
   }
 });
 
-// Update task (Change card color, title, priority, checklist, etc.)
+// Update task (Change card color, title, priority, checklist, assignees, etc.)
 app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
   try {
-    const { title, description, priority, due_date, column_id, position, color, tags, progress, subtasks, note } = req.body;
+    const { title, description, priority, due_date, column_id, position, color, tags, progress, subtasks, note, assignees } = req.body;
 
     const updates = [];
     const params = [];
@@ -548,6 +552,7 @@ app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
     if (progress !== undefined) { updates.push('progress = ?'); params.push(progress); }
     if (subtasks !== undefined) { updates.push('subtasks = ?'); params.push(JSON.stringify(subtasks)); }
     if (note !== undefined) { updates.push('note = ?'); params.push(note); }
+    if (assignees !== undefined) { updates.push('assignees = ?'); params.push(JSON.stringify(assignees)); }
 
     updates.push('updated_at = CURRENT_TIMESTAMP');
     params.push(req.params.id);
@@ -557,6 +562,7 @@ app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
     const task = await getAsync('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
     task.tags = JSON.parse(task.tags || '[]');
     task.subtasks = JSON.parse(task.subtasks || '[]');
+    task.assignees = JSON.parse(task.assignees || '[]');
     res.json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });
