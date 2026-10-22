@@ -1,0 +1,60 @@
+# Instructions / Specification files (Excluded from repo commits)
+INSTRUCTIONS.md
+instructions.md
+*.instructions.md
+specs/
+
+# Environment files
+.env
+.env.backup
+.env.production
+.env.local
+.env.*.local
+*.env
+
+# Dependencies
+node_modules/
+vendor/
+.pnp
+.pnp.js
+
+# Build and distribution files
+dist/
+build/
+out/
+.next/
+
+# Laravel specific
+/backend/vendor/
+/backend/.env
+/backend/.env.backup
+/backend/.env.production
+/backend/public/hot
+/backend/public/storage
+/backend/storage/*.key
+/backend/storage/framework/cache/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/views/*
+/backend/storage/logs/*
+
+# Testing and coverage
+coverage/
+.phpunit.result.cache
+*.lcov
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
