@@ -1449,42 +1449,68 @@ app.post('/api/v1/organizations/:orgId/invites', authMiddleware, async (req, res
 
     if (mailTransporter) {
       try {
+        const fromAddress = process.env.SMTP_USER || 'shahdhosni144@gmail.com';
         const mailOptions = {
-          from: `"Archival PM" <${process.env.SMTP_FROM || process.env.SMTP_USER || 'invites@archivalpm.com'}>`,
+          from: `"Archival PM" <${fromAddress}>`,
           to: email.trim().toLowerCase(),
-          subject: `${org.name}: You have been invited to collaborate on Archival PM`,
-          headers: {
-            'X-Priority': '1',
-            'X-MSMail-Priority': 'High',
-            'Importance': 'High'
-          },
-          text: `You have been invited to join ${org.name} on Archival PM as ${role || 'team member'}.\n\nClick the link below to accept and access your workspace:\n${inviteUrl}\n\nWelcome aboard!`,
+          replyTo: fromAddress,
+          subject: `Invitation to collaborate on ${org.name}`,
+          text: `Hi ${name || 'there'},\n\nYou have been invited to collaborate with ${org.name} on Archival PM.\n\nTo accept this invitation and access your projects, please visit:\n${inviteUrl}\n\nThank you,\n${org.name} Team`,
           html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F5EFEB; padding: 40px 20px; color: #2A231D;">
-              <div style="max-width: 520px; margin: 0 auto; background: #FAF6EE; border: 2px solid #D5CABB; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-                <div style="background-color: #EFE8DC; padding: 18px 24px; border-bottom: 1px solid #DCD1BC;">
-                  <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #7F7364;">Archival PM &bull; Classified Workspace</span>
-                </div>
-                <div style="padding: 32px 28px; text-align: center;">
-                  <div style="width: 54px; height: 54px; line-height: 54px; margin: 0 auto 16px; border-radius: 50%; background-color: #2B231D; color: #FAF6EE; font-weight: 900; font-size: 20px; border: 2px solid #D5CABB;">
-                    AP
-                  </div>
-                  <h2 style="font-size: 20px; font-weight: 900; color: #2A231D; margin: 0 0 8px;">You've been invited to join ${org.name}</h2>
-                  <p style="font-size: 13px; color: #6B5E4F; line-height: 1.6; margin: 0 0 24px;">
-                    Collaborate on confidential project dossiers, interactive schedules, and sprint boards on Archival PM.
-                  </p>
-                  <div style="margin: 28px 0;">
-                    <a href="${inviteUrl}" style="background-color: #2B231D; color: #FAF6EE; padding: 14px 28px; border-radius: 12px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                      Accept Invitation & Join &rarr;
-                    </a>
-                  </div>
-                  <p style="font-size: 11px; color: #8C7E6C; margin: 24px 0 0; border-top: 1px solid #E8DEC9; pt: 16px;">
-                    Or paste this URL in your browser:<br/>
-                    <a href="${inviteUrl}" style="color: #2A231D; word-break: break-all;">${inviteUrl}</a>
-                  </p>
-                </div>
-              </div>
-            </div>
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Workspace Invitation</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f7f5f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #2d241e;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f7f5f0; padding: 40px 15px;">
+                <tr>
+                  <td align="center">
+                    <table role="presentation" width="100%" style="max-width: 540px; background-color: #ffffff; border: 1px solid #e2dacd; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="background-color: #f2ede4; padding: 18px 28px; border-bottom: 1px solid #e2dacd;">
+                          <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="font-size: 13px; font-weight: 700; color: #6b5c4d; letter-spacing: 0.5px;">
+                                ARCHIVAL PM WORKSPACE
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 36px 32px;">
+                          <h1 style="font-size: 22px; line-height: 1.3; font-weight: 800; color: #221a14; margin: 0 0 16px 0;">
+                            Join ${org.name}
+                          </h1>
+                          <p style="font-size: 15px; line-height: 1.6; color: #4a3e35; margin: 0 0 20px 0;">
+                            Hello ${name || ''},<br/><br/>
+                            You've been invited as <strong>${role || 'Team Member'}</strong> to collaborate on schedules, task boards, and project dossiers in the <strong>${org.name}</strong> workspace.
+                          </p>
+                          <div style="margin: 28px 0; text-align: left;">
+                            <a href="${inviteUrl}" target="_blank" style="display: inline-block; background-color: #2b231d; color: #ffffff; text-decoration: none; padding: 13px 26px; border-radius: 8px; font-size: 14px; font-weight: 700; letter-spacing: 0.2px;">
+                              Accept Invitation &rarr;
+                            </a>
+                          </div>
+                          <p style="font-size: 13px; line-height: 1.5; color: #706356; margin: 24px 0 0 0; padding-top: 20px; border-top: 1px solid #f0e9df;">
+                            If you're having trouble clicking the button, copy and paste this link into your web browser:<br/>
+                            <a href="${inviteUrl}" style="color: #6366f1; word-break: break-all; font-size: 12px;">${inviteUrl}</a>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="background-color: #faf8f5; padding: 16px 32px; border-top: 1px solid #f0e9df; font-size: 12px; color: #8e8072; text-align: center;">
+                          Sent via Archival PM Workspace for ${org.name}.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
           `
         };
 
