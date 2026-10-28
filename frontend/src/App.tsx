@@ -5808,36 +5808,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (Thumb-Friendly Native Smartphone Pattern) */}
-      <nav className="md:hidden sticky bottom-0 z-30 bg-[#EFE8DC]/95 backdrop-blur-md border-t border-[#DCD1BC] px-2 py-1.5 pb-safe flex items-center justify-around shadow-lg">
-        {[
-          { id: 'board' as const, icon: LayoutDashboard, label: 'Boards' },
-          { id: 'products' as const, icon: Package, label: 'Products' },
-          { id: 'schedule' as const, icon: CalendarIcon, label: 'Timeline' },
-          { id: 'notes' as const, icon: FileText, label: 'Notes' },
-          { id: 'team' as const, icon: Users, label: 'Team' }
-        ].map(item => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all touch-target select-none ${
-                isActive
-                  ? 'text-[#2E2721] font-black'
-                  : 'text-[#7A7064] hover:text-[#2C241E] font-medium'
-              }`}
-            >
-              <div className={`p-1 rounded-lg transition-transform ${isActive ? 'bg-[#FAF6EE] shadow-2xs scale-110' : ''}`}>
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[#2E2721]' : 'text-[#7A7064]'}`} />
-              </div>
-              <span className="text-[10px] mt-0.5 tracking-tight leading-none">{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
       {/* Task Detail Modal & Live Card Color Changer */}
       {selectedTask && (() => {
         const currentModalTask = tasks.find(t => t.id === selectedTask.id) || selectedTask;
