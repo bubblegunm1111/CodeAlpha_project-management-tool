@@ -1052,6 +1052,10 @@ export default function App() {
   const [isScheduleColorDropdownOpen, setIsScheduleColorDropdownOpen] = useState(false);
   const [isDetailColorDropdownOpen, setIsDetailColorDropdownOpen] = useState(false);
 
+  // Custom Member Assignment Popover Dropdown open states
+  const [isDetailMemberDropdownOpen, setIsDetailMemberDropdownOpen] = useState(false);
+  const [isTaskMemberDropdownOpen, setIsTaskMemberDropdownOpen] = useState(false);
+
   // Set sidebar open on wide screens and closed on mobile screens initially
   useEffect(() => {
     if (window.innerWidth >= 768) {
@@ -6349,8 +6353,8 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ASSIGNED TEAM MEMBERS (User Requirement: Assign members to task) */}
-              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-2.5">
+              {/* ASSIGNED TEAM MEMBERS: Space-Saving Custom Dropdown Selector */}
+              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
                   <span className="flex items-center space-x-1.5">
                     <Users className="w-4 h-4 text-[#7A6E60]" />
@@ -6361,49 +6365,86 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  {selectedTask.assignees.map((assignee, idx) => (
-                    <div
-                      key={idx}
-                      className="inline-flex items-center space-x-2 bg-white px-2.5 py-1 rounded-full border border-[#DCD1BC] shadow-2xs"
-                    >
-                      <img
-                        src={assignee.avatar}
-                        alt={assignee.name}
-                        className="w-5 h-5 rounded-full object-cover border border-[#DCD1BC]"
-                      />
-                      <span className="text-xs font-bold text-[#2A231D]">{assignee.name}</span>
-                    </div>
-                  ))}
+                {/* Selected Member Badges with 1-Click Remove */}
+                <div className="flex flex-wrap items-center gap-1.5 min-h-[30px]">
+                  {selectedTask.assignees.map((assignee, idx) => {
+                    const memberObj = teamMembers.find(m => m.name === assignee.name);
+                    return (
+                      <div
+                        key={idx}
+                        className="inline-flex items-center space-x-1.5 bg-white pl-1.5 pr-2 py-0.5 rounded-full border border-[#DCD1BC] shadow-2xs text-xs font-bold text-[#2A231D]"
+                      >
+                        <img
+                          src={assignee.avatar}
+                          alt={assignee.name}
+                          className="w-4 h-4 rounded-full object-cover border border-[#DCD1BC]"
+                        />
+                        <span>{assignee.name}</span>
+                        {selectedTask.assignees.length > 1 && memberObj && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleTaskAssignee(selectedTask.id, memberObj)}
+                            className="text-[#9C8F80] hover:text-red-700 ml-0.5"
+                            title={`Unassign ${assignee.name}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="pt-2 border-t border-[#E8DEC9]">
-                  <p className="text-[10px] font-bold text-[#8C7E6C] uppercase mb-1.5">Click to Assign / Unassign Member:</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-1 bg-white/70 border border-[#DCD1BC] rounded-xl">
-                    {teamMembers.map(member => {
-                      const isAssigned = (selectedTask.assignees || []).some(a => a.name === member.name);
-                      return (
-                        <button
-                          key={member.id}
-                          type="button"
-                          onClick={() => handleToggleTaskAssignee(selectedTask.id, member)}
-                          className={`flex items-center space-x-2 p-1.5 rounded-lg border text-xs text-left transition-all ${
-                            isAssigned
-                              ? 'bg-[#EFE8DC] border-[#8C7E6C] text-[#2A231D] font-bold'
-                              : 'bg-white border-[#E8DEC9] text-[#6B5E4F] hover:bg-[#FAF6EE]'
-                          }`}
-                        >
-                          <img
-                            src={member.avatar}
-                            alt={member.name}
-                            className="w-5 h-5 rounded-full object-cover border border-[#DCD1BC] shrink-0"
-                          />
-                          <span className="truncate flex-1 text-[11px]">{member.name}</span>
-                          {isAssigned && <Check className="w-3 h-3 text-[#2A231D] shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                {/* Dropdown Toggle matching the Color Theme Aesthetic */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsDetailMemberDropdownOpen(!isDetailMemberDropdownOpen)}
+                    className="w-full bg-white border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3.5 py-2 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                      <span>Assign / Manage Contributors ({teamMembers.length} available)</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-[#8C7E6C] transition-transform duration-200 ${isDetailMemberDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Rich Popover Menu with live team members & instant updates */}
+                  {isDetailMemberDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar">
+                      <div className="p-1.5 text-[10px] font-bold uppercase text-[#8C7E6C] tracking-wider border-b border-[#E8DEC9] mb-1">
+                        Select contributors to toggle assignment:
+                      </div>
+                      {teamMembers.map(member => {
+                        const isAssigned = (selectedTask.assignees || []).some(a => a.name === member.name);
+                        return (
+                          <button
+                            key={member.id}
+                            type="button"
+                            onClick={() => handleToggleTaskAssignee(selectedTask.id, member)}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all ${
+                              isAssigned
+                                ? 'bg-[#EAE0CF] text-[#2C241E] font-bold shadow-2xs'
+                                : 'hover:bg-white text-[#4A3F33]'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2.5 min-w-0">
+                              <img
+                                src={member.avatar}
+                                alt={member.name}
+                                className="w-6 h-6 rounded-full object-cover border border-[#DCD1BC] shrink-0"
+                              />
+                              <div className="text-left min-w-0">
+                                <p className="font-bold leading-tight truncate">{member.name}</p>
+                                <p className="text-[10px] text-[#8C7E6C] truncate">{member.role}</p>
+                              </div>
+                            </div>
+                            {isAssigned && <Check className="w-4 h-4 text-[#2C241E] shrink-0 ml-2" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -6740,49 +6781,99 @@ export default function App() {
                 )}
               </div>
 
-              {/* Assign Team Members (User Requirement) */}
-              <div>
+              {/* Assign Team Members: Space-Saving Dropdown */}
+              <div className="relative">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold text-[#5C5042]">Assign Team Members</label>
                   <span className="text-[11px] text-[#8C7E6C] font-semibold">
                     {newTaskAssignees.length} assigned
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1.5 bg-white/80 border border-[#D5CABB] rounded-xl">
-                  {teamMembers.map(member => {
-                    const isAssigned = newTaskAssignees.some(a => a.name === member.name);
-                    return (
-                      <button
-                        type="button"
-                        key={member.id}
-                        onClick={() => {
-                          if (isAssigned) {
-                            if (newTaskAssignees.length > 1) {
-                              setNewTaskAssignees(newTaskAssignees.filter(a => a.name !== member.name));
-                            }
-                          } else {
-                            setNewTaskAssignees([...newTaskAssignees, { name: member.name, avatar: member.avatar }]);
-                          }
-                        }}
-                        className={`flex items-center space-x-2 p-1.5 rounded-lg border text-xs text-left transition-all ${
-                          isAssigned
-                            ? 'bg-[#EFE8DC] border-[#8C7E6C] text-[#2A231D] font-bold shadow-2xs'
-                            : 'bg-white border-[#E8DEC9] text-[#6B5E4F] hover:bg-[#FAF6EE]'
-                        }`}
-                      >
-                        <img
-                          src={member.avatar}
-                          alt={member.name}
-                          className="w-6 h-6 rounded-full object-cover border border-[#DCD1BC] shrink-0"
-                        />
-                        <div className="truncate flex-1">
-                          <p className="truncate leading-tight text-[11px]">{member.name}</p>
-                          <p className="text-[9px] text-[#8C7E6C] font-normal truncate">{member.role}</p>
-                        </div>
-                        {isAssigned && <Check className="w-3.5 h-3.5 text-[#2A231D] shrink-0" />}
-                      </button>
-                    );
-                  })}
+
+                {/* Selected Member Badges */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-2 min-h-[26px]">
+                  {newTaskAssignees.map((assignee, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center space-x-1.5 bg-white pl-1.5 pr-2 py-0.5 rounded-full border border-[#DCD1BC] shadow-2xs text-xs font-bold text-[#2A231D]"
+                    >
+                      <img
+                        src={assignee.avatar}
+                        alt={assignee.name}
+                        className="w-4 h-4 rounded-full object-cover border border-[#DCD1BC]"
+                      />
+                      <span>{assignee.name}</span>
+                      {newTaskAssignees.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setNewTaskAssignees(newTaskAssignees.filter(a => a.name !== assignee.name))}
+                          className="text-[#9C8F80] hover:text-red-700 ml-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Custom Popover Dropdown Button */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsTaskMemberDropdownOpen(!isTaskMemberDropdownOpen)}
+                    className="w-full bg-white border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3.5 py-2 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                      <span>Select Contributors ({teamMembers.length} available)</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-[#8C7E6C] transition-transform duration-200 ${isTaskMemberDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Popover Dropdown List */}
+                  {isTaskMemberDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar">
+                      <div className="p-1.5 text-[10px] font-bold uppercase text-[#8C7E6C] tracking-wider border-b border-[#E8DEC9] mb-1">
+                        Select contributors to toggle assignment:
+                      </div>
+                      {teamMembers.map(member => {
+                        const isAssigned = newTaskAssignees.some(a => a.name === member.name);
+                        return (
+                          <button
+                            key={member.id}
+                            type="button"
+                            onClick={() => {
+                              if (isAssigned) {
+                                if (newTaskAssignees.length > 1) {
+                                  setNewTaskAssignees(newTaskAssignees.filter(a => a.name !== member.name));
+                                }
+                              } else {
+                                setNewTaskAssignees([...newTaskAssignees, { name: member.name, avatar: member.avatar }]);
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all ${
+                              isAssigned
+                                ? 'bg-[#EAE0CF] text-[#2C241E] font-bold shadow-2xs'
+                                : 'hover:bg-white text-[#4A3F33]'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2.5 min-w-0">
+                              <img
+                                src={member.avatar}
+                                alt={member.name}
+                                className="w-6 h-6 rounded-full object-cover border border-[#DCD1BC] shrink-0"
+                              />
+                              <div className="text-left min-w-0">
+                                <p className="font-bold leading-tight truncate">{member.name}</p>
+                                <p className="text-[10px] text-[#8C7E6C] truncate">{member.role}</p>
+                              </div>
+                            </div>
+                            {isAssigned && <Check className="w-4 h-4 text-[#2C241E] shrink-0 ml-2" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
