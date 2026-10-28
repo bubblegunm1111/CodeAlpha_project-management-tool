@@ -51,7 +51,11 @@ import {
   Timer,
   AlertTriangle,
   ShieldAlert,
-  Flame
+  Flame,
+  Boxes,
+  ExternalLink,
+  Target,
+  Gauge
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -162,6 +166,123 @@ export interface TaskFolder {
   status: string;
   tasksCount?: number;
 }
+
+export interface ProductFeature {
+  id: string;
+  title: string;
+  status: 'Planned' | 'In Progress' | 'Completed';
+}
+
+export interface ProductMetrics {
+  completionRate: number;
+  openBugs: number;
+  totalMilestones: number;
+}
+
+export interface ProductItem {
+  id: string;
+  name: string;
+  code: string;
+  version: string;
+  description: string;
+  category: string;
+  stage: 'Discovery' | 'In Development' | 'Review & QA' | 'Launched' | string;
+  health: 'On Track' | 'At Risk' | 'Needs Attention' | string;
+  color: CardColor;
+  target_release: string;
+  lead_name: string;
+  lead_avatar: string;
+  linked_tasks_count: number;
+  features: ProductFeature[];
+  metrics: ProductMetrics;
+}
+
+const INITIAL_PRODUCTS: ProductItem[] = [
+  {
+    id: 'prd-1',
+    name: 'Acme Digital Portal',
+    code: 'PRD-01',
+    version: 'v2.4.0',
+    description: 'Client self-service dashboard with multi-tenant permissions, real-time analytics, and billing hooks.',
+    category: 'Web App',
+    stage: 'In Development',
+    health: 'On Track',
+    color: 'peach',
+    target_release: '2026-06-30',
+    lead_name: 'Mason Walker',
+    lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces',
+    linked_tasks_count: 8,
+    features: [
+      { id: 'f1', title: 'Single Sign-On (Google/SAML)', status: 'Completed' },
+      { id: 'f2', title: 'Telemetry & Audit Logs', status: 'In Progress' },
+      { id: 'f3', title: 'Export PDF Deliverables', status: 'Planned' }
+    ],
+    metrics: { completionRate: 68, openBugs: 2, totalMilestones: 6 }
+  },
+  {
+    id: 'prd-2',
+    name: 'Ginko Mobile Native App',
+    code: 'PRD-02',
+    version: 'v1.1.2',
+    description: 'High-performance iOS & Android client with offline SQLite cache, push reminders, and biometrics.',
+    category: 'Mobile App',
+    stage: 'Review & QA',
+    health: 'At Risk',
+    color: 'mint',
+    target_release: '2026-05-20',
+    lead_name: 'Emma Carter',
+    lead_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces',
+    linked_tasks_count: 14,
+    features: [
+      { id: 'f1', title: 'Biometric FaceID Login', status: 'Completed' },
+      { id: 'f2', title: 'Push Notification Gateway', status: 'Completed' },
+      { id: 'f3', title: 'App Store Submission Dossier', status: 'In Progress' }
+    ],
+    metrics: { completionRate: 85, openBugs: 5, totalMilestones: 8 }
+  },
+  {
+    id: 'prd-3',
+    name: 'Orion Design System & UI Kit',
+    code: 'PRD-03',
+    version: 'v3.0.0-rc',
+    description: 'Shared token repository, Figma UI variables, tactile vintage card components, and accessible patterns.',
+    category: 'Design System',
+    stage: 'Launched',
+    health: 'On Track',
+    color: 'blue',
+    target_release: '2026-04-15',
+    lead_name: 'Sophia Bennett',
+    lead_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces',
+    linked_tasks_count: 5,
+    features: [
+      { id: 'f1', title: 'Manila Dossier Card Specs', status: 'Completed' },
+      { id: 'f2', title: 'Figma Auto-Layout Tokens', status: 'Completed' },
+      { id: 'f3', title: 'KaTeX Formula Support', status: 'Completed' }
+    ],
+    metrics: { completionRate: 100, openBugs: 0, totalMilestones: 4 }
+  },
+  {
+    id: 'prd-4',
+    name: 'Telemetry AI Risk Radar API',
+    code: 'PRD-04',
+    version: 'v0.9-beta',
+    description: 'Machine learning pacing engine calculating task slip probabilities, burndown forecasts, and velocity warnings.',
+    category: 'API & Service',
+    stage: 'Discovery',
+    health: 'Needs Attention',
+    color: 'purple',
+    target_release: '2026-08-10',
+    lead_name: 'Lucas Wright',
+    lead_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces',
+    linked_tasks_count: 9,
+    features: [
+      { id: 'f1', title: 'Chronos Real-time Stopwatch Sync', status: 'Completed' },
+      { id: 'f2', title: 'Heuristic Pace Warning Matrix', status: 'In Progress' },
+      { id: 'f3', title: 'Weekly Executive Briefing PDF', status: 'Planned' }
+    ],
+    metrics: { completionRate: 42, openBugs: 3, totalMilestones: 5 }
+  }
+];
 
 export interface Organization {
   id: string;
@@ -810,12 +931,31 @@ export default function App() {
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
   });
 
-  const [activeTab, setActiveTab] = useState<'board' | 'schedule' | 'notes' | 'reports' | 'team'>('board');
+  const [activeTab, setActiveTab] = useState<'board' | 'schedule' | 'notes' | 'reports' | 'team' | 'products'>('board');
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
   const [schedules, setSchedules] = useState<ScheduleItem[]>(INITIAL_SCHEDULE);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(INITIAL_TEAM);
+  const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Products Page State
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [productCategoryFilter, setProductCategoryFilter] = useState('All');
+  const [productStageFilter, setProductStageFilter] = useState('All');
+  const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductCode, setNewProductCode] = useState('');
+  const [newProductVersion, setNewProductVersion] = useState('v1.0.0');
+  const [newProductDescription, setNewProductDescription] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState('Web App');
+  const [newProductStage, setNewProductStage] = useState('In Development');
+  const [newProductHealth, setNewProductHealth] = useState('On Track');
+  const [newProductColor, setNewProductColor] = useState<CardColor>('peach');
+  const [newProductRelease, setNewProductRelease] = useState('2026-06-30');
+  const [newProductLead, setNewProductLead] = useState('Mason Walker');
+  const [newFeatureInput, setNewFeatureInput] = useState('');
 
   // Team Management Filters & Modal State
   const [teamRoleFilter, setTeamRoleFilter] = useState<string>('All Roles');
@@ -1188,6 +1328,32 @@ export default function App() {
       })
       .catch(() => {});
 
+    fetch(`${API_BASE}/products`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          const apiProducts: ProductItem[] = data.map((d: any) => ({
+            id: `prd-${d.id}`,
+            name: d.name,
+            code: d.code,
+            version: d.version || 'v1.0.0',
+            description: d.description || '',
+            category: d.category || 'Web App',
+            stage: d.stage || 'In Development',
+            health: d.health || 'On Track',
+            color: (d.color as any) || 'peach',
+            target_release: d.target_release || '2026-06-30',
+            lead_name: d.lead_name || 'Mason Walker',
+            lead_avatar: d.lead_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+            linked_tasks_count: d.linked_tasks_count || 0,
+            features: Array.isArray(d.features) ? d.features : [],
+            metrics: d.metrics || { completionRate: 50, openBugs: 0, totalMilestones: 4 }
+          }));
+          setProducts(apiProducts);
+        }
+      })
+      .catch(() => {});
+
     fetch(`${API_BASE}/projects/1`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
@@ -1377,6 +1543,137 @@ export default function App() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estimated_hours: val })
+    }).catch(() => {});
+  };
+
+  // Product Catalog Handlers
+  const handleCreateProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProductName.trim()) return;
+
+    const newProd: ProductItem = {
+      id: `prd-${Date.now()}`,
+      name: newProductName.trim(),
+      code: newProductCode.trim().toUpperCase() || `PRD-0${products.length + 1}`,
+      version: newProductVersion.trim() || 'v1.0.0',
+      description: newProductDescription.trim() || 'Classified product deliverable and engineering system.',
+      category: newProductCategory,
+      stage: newProductStage,
+      health: newProductHealth,
+      color: newProductColor,
+      target_release: newProductRelease,
+      lead_name: newProductLead,
+      lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces',
+      linked_tasks_count: 0,
+      features: [
+        { id: `f-${Date.now()}-1`, title: 'Core architecture scaffolding', status: 'Completed' },
+        { id: `f-${Date.now()}-2`, title: 'Integration testing & QA review', status: 'In Progress' }
+      ],
+      metrics: { completionRate: 35, openBugs: 1, totalMilestones: 4 }
+    };
+
+    setProducts(prev => [newProd, ...prev]);
+    setIsNewProductModalOpen(false);
+    setNewProductName('');
+    setNewProductCode('');
+    setNewProductVersion('v1.0.0');
+    setNewProductDescription('');
+
+    fetch(`${API_BASE}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: newProd.name,
+        code: newProd.code,
+        version: newProd.version,
+        description: newProd.description,
+        category: newProd.category,
+        stage: newProd.stage,
+        health: newProd.health,
+        color: newProd.color,
+        target_release: newProd.target_release,
+        lead_name: newProd.lead_name,
+        lead_avatar: newProd.lead_avatar,
+        linked_tasks_count: newProd.linked_tasks_count,
+        features: newProd.features,
+        metrics: newProd.metrics
+      })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Created product dossier: "${newProd.name}" (${newProd.code})`, time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  const handleToggleProductFeature = (productId: string, featureId: string) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const nextFeatures = p.features.map(f => {
+          if (f.id === featureId) {
+            const nextStatus: 'Planned' | 'In Progress' | 'Completed' =
+              f.status === 'Completed' ? 'In Progress' : f.status === 'In Progress' ? 'Planned' : 'Completed';
+            return { ...f, status: nextStatus };
+          }
+          return f;
+        });
+        const completedCount = nextFeatures.filter(f => f.status === 'Completed').length;
+        const newRate = nextFeatures.length > 0 ? Math.round((completedCount / nextFeatures.length) * 100) : p.metrics.completionRate;
+        const updated = {
+          ...p,
+          features: nextFeatures,
+          metrics: { ...p.metrics, completionRate: newRate }
+        };
+        if (selectedProduct && selectedProduct.id === productId) {
+          setSelectedProduct(updated);
+        }
+        return updated;
+      }
+      return p;
+    }));
+  };
+
+  const handleAddProductFeature = (productId: string) => {
+    if (!newFeatureInput.trim()) return;
+    const newFeature: ProductFeature = {
+      id: `f-${Date.now()}`,
+      title: newFeatureInput.trim(),
+      status: 'Planned'
+    };
+
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const nextFeatures = [...p.features, newFeature];
+        const completedCount = nextFeatures.filter(f => f.status === 'Completed').length;
+        const newRate = Math.round((completedCount / nextFeatures.length) * 100);
+        const updated = {
+          ...p,
+          features: nextFeatures,
+          metrics: { ...p.metrics, completionRate: newRate }
+        };
+        if (selectedProduct && selectedProduct.id === productId) {
+          setSelectedProduct(updated);
+        }
+        return updated;
+      }
+      return p;
+    }));
+
+    setNewFeatureInput('');
+  };
+
+  const handleDeleteProduct = (productId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!confirm('Are you sure you want to archive this product deliverable dossier?')) return;
+
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    if (selectedProduct && selectedProduct.id === productId) {
+      setSelectedProduct(null);
+    }
+
+    const numId = productId.replace('prd-', '');
+    fetch(`${API_BASE}/products/${numId}`, {
+      method: 'DELETE'
     }).catch(() => {});
   };
 
@@ -3342,6 +3639,7 @@ export default function App() {
           <nav className="flex space-x-2 -mb-[1px]">
             {[
               { id: 'board' as const, label: 'Kanban Boards', count: tasks.length },
+              { id: 'products' as const, label: 'Products & Deliverables', count: products.length },
               { id: 'schedule' as const, label: 'Schedule & Timeline', count: schedules.length },
               { id: 'notes' as const, label: 'Dossier Notes', count: notes.length },
               { id: 'reports' as const, label: 'Activity Logs' },
@@ -3415,9 +3713,7 @@ export default function App() {
                     <button
                       key={item.id}
                       onClick={() => {
-                        if (item.id === 'board' || item.id === 'schedule' || item.id === 'notes' || item.id === 'reports') {
-                          setActiveTab(item.id as any);
-                        }
+                        setActiveTab(item.id as any);
                       }}
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                         isActive
@@ -4844,6 +5140,288 @@ export default function App() {
             </div>
           )}
 
+          {/* VIEW 6: PRODUCTS & DELIVERABLES CATALOG (Tactile Vintage Aesthetic) */}
+          {activeTab === 'products' && (
+            <div className="space-y-6">
+              {/* Top Action Header */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-[#E5DBCA] gap-4">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F4E9D5] text-[#8A4A1C] border border-[#DFD1B8]">
+                      Product Engineering & Releases
+                    </span>
+                    <span className="text-xs text-[#7B7062]">
+                      • {products.length} Active Deliverables
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
+                    <Package className="w-6 h-6 text-[#756A5E]" />
+                    <span>Products & Deliverables Directory</span>
+                  </h1>
+                  <p className="text-xs text-[#7B7062] mt-0.5">
+                    Centralized product portfolios, milestone tracking, and task allocations matching your vintage archival dossier system.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C7E6C]" />
+                    <input
+                      type="text"
+                      placeholder="Search deliverables, codes, leads..."
+                      value={productSearchQuery}
+                      onChange={(e) => setProductSearchQuery(e.target.value)}
+                      className="pl-9 pr-3.5 py-2 bg-white/90 border border-[#DCD1BC] rounded-xl text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C] focus:bg-white w-52 md:w-64 shadow-xs transition-all"
+                    />
+                  </div>
+
+                  {/* Add Product Button */}
+                  <button
+                    onClick={() => setIsNewProductModalOpen(true)}
+                    className="flex items-center space-x-1.5 px-4 py-2 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-all active:scale-95 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>New Product Dossier</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Stat Highlights */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Total Deliverables</span>
+                    <Boxes className="w-4 h-4 text-[#8C7E6C]" />
+                  </div>
+                  <p className="text-2xl font-black text-[#2A231D]">{products.length}</p>
+                  <p className="text-[10px] text-emerald-700 font-bold mt-1">100% synced with task board</p>
+                </div>
+
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>On Track</span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <p className="text-2xl font-black text-[#2A231D]">
+                    {products.filter(p => p.health === 'On Track').length}
+                  </p>
+                  <p className="text-[10px] text-[#7A6F62] mt-1">Healthy milestone velocity</p>
+                </div>
+
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Needs Attention / Risk</span>
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <p className="text-2xl font-black text-amber-800">
+                    {products.filter(p => p.health !== 'On Track').length}
+                  </p>
+                  <p className="text-[10px] text-amber-700 mt-1">AI radar pacing alert</p>
+                </div>
+
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Average Completion</span>
+                    <Gauge className="w-4 h-4 text-[#8C7E6C]" />
+                  </div>
+                  <p className="text-2xl font-black text-[#2A231D]">
+                    {products.length > 0
+                      ? Math.round(products.reduce((acc, p) => acc + (p.metrics?.completionRate || 0), 0) / products.length)
+                      : 0}%
+                  </p>
+                  <p className="text-[10px] text-[#7A6F62] mt-1">Calculated across active features</p>
+                </div>
+              </div>
+
+              {/* Filter Pills */}
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#F5EFEB]/90 p-3 rounded-2xl border border-[#DCD1BC]">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[11px] font-bold text-[#8C7E6C] uppercase mr-1">Category:</span>
+                  {['All', 'Web App', 'Mobile App', 'Design System', 'API & Service'].map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setProductCategoryFilter(cat)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                        productCategoryFilter === cat
+                          ? 'bg-[#2B231D] text-[#FAF6EE] shadow-xs'
+                          : 'bg-white/80 hover:bg-white text-[#635547] border border-[#DCD1BC]'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-[11px] font-bold text-[#8C7E6C] uppercase mr-1">Stage:</span>
+                  {['All', 'Discovery', 'In Development', 'Review & QA', 'Launched'].map(stg => (
+                    <button
+                      key={stg}
+                      onClick={() => setProductStageFilter(stg)}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+                        productStageFilter === stg
+                          ? 'bg-[#3F3730] text-[#FAF6EE]'
+                          : 'bg-white/70 hover:bg-white text-[#635547] border border-[#E3D9C8]'
+                      }`}
+                    >
+                      {stg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Product Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {products
+                  .filter(p => {
+                    const matchQuery =
+                      p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                      p.code.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                      p.description.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                      p.lead_name.toLowerCase().includes(productSearchQuery.toLowerCase());
+                    const matchCategory = productCategoryFilter === 'All' || p.category === productCategoryFilter;
+                    const matchStage = productStageFilter === 'All' || p.stage === productStageFilter;
+                    return matchQuery && matchCategory && matchStage;
+                  })
+                  .map(product => {
+                    const colorStyle = getColorStyles(product.color);
+                    const completedFeatures = product.features.filter(f => f.status === 'Completed').length;
+                    const totalFeatures = product.features.length;
+
+                    return (
+                      <div
+                        key={product.id}
+                        onClick={() => setSelectedProduct(product)}
+                        className={`${colorStyle.bg} border ${colorStyle.border} rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 cursor-pointer flex flex-col justify-between relative group`}
+                      >
+                        {/* Top Card Bar */}
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase font-mono bg-black/10 text-[#2B231D]">
+                                {product.code}
+                              </span>
+                              <span className="text-[10px] font-bold text-[#7A6F62] bg-white/70 px-2 py-0.5 rounded-md border border-black/5">
+                                {product.version}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center space-x-1.5">
+                              {/* Health Badge */}
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center space-x-1 ${
+                                product.health === 'On Track'
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                  : product.health === 'At Risk'
+                                  ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                  : 'bg-amber-100 text-amber-800 border border-amber-200'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  product.health === 'On Track'
+                                    ? 'bg-emerald-600'
+                                    : product.health === 'At Risk'
+                                    ? 'bg-rose-600'
+                                    : 'bg-amber-600'
+                                }`}></span>
+                                <span>{product.health}</span>
+                              </span>
+
+                              {/* Delete button */}
+                              <button
+                                onClick={(e) => handleDeleteProduct(product.id, e)}
+                                className="opacity-0 group-hover:opacity-100 p-1 text-[#8C7E6C] hover:text-rose-700 hover:bg-black/5 rounded-md transition-all"
+                                title="Archive product dossier"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Title & Category */}
+                          <div className="mb-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6F62]">
+                              {product.category}
+                            </span>
+                            <h3 className="text-base font-black text-[#26201A] tracking-tight leading-snug group-hover:underline">
+                              {product.name}
+                            </h3>
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-xs text-[#524639] line-clamp-2 leading-relaxed mb-4">
+                            {product.description}
+                          </p>
+
+                          {/* Feature Checkpoints Preview */}
+                          <div className="space-y-1.5 mb-4 bg-white/60 p-2.5 rounded-xl border border-black/5">
+                            <div className="flex items-center justify-between text-[11px] font-bold text-[#635547] mb-1">
+                              <span>Milestone Features</span>
+                              <span>{completedFeatures}/{totalFeatures}</span>
+                            </div>
+                            {product.features.slice(0, 3).map(feature => (
+                              <div
+                                key={feature.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleProductFeature(product.id, feature.id);
+                                }}
+                                className="flex items-center space-x-2 text-[11px] text-[#42362A] hover:text-black cursor-pointer group/feat"
+                              >
+                                {feature.status === 'Completed' ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                ) : (
+                                  <Circle className="w-3.5 h-3.5 text-[#9C8F7E] group-hover/feat:text-amber-700 shrink-0" />
+                                )}
+                                <span className={feature.status === 'Completed' ? 'line-through opacity-70' : ''}>
+                                  {feature.title}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Card Bottom Progress & Lead Meta */}
+                        <div className="pt-3 border-t border-black/10 space-y-3">
+                          {/* Progress Meter */}
+                          <div>
+                            <div className="flex justify-between items-center text-[10px] font-bold text-[#5C4F41] mb-1">
+                              <span>Product Readiness</span>
+                              <span>{product.metrics.completionRate}%</span>
+                            </div>
+                            <div className="w-full bg-black/10 h-1.5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-[#2B231D] transition-all duration-300"
+                                style={{ width: `${product.metrics.completionRate}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Footer Info: Lead & Target Date */}
+                          <div className="flex items-center justify-between pt-1 text-[11px] text-[#635547]">
+                            <div className="flex items-center space-x-2">
+                              <img
+                                src={product.lead_avatar}
+                                alt={product.lead_name}
+                                className="w-5 h-5 rounded-full object-cover border border-white"
+                              />
+                              <span className="font-semibold text-[#2C241E] truncate max-w-[100px]">
+                                {product.lead_name}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center space-x-1 text-[10px] font-medium text-[#7A6F62]">
+                              <CalendarIcon className="w-3 h-3" />
+                              <span>{product.target_release}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
 
@@ -5918,6 +6496,380 @@ export default function App() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (() => {
+        const completedFeatures = selectedProduct.features.filter(f => f.status === 'Completed').length;
+        const totalFeatures = selectedProduct.features.length;
+
+        return (
+          <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              {/* Modal Header */}
+              <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Package className="w-4 h-4 text-[#665A4E]" />
+                  <span className="text-xs font-bold text-[#7A6E60] uppercase tracking-wider font-mono">
+                    {selectedProduct.code}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#E5DBC7] font-semibold text-[#4F4437]">
+                    {selectedProduct.category}
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    selectedProduct.health === 'On Track'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {selectedProduct.health}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSelectedProduct(null)}
+                  className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 overflow-y-auto space-y-5">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-black text-[#26201A] tracking-tight">
+                      {selectedProduct.name}
+                    </h2>
+                    <span className="text-xs font-mono font-bold text-[#7A6F62] bg-[#EFE8DC] px-2.5 py-1 rounded-lg border border-[#DCD1BC]">
+                      {selectedProduct.version}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#5C4F41] mt-2 leading-relaxed">
+                    {selectedProduct.description}
+                  </p>
+                </div>
+
+                {/* KPI Metrics Matrix */}
+                <div className="grid grid-cols-3 gap-3 p-3.5 bg-white/70 rounded-xl border border-[#DCD1BC]">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#8C7E6C] block">Readiness</span>
+                    <span className="text-lg font-black text-[#26201A]">{selectedProduct.metrics.completionRate}%</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#8C7E6C] block">Milestones</span>
+                    <span className="text-lg font-black text-[#26201A]">{completedFeatures} / {totalFeatures}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#8C7E6C] block">Target Release</span>
+                    <span className="text-xs font-bold text-[#26201A] mt-1 block">{selectedProduct.target_release}</span>
+                  </div>
+                </div>
+
+                {/* Interactive Milestone Checkpoints */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#7A6F62] flex items-center space-x-1.5">
+                      <Target className="w-3.5 h-3.5" />
+                      <span>Product Roadmap & Key Deliverables</span>
+                    </h4>
+                    <span className="text-[11px] text-[#8C7E6C]">
+                      Click to toggle status
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {selectedProduct.features.map(feat => (
+                      <div
+                        key={feat.id}
+                        onClick={() => handleToggleProductFeature(selectedProduct.id, feat.id)}
+                        className="flex items-center justify-between p-3 bg-white rounded-xl border border-[#DCD1BC] hover:border-[#8C7E6C] cursor-pointer transition-all"
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          {feat.status === 'Completed' ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                          ) : feat.status === 'In Progress' ? (
+                            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-[#A89A89] shrink-0" />
+                          )}
+                          <span className={`text-xs font-medium text-[#2C241E] ${
+                            feat.status === 'Completed' ? 'line-through opacity-70' : ''
+                          }`}>
+                            {feat.title}
+                          </span>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          feat.status === 'Completed'
+                            ? 'bg-emerald-50 text-emerald-800'
+                            : feat.status === 'In Progress'
+                            ? 'bg-amber-50 text-amber-800'
+                            : 'bg-stone-100 text-stone-700'
+                        }`}>
+                          {feat.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add New Milestone Input */}
+                  <div className="flex items-center space-x-2 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Add product feature milestone..."
+                      value={newFeatureInput}
+                      onChange={(e) => setNewFeatureInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddProductFeature(selectedProduct.id);
+                        }
+                      }}
+                      className="flex-1 bg-white border border-[#DCD1BC] rounded-xl px-3 py-1.5 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddProductFeature(selectedProduct.id)}
+                      className="px-3 py-1.5 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#433931]"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lead Engineer & Folder Anchor */}
+                <div className="p-3 bg-[#EFE8DC]/60 rounded-xl border border-[#DCD1BC] flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2.5">
+                    <img
+                      src={selectedProduct.lead_avatar}
+                      alt={selectedProduct.lead_name}
+                      className="w-7 h-7 rounded-full object-cover border border-[#DCD1BC]"
+                    />
+                    <div>
+                      <p className="font-bold text-[#2A231D] leading-tight">{selectedProduct.lead_name}</p>
+                      <p className="text-[10px] text-[#7A6F62]">Product Technical Lead</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedProduct(null);
+                      setActiveTab('board');
+                    }}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#DCD1BC] font-bold text-xs text-[#2A231D] hover:bg-[#FAF6EE]"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-[#7A6F62]" />
+                    <span>View Kanban Tasks</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-3 bg-[#EFE8DC] border-t border-[#DCD1BC] flex items-center justify-between">
+                <button
+                  onClick={() => handleDeleteProduct(selectedProduct.id)}
+                  className="text-xs font-bold text-rose-700 hover:underline flex items-center space-x-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Archive Deliverable</span>
+                </button>
+
+                <button
+                  onClick={() => setSelectedProduct(null)}
+                  className="px-4 py-1.5 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#433931]"
+                >
+                  Close Dossier
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* New Product Dossier Modal */}
+      {isNewProductModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Package className="w-4 h-4 text-[#665A4E]" />
+                <h3 className="text-sm font-bold text-[#2A231D]">Catalog New Product Deliverable</h3>
+              </div>
+              <button
+                onClick={() => setIsNewProductModalOpen(false)}
+                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProduct} className="p-6 space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                  Product / Deliverable Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. NextGen Mobile Checkout"
+                  value={newProductName}
+                  onChange={(e) => setNewProductName(e.target.value)}
+                  className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Product Code
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. PRD-05"
+                    value={newProductCode}
+                    onChange={(e) => setNewProductCode(e.target.value)}
+                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] font-mono uppercase focus:outline-none focus:border-[#8C7E6C]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Version
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="v1.0.0"
+                    value={newProductVersion}
+                    onChange={(e) => setNewProductVersion(e.target.value)}
+                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] font-mono focus:outline-none focus:border-[#8C7E6C]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={newProductCategory}
+                    onChange={(e) => setNewProductCategory(e.target.value)}
+                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  >
+                    <option value="Web App">Web App</option>
+                    <option value="Mobile App">Mobile App</option>
+                    <option value="Design System">Design System</option>
+                    <option value="API & Service">API & Service</option>
+                    <option value="Hardware">Hardware</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Lifecycle Stage
+                  </label>
+                  <select
+                    value={newProductStage}
+                    onChange={(e) => setNewProductStage(e.target.value)}
+                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  >
+                    <option value="Discovery">Discovery</option>
+                    <option value="In Development">In Development</option>
+                    <option value="Review & QA">Review & QA</option>
+                    <option value="Launched">Launched</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Health Status
+                  </label>
+                  <select
+                    value={newProductHealth}
+                    onChange={(e) => setNewProductHealth(e.target.value)}
+                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  >
+                    <option value="On Track">On Track</option>
+                    <option value="Needs Attention">Needs Attention</option>
+                    <option value="At Risk">At Risk</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                  Deliverable Description
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Summarize product purpose, scope, and technical stack..."
+                  value={newProductDescription}
+                  onChange={(e) => setNewProductDescription(e.target.value)}
+                  className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Target Release Date
+                  </label>
+                  <input
+                    type="date"
+                    value={newProductRelease}
+                    onChange={(e) => setNewProductRelease(e.target.value)}
+                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Lead Contributor
+                  </label>
+                  <select
+                    value={newProductLead}
+                    onChange={(e) => setNewProductLead(e.target.value)}
+                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  >
+                    <option value="Mason Walker">Mason Walker (Admin)</option>
+                    <option value="Emma Carter">Emma Carter (Lead Dev)</option>
+                    <option value="Sophia Bennett">Sophia Bennett (Product Owner)</option>
+                    <option value="Lucas Wright">Lucas Wright (Systems Eng)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Color Code Swatch */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1.5">
+                  Dossier Card Swatch
+                </label>
+                <div className="flex items-center space-x-2">
+                  {(['peach', 'blue', 'mint', 'purple', 'coral', 'canary'] as CardColor[]).map((clr) => (
+                    <button
+                      key={clr}
+                      type="button"
+                      onClick={() => setNewProductColor(clr)}
+                      className={`w-7 h-7 rounded-full border-2 transition-transform ${
+                        newProductColor === clr ? 'scale-110 border-[#2A231D]' : 'border-transparent hover:scale-105'
+                      } ${getColorStyles(clr).bg}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewProductModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-[#6B5E4F] hover:bg-[#EAE0CD]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2B231D] text-[#FAF6EE] hover:bg-[#433931]"
+                >
+                  Create Deliverable
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

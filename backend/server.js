@@ -238,6 +238,28 @@ const initializeDB = () => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Products / Deliverables Catalog table
+    db.run(`CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      code TEXT,
+      version TEXT DEFAULT 'v1.0',
+      description TEXT,
+      category TEXT DEFAULT 'Web App',
+      stage TEXT DEFAULT 'In Development',
+      health TEXT DEFAULT 'On Track',
+      color TEXT DEFAULT 'peach',
+      target_release TEXT,
+      lead_name TEXT,
+      lead_avatar TEXT,
+      linked_tasks_count INTEGER DEFAULT 0,
+      features TEXT DEFAULT '[]',
+      metrics TEXT DEFAULT '{}',
+      organization_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
     // Organization Members table (links registered users to organizations they belong to)
     db.run(`CREATE TABLE IF NOT EXISTS organization_members (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1439,6 +1461,236 @@ app.put('/api/v1/team-members/:id', authMiddleware, async (req, res) => {
 app.delete('/api/v1/team-members/:id', authMiddleware, async (req, res) => {
   try {
     await runAsync('DELETE FROM team_members WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ PRODUCTS / DELIVERABLES ENDPOINTS ============
+
+app.get('/api/v1/products', authMiddleware, async (req, res) => {
+  try {
+    let products = await allAsync('SELECT * FROM products ORDER BY id DESC');
+    if (products.length === 0) {
+      // Seed initial realistic products
+      const seedProducts = [
+        {
+          name: 'Acme Digital Portal',
+          code: 'PRD-01',
+          version: 'v2.4.0',
+          description: 'Client self-service dashboard with multi-tenant permissions, real-time analytics, and billing hooks.',
+          category: 'Web App',
+          stage: 'In Development',
+          health: 'On Track',
+          color: 'peach',
+          target_release: '2026-06-30',
+          lead_name: 'Mason Walker',
+          lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces',
+          linked_tasks_count: 8,
+          features: JSON.stringify([
+            { id: 'f1', title: 'Single Sign-On (Google/SAML)', status: 'Completed' },
+            { id: 'f2', title: 'Telemetry & Audit Logs', status: 'In Progress' },
+            { id: 'f3', title: 'Export PDF Deliverables', status: 'Planned' }
+          ]),
+          metrics: JSON.stringify({ completionRate: 68, openBugs: 2, totalMilestones: 6 })
+        },
+        {
+          name: 'Ginko Mobile Native App',
+          code: 'PRD-02',
+          version: 'v1.1.2',
+          description: 'High-performance iOS & Android client with offline SQLite cache, push reminders, and biometrics.',
+          category: 'Mobile App',
+          stage: 'Review & QA',
+          health: 'At Risk',
+          color: 'mint',
+          target_release: '2026-05-20',
+          lead_name: 'Emma Carter',
+          lead_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces',
+          linked_tasks_count: 14,
+          features: JSON.stringify([
+            { id: 'f1', title: 'Biometric FaceID Login', status: 'Completed' },
+            { id: 'f2', title: 'Push Notification Gateway', status: 'Completed' },
+            { id: 'f3', title: 'App Store Submission Dossier', status: 'In Progress' }
+          ]),
+          metrics: JSON.stringify({ completionRate: 85, openBugs: 5, totalMilestones: 8 })
+        },
+        {
+          name: 'Orion Design System & UI Kit',
+          code: 'PRD-03',
+          version: 'v3.0.0-rc',
+          description: 'Shared token repository, Figma UI variables, tactile vintage card components, and accessible patterns.',
+          category: 'Design System',
+          stage: 'Launched',
+          health: 'On Track',
+          color: 'blue',
+          target_release: '2026-04-15',
+          lead_name: 'Sophia Bennett',
+          lead_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces',
+          linked_tasks_count: 5,
+          features: JSON.stringify([
+            { id: 'f1', title: 'Manila Dossier Card Specs', status: 'Completed' },
+            { id: 'f2', title: 'Figma Auto-Layout Tokens', status: 'Completed' },
+            { id: 'f3', title: 'KaTeX Formula Support', status: 'Completed' }
+          ]),
+          metrics: JSON.stringify({ completionRate: 100, openBugs: 0, totalMilestones: 4 })
+        },
+        {
+          name: 'Telemetry AI Risk Radar API',
+          code: 'PRD-04',
+          version: 'v0.9-beta',
+          description: 'Machine learning pacing engine calculating task slip probabilities, burndown forecasts, and velocity warnings.',
+          category: 'API & Service',
+          stage: 'Discovery',
+          health: 'Needs Attention',
+          color: 'purple',
+          target_release: '2026-08-10',
+          lead_name: 'Lucas Wright',
+          lead_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces',
+          linked_tasks_count: 9,
+          features: JSON.stringify([
+            { id: 'f1', title: 'Chronos Real-time Stopwatch Sync', status: 'Completed' },
+            { id: 'f2', title: 'Heuristic Pace Warning Matrix', status: 'In Progress' },
+            { id: 'f3', title: 'Weekly Executive Briefing PDF', status: 'Planned' }
+          ]),
+          metrics: JSON.stringify({ completionRate: 42, openBugs: 3, totalMilestones: 5 })
+        }
+      ];
+
+      for (const p of seedProducts) {
+        await runAsync(
+          `INSERT INTO products (name, code, version, description, category, stage, health, color, target_release, lead_name, lead_avatar, linked_tasks_count, features, metrics)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            p.name, p.code, p.version, p.description, p.category, p.stage, p.health, p.color,
+            p.target_release, p.lead_name, p.lead_avatar, p.linked_tasks_count, p.features, p.metrics
+          ]
+        );
+      }
+
+      products = await allAsync('SELECT * FROM products ORDER BY id DESC');
+    }
+
+    const formatted = products.map(p => ({
+      ...p,
+      features: JSON.parse(p.features || '[]'),
+      metrics: JSON.parse(p.metrics || '{}')
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/v1/products', authMiddleware, async (req, res) => {
+  try {
+    const {
+      name,
+      code,
+      version,
+      description,
+      category,
+      stage,
+      health,
+      color,
+      target_release,
+      lead_name,
+      lead_avatar,
+      linked_tasks_count,
+      features,
+      metrics
+    } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Product name is required' });
+    }
+
+    const result = await runAsync(
+      `INSERT INTO products (name, code, version, description, category, stage, health, color, target_release, lead_name, lead_avatar, linked_tasks_count, features, metrics)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        code || `PRD-${Math.floor(10 + Math.random() * 90)}`,
+        version || 'v1.0.0',
+        description || '',
+        category || 'Web App',
+        stage || 'In Development',
+        health || 'On Track',
+        color || 'peach',
+        target_release || '2026-06-30',
+        lead_name || 'Mason Walker',
+        lead_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces',
+        linked_tasks_count || 0,
+        JSON.stringify(features || []),
+        JSON.stringify(metrics || { completionRate: 0, openBugs: 0, totalMilestones: 3 })
+      ]
+    );
+
+    const product = await getAsync('SELECT * FROM products WHERE id = ?', [result.lastID]);
+    product.features = JSON.parse(product.features || '[]');
+    product.metrics = JSON.parse(product.metrics || '{}');
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/v1/products/:id', authMiddleware, async (req, res) => {
+  try {
+    const {
+      name,
+      code,
+      version,
+      description,
+      category,
+      stage,
+      health,
+      color,
+      target_release,
+      lead_name,
+      lead_avatar,
+      linked_tasks_count,
+      features,
+      metrics
+    } = req.body;
+
+    const updates = [];
+    const params = [];
+
+    if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+    if (code !== undefined) { updates.push('code = ?'); params.push(code); }
+    if (version !== undefined) { updates.push('version = ?'); params.push(version); }
+    if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+    if (category !== undefined) { updates.push('category = ?'); params.push(category); }
+    if (stage !== undefined) { updates.push('stage = ?'); params.push(stage); }
+    if (health !== undefined) { updates.push('health = ?'); params.push(health); }
+    if (color !== undefined) { updates.push('color = ?'); params.push(color); }
+    if (target_release !== undefined) { updates.push('target_release = ?'); params.push(target_release); }
+    if (lead_name !== undefined) { updates.push('lead_name = ?'); params.push(lead_name); }
+    if (lead_avatar !== undefined) { updates.push('lead_avatar = ?'); params.push(lead_avatar); }
+    if (linked_tasks_count !== undefined) { updates.push('linked_tasks_count = ?'); params.push(linked_tasks_count); }
+    if (features !== undefined) { updates.push('features = ?'); params.push(JSON.stringify(features)); }
+    if (metrics !== undefined) { updates.push('metrics = ?'); params.push(JSON.stringify(metrics)); }
+
+    if (updates.length > 0) {
+      params.push(req.params.id);
+      await runAsync(`UPDATE products SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, params);
+    }
+
+    const product = await getAsync('SELECT * FROM products WHERE id = ?', [req.params.id]);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    product.features = JSON.parse(product.features || '[]');
+    product.metrics = JSON.parse(product.metrics || '{}');
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/v1/products/:id', authMiddleware, async (req, res) => {
+  try {
+    await runAsync('DELETE FROM products WHERE id = ?', [req.params.id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
