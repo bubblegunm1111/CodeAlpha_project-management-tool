@@ -2654,16 +2654,16 @@ export default function App() {
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[#E5D7BF] opacity-30 blur-3xl pointer-events-none glow-ambient" />
 
         {/* Top Bar: Brand + Direct Skip to Sign In */}
-        <header className="relative z-20 flex items-center justify-between max-w-5xl mx-auto w-full">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-md border border-[#2C241E]">
-              <Folder className="w-5 h-5" />
+        <header className="relative z-20 flex items-center justify-between max-w-5xl mx-auto w-full pt-4 sm:pt-2">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-md border border-[#2C241E] shrink-0">
+              <Folder className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight text-[#2C241E]">Archival PM</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#E8DECA] text-[#5A5046] border border-[#D5CABB]">
-                  System Onboarding
+            <div className="min-w-0">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap">
+                <span className="font-extrabold text-base sm:text-lg tracking-tight text-[#2C241E] whitespace-nowrap">Archival PM</span>
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded bg-[#E8DECA] text-[#5A5046] border border-[#D5CABB] whitespace-nowrap">
+                  Onboarding
                 </span>
               </div>
               <p className="text-[11px] text-[#7A7064] font-medium hidden sm:block">Tactile Dossier & Project Workflow</p>
@@ -2672,7 +2672,7 @@ export default function App() {
 
           <button
             onClick={() => setCurrentScreen('auth')}
-            className="px-4 py-2 rounded-xl bg-[#FAF6EE] hover:bg-[#EFE8DC] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] transition-all shadow-xs flex items-center space-x-1.5"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#FAF6EE] hover:bg-[#EFE8DC] active:scale-95 border border-[#DCD1BC] text-xs font-bold text-[#3F3730] transition-all shadow-xs flex items-center space-x-1 sm:space-x-1.5 shrink-0 whitespace-nowrap ml-2"
           >
             <span>Skip to Sign In</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -2716,45 +2716,47 @@ export default function App() {
             </div>
 
             {/* Stepper Dots & Action Controls */}
-            <div className="flex items-center space-x-4 pt-2">
-              <div className="flex space-x-1.5">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <div className="flex space-x-1.5 shrink-0">
                 {onboardingSteps.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSplashStep(idx)}
                     className={`h-2.5 rounded-full transition-all duration-300 ${
-                      splashStep === idx ? 'w-8 bg-[#3F3730]' : 'w-2.5 bg-[#D5CABB] hover:bg-[#B8AA94]'
+                      splashStep === idx ? 'w-7 sm:w-8 bg-[#3F3730]' : 'w-2.5 bg-[#D5CABB] hover:bg-[#B8AA94]'
                     }`}
                     title={`Go to step ${idx + 1}`}
                   />
                 ))}
               </div>
 
-              {splashStep < onboardingSteps.length - 1 ? (
-                <button
-                  onClick={() => setSplashStep(prev => prev + 1)}
-                  className="px-5 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C241E] transition-all shadow-md flex items-center space-x-2"
-                >
-                  <span>Next Feature</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={() => setCurrentScreen('auth')}
-                  className="px-6 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C241E] transition-all shadow-md flex items-center space-x-2"
-                >
-                  <span>Enter Archival PM</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
+              <div className="flex items-center space-x-2 shrink-0">
+                {splashStep < onboardingSteps.length - 1 ? (
+                  <button
+                    onClick={() => setSplashStep(prev => prev + 1)}
+                    className="px-4 sm:px-5 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C241E] active:scale-95 transition-all shadow-md flex items-center space-x-1.5 whitespace-nowrap"
+                  >
+                    <span>Next Feature</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setCurrentScreen('auth')}
+                    className="px-5 sm:px-6 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C241E] active:scale-95 transition-all shadow-md flex items-center space-x-1.5 whitespace-nowrap"
+                  >
+                    <span>Enter Archival PM</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
 
-              <button
-                onClick={() => setIsFolderOpened(!isFolderOpened)}
-                className="px-3.5 py-2.5 rounded-xl bg-[#FAF6EE] hover:bg-[#EFE8DC] border border-[#D5CABB] text-xs font-semibold text-[#5A5046] transition-colors"
-                title="Toggle 3D folder flap opening"
-              >
-                {isFolderOpened ? 'Close Folder' : 'Open Folder'}
-              </button>
+                <button
+                  onClick={() => setIsFolderOpened(!isFolderOpened)}
+                  className="px-3 sm:px-3.5 py-2.5 rounded-xl bg-[#FAF6EE] hover:bg-[#EFE8DC] active:scale-95 border border-[#D5CABB] text-xs font-semibold text-[#5A5046] transition-colors whitespace-nowrap"
+                  title="Toggle 3D folder flap opening"
+                >
+                  {isFolderOpened ? 'Close Folder' : 'Open Folder'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -2857,20 +2859,20 @@ export default function App() {
         </main>
 
         {/* Bottom Footer: Feature Highlights */}
-        <footer className="relative z-20 max-w-5xl mx-auto w-full pt-4 border-t border-[#DCD1BC]/60 flex flex-col sm:flex-row items-center justify-between text-xs text-[#7A7064] gap-2">
-          <div className="flex items-center space-x-4">
+        <footer className="relative z-20 max-w-5xl mx-auto w-full pt-3 sm:pt-4 pb-2 border-t border-[#DCD1BC]/60 flex flex-col sm:flex-row items-center justify-between text-xs text-[#7A7064] gap-2.5">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[11px] sm:text-xs">
             <span className="flex items-center space-x-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
               <span>Interactive Checklist Physics</span>
             </span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span>6 Pastel Card Palettes</span>
-            <span>•</span>
-            <span>Schedule Timeline & Dossier Notes</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="hidden xs:inline">Schedule Timeline & Dossier Notes</span>
           </div>
           <button
             onClick={() => setCurrentScreen('auth')}
-            className="text-xs font-bold text-[#3F3730] hover:underline flex items-center space-x-1"
+            className="text-xs font-black text-[#2C241E] bg-[#FAF6EE] hover:bg-[#EFE8DC] active:scale-95 border border-[#D5CABB] px-3.5 py-1.5 rounded-xl shadow-2xs flex items-center space-x-1"
           >
             <span>Ready? Sign in or Create Account</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -2883,11 +2885,11 @@ export default function App() {
   // 2. Authentication Screen: Exact Match to User Screenshot
   if (currentScreen === 'auth') {
     return (
-      <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative selection:bg-[#E8DECA]">
+      <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8 relative selection:bg-[#E8DECA]">
         {/* Vintage Paper Texture Background */}
         <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
 
-        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 pt-4 sm:pt-0">
           {/* Logo & Header */}
           <div className="text-center">
             <div className="w-12 h-12 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center mx-auto shadow-sm">
@@ -2942,18 +2944,20 @@ export default function App() {
             </div>
 
             {/* Folder Main Pocket Body */}
-            <div className="bg-[#FAF6EE] border-2 border-[#D5CABB] rounded-2xl rounded-tl-none py-7 px-6 sm:px-8 shadow-xl relative z-10 overflow-hidden">
+            <div className="bg-[#FAF6EE] border-2 border-[#D5CABB] rounded-2xl rounded-tl-none py-6 sm:py-7 px-5 sm:px-8 shadow-xl relative z-10 overflow-hidden">
               {/* Folder Internal Paper Watermark & Line Details */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(#D5CABB_1px,transparent_1px)] [background-size:12px_12px] opacity-40 pointer-events-none" />
-              <div className="absolute top-2.5 right-4 pointer-events-none select-none text-right">
-                <span className="text-[8px] font-mono uppercase tracking-widest text-[#A89C8C] block">REF: DOSSIER-APEX-2026</span>
-                <span className="text-[9px] font-bold text-amber-800/80 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 inline-block mt-0.5">
-                  SEC-LEVEL 4
-                </span>
-              </div>
 
               {/* Folder Pocket Header */}
-              <div className="mb-5 pb-3 border-b border-[#E8DEC9] flex items-center justify-between">
+              <div className="mb-5 pb-3 border-b border-[#E8DEC9] relative">
+                {/* Meta Badge repositioned on top of header so it never covers the text */}
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+                  <span className="text-[8px] font-mono uppercase tracking-widest text-[#A89C8C]">REF: DOSSIER-APEX-2026</span>
+                  <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80 inline-block font-mono">
+                    SEC-LEVEL 4
+                  </span>
+                </div>
+
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-wider text-[#2C241E]">
                     {activeInvitationToken
@@ -2962,7 +2966,7 @@ export default function App() {
                       ? 'Archival Member Clearance'
                       : 'Agent Dossier Registration'}
                   </h3>
-                  <p className="text-[11px] text-[#7C6F60] mt-0.5 font-medium">
+                  <p className="text-[11px] text-[#7C6F60] mt-1 font-medium leading-relaxed">
                     {activeInvitationToken
                       ? `You've been invited to join "${invitationDetails?.organization_name || 'Apex Studio Agency'}" as a ${invitationDetails?.role || 'team member'}.`
                       : authMode === 'signin'
@@ -3223,25 +3227,25 @@ export default function App() {
         <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1.2px,transparent_1.2px)] [background-size:20px_20px] opacity-35 pointer-events-none" />
 
         {/* Top Header */}
-        <header className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between relative z-10">
-          <div className="flex items-center space-x-4">
-            <div className="w-9 h-9 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-sm">
+        <header className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-4 sm:pt-3 relative z-10">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-sm shrink-0">
               <Folder className="w-5 h-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-base tracking-tight text-[#2C241E]">Archival PM</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#E4DAC7] text-[#5A5046] border border-[#D5CABB]">
+                <span className="font-extrabold text-base tracking-tight text-[#2C241E] whitespace-nowrap">Archival PM</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#E4DAC7] text-[#5A5046] border border-[#D5CABB] whitespace-nowrap">
                   Folder Hub
                 </span>
               </div>
-              <p className="text-[11px] text-[#7A7064] font-medium">Select a dossier task folder to open its Kanban board</p>
+              <p className="text-[11px] text-[#7A7064] font-medium truncate">Select a dossier task folder to open its Kanban board</p>
             </div>
           </div>
 
           {/* Org Selector & Controls */}
-          <div className="flex items-center space-x-3">
-            <div className="relative">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+            <div className="relative flex-1 sm:flex-initial min-w-[140px]">
               <select
                 value={currentOrg.id}
                 onChange={(e) => {
@@ -3253,7 +3257,7 @@ export default function App() {
                     }
                   }
                 }}
-                className="pl-3 pr-8 py-1.5 text-xs font-bold bg-[#FAF6EE] border border-[#D5CABB] rounded-lg text-[#2C2621] focus:outline-none cursor-pointer shadow-xs"
+                className="w-full pl-3 pr-8 py-1.5 text-xs font-bold bg-[#FAF6EE] border border-[#D5CABB] rounded-lg text-[#2C2621] focus:outline-none cursor-pointer shadow-xs"
               >
                 {organizations.map(org => (
                   <option key={org.id} value={org.id}>
@@ -3265,7 +3269,7 @@ export default function App() {
 
             <button
               onClick={() => setIsNewOrgModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EFE8DC] border border-[#D5CABB] text-xs font-semibold text-[#433A31] transition-colors flex items-center space-x-1"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EFE8DC] border border-[#D5CABB] text-xs font-semibold text-[#433A31] transition-colors flex items-center space-x-1 shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Org</span>
@@ -3273,15 +3277,15 @@ export default function App() {
 
             <button
               onClick={() => setIsNewFolderModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-xs flex items-center space-x-1.5"
+              className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C2621] transition-colors shadow-xs flex items-center space-x-1.5 shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Create Task Folder</span>
+              <span>Create Folder</span>
             </button>
 
             <button
               onClick={() => setCurrentScreen('auth')}
-              className="p-1.5 rounded-lg bg-[#FAF6EE] border border-[#D5CABB] text-[#7A7064] hover:text-[#2C2621]"
+              className="p-1.5 rounded-lg bg-[#FAF6EE] border border-[#D5CABB] text-[#7A7064] hover:text-[#2C2621] shrink-0"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />

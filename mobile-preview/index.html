@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Archival PM - Mobile Device Preview</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: #241E1A;
+        background-image: 
+          radial-gradient(#382F28 1px, transparent 1px),
+          radial-gradient(#302822 1px, #241E1A 1px);
+        background-size: 24px 24px;
+        background-position: 0 0, 12px 12px;
+        color: #FAF6EE;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+      }
+
+      /* Top Device Control Bar */
+      .top-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        background: rgba(46, 39, 33, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid #4D4238;
+        padding: 8px 16px;
+        border-radius: 9999px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        z-index: 50;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 13px;
+        color: #E8DECA;
+        letter-spacing: 0.5px;
+      }
+      .brand-badge {
+        background: #E8DECA;
+        color: #2C2621;
+        font-size: 10px;
+        font-weight: 900;
+        padding: 2px 8px;
+        border-radius: 999px;
+        text-transform: uppercase;
+      }
+
+      .btn-group {
+        display: flex;
+        align-items: center;
+        background: #1C1713;
+        border-radius: 999px;
+        padding: 3px;
+        gap: 2px;
+      }
+
+      .btn-device {
+        background: transparent;
+        color: #B5A898;
+        border: none;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .btn-device:hover {
+        color: #FAF6EE;
+      }
+      .btn-device.active {
+        background: #FAF6EE;
+        color: #241E1A;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      }
+
+      .btn-toggle-notch {
+        background: #382F28;
+        color: #E8DECA;
+        border: 1px solid #5A4C40;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-toggle-notch:hover {
+        background: #4D4035;
+        color: #FAF6EE;
+      }
+
+      .view-direct-btn {
+        background: #D48B47;
+        color: #FAF6EE;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 999px;
+        text-decoration: none;
+        transition: background 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .view-direct-btn:hover {
+        background: #BF7836;
+      }
+
+      /* Realistic Smartphone Shell Frame */
+      .phone-container {
+        position: relative;
+        transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        width: 390px;
+        height: 844px;
+        max-height: calc(100vh - 120px);
+        margin: 0 auto;
+        border-radius: 54px;
+        background: #0B0A09;
+        padding: 12px;
+        box-shadow: 
+          0 0 0 4px #423830,
+          0 0 0 6px #1A1512,
+          0 25px 70px -10px rgba(0, 0, 0, 0.8),
+          0 10px 20px -5px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* iPhone Dynamic Island / Camera Notch */
+      .notch-pill {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90px;
+        height: 20px;
+        background: #000000;
+        border-radius: 14px;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px;
+        pointer-events: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      }
+      .notch-lens {
+        width: 7px;
+        height: 7px;
+        background: #111424;
+        border-radius: 50%;
+        border: 1px solid #1C2237;
+      }
+      .notch-sensor {
+        width: 5px;
+        height: 5px;
+        background: #0D0E12;
+        border-radius: 50%;
+      }
+
+      /* Inner Screen Display (iframe) */
+      .screen-viewport {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 44px;
+        overflow: hidden;
+        background: #FAF6EE;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+        background: #FAF6EE;
+      }
+
+      /* Home indicator bar at bottom */
+      .home-indicator {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 134px;
+        height: 5px;
+        background: rgba(44, 38, 33, 0.6);
+        border-radius: 999px;
+        z-index: 40;
+        pointer-events: none;
+      }
+
+      /* Subtext */
+      .hint-text {
+        margin-top: 18px;
+        font-size: 11px;
+        color: #9C8F80;
+        text-align: center;
+        letter-spacing: 0.3px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Control Bar -->
+    <div class="top-bar">
+      <div class="brand">
+        <span>ARCHIVAL PM</span>
+        <span class="brand-badge">Phone View</span>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-device" onclick="setDevice(320, 568, this)">iPhone SE (320px)</button>
+        <button class="btn-device" onclick="setDevice(375, 667, this)">iPhone Mini (375px)</button>
+        <button class="btn-device active" onclick="setDevice(390, 844, this)">iPhone 14/15 (390px)</button>
+        <button class="btn-device" onclick="setDevice(430, 932, this)">15 Pro Max (430px)</button>
+      </div>
+
+      <button class="btn-toggle-notch" onclick="toggleNotch()">Toggle Camera Notch</button>
+
+      <a href="http://127.0.0.1:5173" target="_blank" class="view-direct-btn">
+        <span>Open Direct Web</span>
+        <span>↗</span>
+      </a>
+    </div>
+
+    <!-- Realistic Mobile Shell Container -->
+    <div class="phone-container" id="phoneContainer">
+      <!-- Dynamic Island Notch -->
+      <div class="notch-pill">
+        <div class="notch-lens"></div>
+        <div class="notch-sensor"></div>
+      </div>
+
+      <!-- Live App Screen Inside Phone -->
+      <div class="screen-viewport">
+        <iframe id="appFrame" src="http://127.0.0.1:5173"></iframe>
+      </div>
+
+      <!-- iOS Home Bar Indicator -->
+      <div class="home-indicator"></div>
+    </div>
+
+    <p class="hint-text">
+      Interactive phone viewport preview running live. Switch devices above or tap directly inside the screen.
+    </p>
+
+    <script>
+      function setDevice(w, h, btn) {
+        document.querySelectorAll('.btn-device').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const container = document.getElementById('phoneContainer');
+        // Add bezel padding (12px on each side = 24px)
+        container.style.width = (w + 24) + 'px';
+        container.style.height = (h + 24) + 'px';
+      }
+
+      function toggleNotch() {
+        const notch = document.querySelector('.notch-pill');
+        if (notch) {
+          notch.style.display = (notch.style.display === 'none') ? 'flex' : 'none';
+        }
+      }
+    </script>
+  </body>
+</html>
