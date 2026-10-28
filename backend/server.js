@@ -5,13 +5,48 @@ const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const http = require('http');
+const { WebSocketServer } = require('ws');
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'archival-secret-key-change-in-prod';
 const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:5173';
+
+// Broadcast helper for real-time WebSocket communication
+const broadcast = (data) => {
+  const payload = typeof data === 'string' ? data : JSON.stringify(data);
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) { // 1 = OPEN
+      client.send(payload);
+    }
+  });
+};
+
+wss.on('connection', (ws) => {
+  console.log('[WebSocket] Client connected for real-time updates');
+  ws.send(JSON.stringify({ type: 'CONNECTED', message: 'Real-time WebSocket tunnel connected' }));
+
+  ws.on('message', (message) => {
+    try {
+      const parsed = JSON.parse(message);
+      // Echo or broadcast client actions if sent over socket
+      if (parsed.type === 'NEW_COMMENT' || parsed.type === 'CARD_UPDATE') {
+        broadcast(parsed);
+      }
+    } catch (e) {
+      console.error('WS parse error:', e.message);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('[WebSocket] Client disconnected');
+  });
+});
 
 // Setup email transporter (Supports real Gmail/SMTP or Ethereal test inbox)
 let mailTransporter = null;
@@ -629,6 +664,7 @@ app.post('/api/v1/projects/:projectId/tasks', authMiddleware, async (req, res) =
     task.subtasks = JSON.parse(task.subtasks || '[]');
     task.assignees = JSON.parse(task.assignees || '[]');
     task.comments = [];
+    broadcast({ type: 'TASK_CREATED', task });
     res.json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -670,6 +706,7 @@ app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
     task.tags = JSON.parse(task.tags || '[]');
     task.subtasks = JSON.parse(task.subtasks || '[]');
     task.assignees = JSON.parse(task.assignees || '[]');
+    broadcast({ type: 'TASK_UPDATED', task });
     res.json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -726,6 +763,7 @@ app.post('/api/v1/tasks/:id/timer', authMiddleware, async (req, res) => {
     updatedTask.tags = JSON.parse(updatedTask.tags || '[]');
     updatedTask.subtasks = JSON.parse(updatedTask.subtasks || '[]');
     updatedTask.assignees = JSON.parse(updatedTask.assignees || '[]');
+    broadcast({ type: 'TASK_UPDATED', task: updatedTask });
     res.json(updatedTask);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -741,6 +779,7 @@ app.post('/api/v1/tasks/:id/move', authMiddleware, async (req, res) => {
       [column_id, position || 0, req.params.id]
     );
     const task = await getAsync('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+    broadcast({ type: 'TASK_MOVED', task });
     res.json(task);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -751,6 +790,7 @@ app.post('/api/v1/tasks/:id/move', authMiddleware, async (req, res) => {
 app.delete('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
   try {
     await runAsync('DELETE FROM tasks WHERE id = ?', [req.params.id]);
+    broadcast({ type: 'TASK_DELETED', taskId: req.params.id });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -790,6 +830,19 @@ app.post('/api/v1/tasks/:taskId/comments', authMiddleware, async (req, res) => {
       LEFT JOIN users u ON c.user_id = u.id
       WHERE c.id = ?
     `, [result.lastID]);
+
+    broadcast({
+      type: 'NEW_COMMENT',
+      taskId: req.params.taskId,
+      comment: {
+        id: comment.id,
+        author: comment.name || 'Agent',
+        avatar: comment.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
+        time: 'Just now',
+        created_at: comment.created_at,
+        text: comment.content
+      }
+    });
 
     res.json(comment);
   } catch (error) {
@@ -1962,9 +2015,9 @@ app.post('/api/v1/invites/:token/accept', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Archival Backend API listening on http://localhost:${PORT}`);
+// Start server with WebSocket support
+server.listen(PORT, () => {
+  console.log(`Archival Backend API & WebSockets listening on http://localhost:${PORT}`);
 });
 
-module.exports = app;
+module.exports = { app, server, broadcast };

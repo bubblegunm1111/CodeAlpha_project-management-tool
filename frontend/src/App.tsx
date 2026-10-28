@@ -1472,6 +1472,175 @@ export default function App() {
     return () => clearInterval(timerInterval);
   }, []);
 
+  // Real-time WebSocket connection for live team comments and task synchronizations
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: any = null;
+
+    const connectWebSocket = () => {
+      try {
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = window.location.hostname || 'localhost';
+        const wsUrl = `${wsProtocol}//${wsHost}:3001`;
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log('[Live Archival Tunnel] Connected to real-time sync server');
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'NEW_COMMENT') {
+              const { taskId, comment } = data;
+              const formattedComment: Comment = {
+                id: `c-${comment.id || Date.now()}`,
+                author: comment.author || comment.name || 'Team Member',
+                avatar: comment.avatar || comment.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces',
+                time: comment.time || 'Just now',
+                content: comment.text || comment.content || ''
+              };
+
+              setTasks(prevTasks => prevTasks.map(t => {
+                const rawId = t.id.replace('t-', '');
+                if (t.id === taskId || rawId === String(taskId)) {
+                  // Prevent duplicate comment if local optimistic update added it
+                  const exists = (t.comments || []).some(c => c.content === formattedComment.content && Math.abs(Number(c.id.replace('c-', '')) - Number(formattedComment.id.replace('c-', ''))) < 5000);
+                  if (exists) return t;
+
+                  const updatedComments = [formattedComment, ...(t.comments || [])];
+                  return {
+                    ...t,
+                    comments: updatedComments,
+                    commentsCount: (t.commentsCount || 0) + 1
+                  };
+                }
+                return t;
+              }));
+
+              setSelectedTask(prevSelected => {
+                if (prevSelected) {
+                  const rawSelId = prevSelected.id.replace('t-', '');
+                  if (prevSelected.id === taskId || rawSelId === String(taskId)) {
+                    const exists = (prevSelected.comments || []).some(c => c.content === formattedComment.content && Math.abs(Number(c.id.replace('c-', '')) - Number(formattedComment.id.replace('c-', ''))) < 5000);
+                    if (!exists) {
+                      return {
+                        ...prevSelected,
+                        comments: [formattedComment, ...(prevSelected.comments || [])],
+                        commentsCount: (prevSelected.commentsCount || 0) + 1
+                      };
+                    }
+                  }
+                }
+                return prevSelected;
+              });
+
+              setNotifications(prev => [
+                {
+                  id: Date.now(),
+                  text: `New dispatch from ${formattedComment.author}: "${formattedComment.content.slice(0, 30)}${formattedComment.content.length > 30 ? '...' : ''}"`,
+                  time: 'Just now'
+                },
+                ...prev
+              ]);
+            } else if (data.type === 'TASK_UPDATED' && data.task) {
+              const updated = data.task;
+              setTasks(prev => prev.map(t => {
+                const rawId = t.id.replace('t-', '');
+                if (t.id === `t-${updated.id}` || rawId === String(updated.id)) {
+                  return {
+                    ...t,
+                    title: updated.title !== undefined ? updated.title : t.title,
+                    color: updated.color || t.color,
+                    progress: updated.progress !== undefined ? updated.progress : t.progress,
+                    priority: updated.priority || t.priority,
+                    note: updated.note !== undefined ? updated.note : t.note,
+                    timeSpent: updated.time_spent !== undefined ? updated.time_spent : t.timeSpent,
+                    isTimerRunning: updated.is_timer_running !== undefined ? !!updated.is_timer_running : t.isTimerRunning,
+                    assignees: Array.isArray(updated.assignees) && updated.assignees.length > 0 ? updated.assignees : t.assignees
+                  };
+                }
+                return t;
+              }));
+
+              setSelectedTask(prev => {
+                if (prev) {
+                  const rawSelId = prev.id.replace('t-', '');
+                  if (prev.id === `t-${updated.id}` || rawSelId === String(updated.id)) {
+                    return {
+                      ...prev,
+                      title: updated.title !== undefined ? updated.title : prev.title,
+                      color: updated.color || prev.color,
+                      progress: updated.progress !== undefined ? updated.progress : prev.progress,
+                      priority: updated.priority || prev.priority,
+                      note: updated.note !== undefined ? updated.note : prev.note,
+                      timeSpent: updated.time_spent !== undefined ? updated.time_spent : prev.timeSpent,
+                      isTimerRunning: updated.is_timer_running !== undefined ? !!updated.is_timer_running : prev.isTimerRunning,
+                      assignees: Array.isArray(updated.assignees) && updated.assignees.length > 0 ? updated.assignees : prev.assignees
+                    };
+                  }
+                }
+                return prev;
+              });
+            } else if (data.type === 'TASK_CREATED' && data.task) {
+              const newTask = data.task;
+              const formattedTask: Task = {
+                id: `t-${newTask.id}`,
+                columnId: (newTask.column_id === 1 ? 'todo' : newTask.column_id === 2 ? 'inprogress' : 'inreview') as any,
+                title: newTask.title,
+                tags: Array.isArray(newTask.tags) ? newTask.tags : ['#client'],
+                color: (newTask.color as any) || 'blue',
+                note: newTask.note || undefined,
+                progress: newTask.progress || 0,
+                subtasks: Array.isArray(newTask.subtasks) ? newTask.subtasks : [],
+                assignees: Array.isArray(newTask.assignees) && newTask.assignees.length > 0 ? newTask.assignees : [
+                  { name: 'Emma Carter', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop' }
+                ],
+                commentsCount: 0,
+                attachmentsCount: 0,
+                dueDate: newTask.due_date || 'May 30, 2026',
+                priority: (newTask.priority as any) || 'Medium',
+                timeSpent: newTask.time_spent || 0,
+                estimatedHours: newTask.estimated_hours || 4.0,
+                isTimerRunning: !!newTask.is_timer_running,
+                aiRiskScore: (newTask.ai_risk_score as any) || 'Low',
+                aiRiskReason: newTask.ai_risk_reason || 'Sprint pace on track',
+                comments: []
+              };
+              setTasks(prev => {
+                if (prev.some(t => t.id === formattedTask.id)) return prev;
+                return [formattedTask, ...prev];
+              });
+            }
+          } catch (err) {
+            console.error('Error handling WebSocket message:', err);
+          }
+        };
+
+        ws.onclose = () => {
+          reconnectTimeout = setTimeout(connectWebSocket, 3000);
+        };
+
+        ws.onerror = () => {
+          if (ws) ws.close();
+        };
+      } catch (err) {
+        reconnectTimeout = setTimeout(connectWebSocket, 3000);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+      }
+    };
+  }, []);
+
   // Format seconds to HH:MM:SS or MM:SS
   const formatTimeSpent = (totalSeconds: number = 0) => {
     const hours = Math.floor(totalSeconds / 3600);
