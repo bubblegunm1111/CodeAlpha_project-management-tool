@@ -4428,9 +4428,12 @@ export default function App() {
                               const rawStartDiff = Math.round((itemStart - sundayMidnight) / msPerDay);
                               const rawEndDiff = Math.round((itemEnd - sundayMidnight) / msPerDay);
 
+                              // Clamp strictly to the visible 7-day grid [0, 6]
                               const startIdx = Math.max(0, Math.min(6, rawStartDiff));
-                              const endIdx = Math.max(startIdx, Math.min(6, Math.max(rawStartDiff, rawEndDiff)));
+                              const endIdx = Math.max(startIdx, Math.min(6, rawEndDiff));
                               const spanDays = Math.max(1, endIdx - startIdx + 1);
+
+                              // Percentage placement inside the grid container
                               const leftPercent = (startIdx / 7) * 100;
                               const widthPercent = (spanDays / 7) * 100;
 
@@ -4495,11 +4498,11 @@ export default function App() {
                                   </div>
 
                                   {/* Right: Gantt bar spanning calculated days */}
-                                  <div className="flex-1 relative py-2 px-1 bg-[linear-gradient(to_right,#EFE8DC_1px,transparent_1px)] bg-[size:14.285%_100%] min-h-[44px] flex items-center">
+                                  <div className="flex-1 relative py-2 px-1 bg-[linear-gradient(to_right,#EFE8DC_1px,transparent_1px)] bg-[size:14.285%_100%] min-h-[44px] flex items-center overflow-hidden">
                                     <div
                                       style={{
                                         marginLeft: `${leftPercent}%`,
-                                        width: `calc(${widthPercent}% - 12px)`
+                                        width: `calc(${widthPercent}% - 8px)`
                                       }}
                                       className={`h-9 rounded-2xl border px-3 flex items-center justify-between shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
                                         isSelected ? 'ring-2 ring-[#2E2721] shadow-md scale-[1.01]' : 'hover:shadow-sm hover:scale-[1.005]'
@@ -4513,17 +4516,12 @@ export default function App() {
                                           {item.startDate ? `${new Date(item.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date((item.endDate || item.startDate) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : item.date}
                                         </span>
                                       </div>
-                                      <div className="flex items-center -space-x-1.5 flex-shrink-0">
+                                      <div className="flex items-center flex-shrink-0">
                                         <img
                                           src={item.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
                                           alt={item.assignee}
                                           className="w-5 h-5 rounded-full border border-white object-cover shadow-xs"
-                                          title={item.assignee}
-                                        />
-                                        <img
-                                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop"
-                                          alt="Team"
-                                          className="w-5 h-5 rounded-full border border-white object-cover shadow-xs"
+                                          title={`Assigned: ${item.assignee}`}
                                         />
                                       </div>
                                     </div>
