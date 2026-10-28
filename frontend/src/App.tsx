@@ -2882,20 +2882,20 @@ export default function App() {
     );
   }
 
-  // 2. Authentication Screen: Exact Match to User Screenshot
+  // 2. Authentication Screen: Native mobile card + Desktop archival tab layout
   if (currentScreen === 'auth') {
     return (
-      <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8 relative selection:bg-[#E8DECA]">
+      <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 relative selection:bg-[#E8DECA]">
         {/* Vintage Paper Texture Background */}
         <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
 
-        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 pt-4 sm:pt-0">
+        <div className="w-full max-w-md mx-auto relative z-10 pt-2 sm:pt-0">
           {/* Logo & Header */}
-          <div className="text-center">
-            <div className="w-12 h-12 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center mx-auto shadow-sm">
-              <Folder className="w-6 h-6" />
+          <div className="text-center mb-5 sm:mb-6">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center mx-auto shadow-sm">
+              <Folder className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <h2 className="mt-4 text-2xl font-bold tracking-tight text-[#2C2621]">
+            <h2 className="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-[#2C2621]">
               {authMode === 'signin' ? 'Archival PM' : 'Create an Account'}
             </h2>
             <p className="mt-1 text-xs text-[#7A7064]">
@@ -2903,54 +2903,44 @@ export default function App() {
             </p>
           </div>
 
-          {/* Auth Dossier Folder Card */}
-          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative">
-            {/* Top Cutout Folder Tab Slips */}
-            <div className="flex items-end justify-between px-2 -mb-px relative z-20">
-              {/* Main Folder Tab (Mode Switcher) */}
-              <div className="flex items-center space-x-1">
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('signin')}
-                  className={`px-5 py-2.5 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-2 border-t-2 border-l-2 border-r-2 whitespace-nowrap ${
-                    authMode === 'signin'
-                      ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
-                      : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
-                  }`}
-                >
-                  <Folder className="w-3.5 h-3.5" />
-                  <span>SIGN IN</span>
-                </button>
+          {/* iOS-Native Segmented Control for Mobile / Tabbed for Desktop */}
+          <div className="mb-3 p-1 bg-[#E8DECA] rounded-xl border border-[#D5CABB] grid grid-cols-2 gap-1 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setAuthMode('signin')}
+              className={`py-2 rounded-lg text-xs font-black tracking-wider transition-all flex items-center justify-center space-x-1.5 ${
+                authMode === 'signin'
+                  ? 'bg-[#FAF6EE] text-[#2C241E] shadow-xs'
+                  : 'text-[#7A6E5E] hover:text-[#2C241E]'
+              }`}
+            >
+              <Folder className="w-3.5 h-3.5" />
+              <span>SIGN IN</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthMode('signup')}
+              className={`py-2 rounded-lg text-xs font-black tracking-wider transition-all flex items-center justify-center space-x-1.5 ${
+                authMode === 'signup'
+                  ? 'bg-[#FAF6EE] text-[#2C241E] shadow-xs'
+                  : 'text-[#7A6E5E] hover:text-[#2C241E]'
+              }`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>NEW ACCOUNT</span>
+            </button>
+          </div>
 
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('signup')}
-                  className={`px-5 py-2.5 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-2 border-t-2 border-l-2 border-r-2 whitespace-nowrap ${
-                    authMode === 'signup'
-                      ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
-                      : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
-                  }`}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>NEW ACCOUNT</span>
-                </button>
-              </div>
-
-              {/* Archival Stamp / Clearance Tag on Folder Tab */}
-              <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-t-lg bg-[#E5D9C4] border-t border-l border-r border-[#CFBF9F] text-[9px] font-mono font-bold text-[#70624E] tracking-widest uppercase">
-                <Lock className="w-2.5 h-2.5 text-amber-800" />
-                <span>CONFIDENTIAL</span>
-              </div>
-            </div>
-
+          {/* Auth Dossier Card */}
+          <div className="relative">
             {/* Folder Main Pocket Body */}
-            <div className="bg-[#FAF6EE] border-2 border-[#D5CABB] rounded-2xl rounded-tl-none py-6 sm:py-7 px-5 sm:px-8 shadow-xl relative z-10 overflow-hidden">
-              {/* Folder Internal Paper Watermark & Line Details */}
+            <div className="bg-[#FAF6EE] border-2 border-[#D5CABB] rounded-2xl py-5 sm:py-7 px-4 sm:px-8 shadow-xl relative z-10 overflow-hidden">
+              {/* Folder Internal Paper Watermark */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(#D5CABB_1px,transparent_1px)] [background-size:12px_12px] opacity-40 pointer-events-none" />
 
               {/* Folder Pocket Header */}
-              <div className="mb-5 pb-3 border-b border-[#E8DEC9] relative">
-                {/* Meta Badge repositioned on top of header so it never covers the text */}
+              <div className="mb-4 sm:mb-5 pb-3 border-b border-[#E8DEC9] relative">
+                {/* Meta Badge clean top row */}
                 <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
                   <span className="text-[8px] font-mono uppercase tracking-widest text-[#A89C8C]">REF: DOSSIER-APEX-2026</span>
                   <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80 inline-block font-mono">

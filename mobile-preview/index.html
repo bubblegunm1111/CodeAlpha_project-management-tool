@@ -133,12 +133,12 @@
         height: 844px;
         max-height: calc(100vh - 120px);
         margin: 0 auto;
-        border-radius: 54px;
-        background: #0B0A09;
-        padding: 12px;
+        border-radius: 50px;
+        background: #181512;
+        padding: 10px;
         box-shadow: 
-          0 0 0 4px #423830,
-          0 0 0 6px #1A1512,
+          0 0 0 3px #3D352D,
+          0 0 0 5px #120F0D,
           0 25px 70px -10px rgba(0, 0, 0, 0.8),
           0 10px 20px -5px rgba(0, 0, 0, 0.6);
         display: flex;
@@ -148,31 +148,31 @@
       /* iPhone Dynamic Island / Camera Notch */
       .notch-pill {
         position: absolute;
-        top: 8px;
+        top: 14px;
         left: 50%;
         transform: translateX(-50%);
-        width: 90px;
-        height: 20px;
+        width: 110px;
+        height: 26px;
         background: #000000;
-        border-radius: 14px;
+        border-radius: 20px;
         z-index: 40;
-        display: flex;
+        display: none; /* Hidden by default so user content is 100% visible and unclipped */
         align-items: center;
         justify-content: space-between;
-        padding: 0 8px;
+        padding: 0 10px;
         pointer-events: none;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
       }
       .notch-lens {
-        width: 7px;
-        height: 7px;
+        width: 8px;
+        height: 8px;
         background: #111424;
         border-radius: 50%;
         border: 1px solid #1C2237;
       }
       .notch-sensor {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
         background: #0D0E12;
         border-radius: 50%;
       }
@@ -182,7 +182,7 @@
         position: relative;
         width: 100%;
         height: 100%;
-        border-radius: 44px;
+        border-radius: 40px;
         overflow: hidden;
         background: #FAF6EE;
       }
