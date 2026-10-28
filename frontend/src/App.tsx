@@ -5630,7 +5630,11 @@ export default function App() {
             const todoTasks = tasks.filter(t => t.columnId === 'todo').length;
             const overallCompletionRate = totalTasksCount > 0 ? Math.round((completedTasks / totalTasksCount) * 100) : 0;
             const totalHoursLogged = tasks.reduce((sum, t) => sum + (t.timeSpent || 0), 0);
+            
+            // Unified Risk Alert Radar: Combines high-risk tasks + products marked 'At Risk' or 'Needs Attention'
             const highRiskTasks = tasks.filter(t => t.aiRiskScore === 'High').length;
+            const atRiskProducts = products.filter(p => p.health === 'At Risk' || p.health === 'Needs Attention').length;
+            const totalRiskCount = highRiskTasks + atRiskProducts;
 
             return (
               <div className="space-y-5 sm:space-y-6">
@@ -5704,10 +5708,12 @@ export default function App() {
                   <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
                     <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
                       <span>Risk Alert Radar</span>
-                      <Flame className="w-4 h-4 text-rose-600" />
+                      <Flame className={`w-4 h-4 ${totalRiskCount > 0 ? 'text-rose-600 animate-pulse' : 'text-[#8C7E6C]'}`} />
                     </div>
-                    <p className="text-2xl font-black text-rose-800">{highRiskTasks}</p>
-                    <p className="text-[10px] text-rose-700 font-bold mt-1">AI capacity alerts active</p>
+                    <p className={`text-2xl font-black ${totalRiskCount > 0 ? 'text-rose-800' : 'text-[#2A231D]'}`}>{totalRiskCount}</p>
+                    <p className={`text-[10px] font-bold mt-1 ${totalRiskCount > 0 ? 'text-rose-700' : 'text-[#7A6F62]'}`}>
+                      {totalRiskCount > 0 ? `${atRiskProducts} at-risk deliverables, ${highRiskTasks} high-risk tasks` : 'All items pacing healthy'}
+                    </p>
                   </div>
                 </div>
 
