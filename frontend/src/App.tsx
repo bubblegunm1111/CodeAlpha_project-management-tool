@@ -983,7 +983,7 @@ export default function App() {
   const [newMemberWorkload, setNewMemberWorkload] = useState<number>(60);
   const [newCommentText, setNewCommentText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // ClickUp-Style Email Invitation & Onboarding States
   const [lastCreatedInvite, setLastCreatedInvite] = useState<{
@@ -1047,7 +1047,14 @@ export default function App() {
   const [timelineNewSubtaskInput, setTimelineNewSubtaskInput] = useState('');
   const [timelineCollapsedPhases, setTimelineCollapsedPhases] = useState<Record<string, boolean>>({});
 
-  // Subtask & Checklist state
+  // Set sidebar open on wide screens and closed on mobile screens initially
+  useEffect(() => {
+    if (window.innerWidth >= 768) {
+      setIsSidebarOpen(true);
+    } else {
+      setIsSidebarOpen(false);
+    }
+  }, []);
   const [newSubtaskInput, setNewSubtaskInput] = useState('');
   const [createTaskSubtasks, setCreateTaskSubtasks] = useState<string[]>([]);
   const [createTaskSubtaskInput, setCreateTaskSubtaskInput] = useState('');
@@ -2752,10 +2759,10 @@ export default function App() {
           </div>
 
           {/* Right Column: 3D Folder Dossier Presentation with Floating Cards */}
-          <div className="lg:col-span-6 flex justify-center items-center py-10">
-            <div className="folder-perspective relative w-80 sm:w-96 h-64 flex items-center justify-center">
+          <div className="lg:col-span-6 flex justify-center items-center py-6 sm:py-10 max-w-full overflow-hidden">
+            <div className="folder-perspective relative w-72 sm:w-80 md:w-96 h-56 sm:h-64 flex items-center justify-center">
               {/* Folder Shadow Glow */}
-              <div className="absolute -bottom-8 w-72 sm:w-80 h-10 bg-[#2C2621]/15 rounded-full blur-xl pointer-events-none" />
+              <div className="absolute -bottom-8 w-64 sm:w-72 md:w-80 h-10 bg-[#2C2621]/15 rounded-full blur-xl pointer-events-none" />
 
               {/* Folder Back Body */}
               <div className="absolute inset-0 bg-[#D8CAAE] rounded-2xl border-2 border-[#C5B595] folder-emboss flex flex-col justify-between p-5 overflow-hidden">
@@ -2783,7 +2790,7 @@ export default function App() {
               {isFolderOpened && (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
                   {/* Left Floating Card: Blue */}
-                  <div className="absolute w-52 p-3.5 rounded-xl bg-[#EBF2FE] border border-[#CADCFE] paper-shadow anim-card-left pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
+                  <div className="absolute w-44 sm:w-52 p-3 sm:p-3.5 rounded-xl bg-[#EBF2FE] border border-[#CADCFE] paper-shadow anim-card-left pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D6E6FE] text-[#1E429F]">#mobile app</span>
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -2796,13 +2803,13 @@ export default function App() {
                   </div>
 
                   {/* Center Hero Floating Card: Peach (Priority) */}
-                  <div className="absolute w-64 p-4 rounded-xl bg-[#FFF3E5] border border-[#FDD9B5] paper-shadow anim-card-center z-30 pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
+                  <div className="absolute w-52 sm:w-64 p-3.5 sm:p-4 rounded-xl bg-[#FFF3E5] border border-[#FDD9B5] paper-shadow anim-card-center z-30 pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FFE2C2] text-[#9A3412]">#product task</span>
                       <span className="text-[10px] font-mono font-bold text-[#9A3412] bg-[#FDD9B5]/80 px-1.5 py-0.5 rounded">Urgent</span>
                     </div>
-                    <p className="text-sm font-bold text-[#431407] mt-2 leading-snug">Wehiu product task & process</p>
-                    <div className="mt-3">
+                    <p className="text-xs sm:text-sm font-bold text-[#431407] mt-2 leading-snug">Wehiu product task & process</p>
+                    <div className="mt-2 sm:mt-3">
                       <div className="flex justify-between text-[10px] font-semibold text-[#7C2D12] mb-1">
                         <span>Checklist progress</span>
                         <span>90%</span>
@@ -2814,7 +2821,7 @@ export default function App() {
                   </div>
 
                   {/* Right Floating Card: Mint */}
-                  <div className="absolute w-52 p-3.5 rounded-xl bg-[#E8FAF0] border border-[#C2F0D5] paper-shadow anim-card-right pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
+                  <div className="absolute w-44 sm:w-52 p-3 sm:p-3.5 rounded-xl bg-[#E8FAF0] border border-[#C2F0D5] paper-shadow anim-card-right pointer-events-auto cursor-pointer hover:-translate-y-1 transition-transform">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#D1F7E2] text-[#065F46]">#crm #client</span>
                       <span className="text-[10px] text-emerald-800 font-medium">In Progress</span>
@@ -3544,13 +3551,13 @@ export default function App() {
       {/* Top Manila Folder Cutout Tab Header */}
       <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
-        <div className="px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between border-b border-[#E4DAC7] gap-3">
+        <div className="px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
-          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink min-w-0">
             {/* Mobile Hamburger to open sidebar */}
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EAE0CF] border border-[#D5CABB] text-[#3F3730] shadow-2xs"
+              className="md:hidden p-2 rounded-lg bg-[#FAF6EE] hover:bg-[#EAE0CF] active:scale-95 border border-[#D5CABB] text-[#3F3730] shadow-2xs touch-target flex items-center justify-center shrink-0"
               title="Open Navigation Menu"
             >
               <Menu className="w-4 h-4" />
@@ -3562,23 +3569,23 @@ export default function App() {
             >
               <Folder className="w-4 h-4" />
             </button>
-            <div className="flex items-center space-x-1.5 sm:space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="font-extrabold text-xs sm:text-sm tracking-tight text-[#2B241F] hover:underline"
+                className="font-extrabold text-xs sm:text-sm tracking-tight text-[#2B241F] hover:underline truncate max-w-[80px] sm:max-w-[140px]"
               >
                 {currentOrg.name}
               </button>
-              <span className="text-[#8C8072] text-xs">/</span>
-              <span className="text-[11px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2 sm:px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1 sm:space-x-1.5">
-                <span className="truncate max-w-[120px] sm:max-w-none">{currentFolder.name}</span>
-                <span className="font-mono text-[9px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1 sm:px-1.5 py-0.2 rounded">
+              <span className="text-[#8C8072] text-xs shrink-0">/</span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-1.5 sm:px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1 min-w-0">
+                <span className="truncate max-w-[70px] sm:max-w-none">{currentFolder.name}</span>
+                <span className="font-mono text-[8px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1 sm:px-1.5 py-0.2 rounded shrink-0">
                   {formatFolderCode(currentFolder.code)}
                 </span>
               </span>
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="hidden sm:inline text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded hover:bg-[#E5DCBE] transition-colors"
+                className="hidden sm:inline text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded hover:bg-[#E5DCBE] transition-colors shrink-0"
               >
                 Switch
               </button>
@@ -3586,15 +3593,15 @@ export default function App() {
           </div>
 
           {/* Right Controls: Search, Notifications, Profile */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="relative">
+          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+            <div className="relative hidden xs:block sm:block">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-32 sm:w-52 shadow-inner"
+                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-24 sm:w-52 shadow-inner"
               />
             </div>
 
@@ -3685,7 +3692,7 @@ export default function App() {
         </div>
 
         {/* Lower Row: Full-width Folder Cutout Slips that dock cleanly into the canvas */}
-        <div className="px-4 sm:px-6 pt-2 flex items-center overflow-x-auto no-scrollbar">
+        <div className="px-3 sm:px-6 pt-2 flex items-center overflow-x-auto no-scrollbar max-w-full">
           <nav className="flex space-x-1 sm:space-x-2 -mb-[1px] min-w-max">
             {[
               { id: 'board' as const, label: 'Kanban Boards', count: tasks.length },
@@ -3855,16 +3862,16 @@ export default function App() {
           {/* VIEW 1: KANBAN BOARD */}
           {activeTab === 'board' && (
             <>
-              <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-[#E5DBCA] gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-[#E5DBCA] gap-4">
                 <div className="flex items-start space-x-3.5">
                   {!isSidebarOpen && (
                     <button
                       onClick={() => setIsSidebarOpen(true)}
-                      className="mt-0.5 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-2xs flex items-center space-x-1.5 transition-all shrink-0"
+                      className="mt-0.5 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-2xs flex items-center space-x-1.5 transition-all shrink-0 touch-target"
                       title="Show Folders sidebar"
                     >
                       <PanelLeftOpen className="w-4 h-4" />
-                      <span>Show Folders</span>
+                      <span className="hidden sm:inline">Show Folders</span>
                     </button>
                   )}
                   <div>
@@ -3872,17 +3879,17 @@ export default function App() {
                       <Clock className="w-3.5 h-3.5" />
                       <span>{getRealTimeDateFormatted()}</span>
                     </p>
-                    <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-0.5 flex items-center space-x-2">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight mt-0.5 flex items-center space-x-2">
                       <span>Task Management Board</span>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F3ECDE] border border-[#D8CEBC] text-[#695D50]">
+                      <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-[#F3ECDE] border border-[#D8CEBC] text-[#695D50]">
                         Sprint #3
                       </span>
                     </h1>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center -space-x-1.5 mr-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div className="hidden sm:flex items-center -space-x-1.5 mr-2">
                     {[
                       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces',
                       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces',
@@ -3896,14 +3903,14 @@ export default function App() {
                   </div>
 
                   {/* Multi-Product Filter Dropdown */}
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-initial min-w-[140px]">
                     <select
                       value={boardProductFilter}
                       onChange={(e) => setBoardProductFilter(e.target.value)}
-                      className="appearance-none bg-[#EFE8DC] border border-[#DCD1BC] hover:border-[#8C7E6C] rounded-xl px-3 py-2 pr-8 text-xs font-bold text-[#2C241E] focus:outline-none shadow-xs cursor-pointer transition-all"
+                      className="w-full appearance-none bg-[#EFE8DC] border border-[#DCD1BC] hover:border-[#8C7E6C] rounded-xl px-2.5 sm:px-3 py-2 pr-7 text-xs font-bold text-[#2C241E] focus:outline-none shadow-xs cursor-pointer transition-all"
                       title="Filter board by specific product deliverable"
                     >
-                      <option value="all">📦 All Products & Backlogs ({tasks.length})</option>
+                      <option value="all">📦 All Products ({tasks.length})</option>
                       {products.map(p => (
                         <option key={p.id} value={p.name}>
                           {p.code} • {p.name}
@@ -3918,7 +3925,7 @@ export default function App() {
                       setNewTaskTargetColumn('todo');
                       setIsNewTaskModalOpen(true);
                     }}
-                    className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#2E2721] text-[#FAF6EE] text-xs font-bold hover:bg-[#463D34] shadow-md transition-all active:scale-95"
+                    className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#2E2721] text-[#FAF6EE] text-xs font-bold hover:bg-[#463D34] shadow-md transition-all active:scale-95 touch-target"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Create Task</span>
@@ -4925,10 +4932,10 @@ export default function App() {
                       </div>
 
                       {/* Interactive Calendar Days Grid */}
-                      <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-semibold">
+                      <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center text-xs font-semibold">
                         {/* Empty leading padding slots for day of week offset */}
                         {Array.from({ length: firstDayOfWeek }).map((_, idx) => (
-                          <div key={`empty-${idx}`} className="h-9 rounded-xl opacity-20 pointer-events-none" />
+                          <div key={`empty-${idx}`} className="h-9 sm:h-10 rounded-xl opacity-20 pointer-events-none" />
                         ))}
 
                         {/* All Month Days */}
@@ -4946,7 +4953,7 @@ export default function App() {
                                 const newDate = new Date(calendarViewYear, calendarViewMonth, dayNum);
                                 setCalendarSelectedDate(newDate);
                               }}
-                              className={`h-9 flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer relative group ${
+                              className={`h-9 sm:h-10 flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer relative group select-none active:scale-95 touch-target ${
                                 isSelected
                                   ? 'bg-[#2E2721] text-[#FAF6EE] font-black shadow-md scale-105 ring-2 ring-[#2E2721]/30 z-10'
                                   : isToday
@@ -5807,13 +5814,45 @@ export default function App() {
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar (Thumb-Friendly Native Smartphone Pattern) */}
+      <nav className="md:hidden sticky bottom-0 z-30 bg-[#EFE8DC]/95 backdrop-blur-md border-t border-[#DCD1BC] px-2 py-1.5 pb-safe flex items-center justify-around shadow-lg">
+        {[
+          { id: 'board' as const, icon: LayoutDashboard, label: 'Boards' },
+          { id: 'products' as const, icon: Package, label: 'Products' },
+          { id: 'schedule' as const, icon: CalendarIcon, label: 'Timeline' },
+          { id: 'notes' as const, icon: FileText, label: 'Notes' },
+          { id: 'team' as const, icon: Users, label: 'Team' }
+        ].map(item => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all touch-target select-none ${
+                isActive
+                  ? 'text-[#2E2721] font-black'
+                  : 'text-[#7A7064] hover:text-[#2C241E] font-medium'
+              }`}
+            >
+              <div className={`p-1 rounded-lg transition-transform ${isActive ? 'bg-[#FAF6EE] shadow-2xs scale-110' : ''}`}>
+                <Icon className={`w-4 h-4 ${isActive ? 'text-[#2E2721]' : 'text-[#7A7064]'}`} />
+              </div>
+              <span className="text-[10px] mt-0.5 tracking-tight leading-none">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
       {/* Task Detail Modal & Live Card Color Changer */}
       {selectedTask && (() => {
         const currentModalTask = tasks.find(t => t.id === selectedTask.id) || selectedTask;
         return (
-        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+            {/* Mobile Drag Handle indicator */}
+            <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2 shrink-0" />
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Folder className="w-4 h-4 text-[#665A4E]" />
                 <span className="text-xs font-bold text-[#7A6E60] uppercase tracking-wider">
@@ -5825,13 +5864,13 @@ export default function App() {
               </div>
               <button
                 onClick={() => setSelectedTask(null)}
-                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors touch-target"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-6">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 sm:space-y-6">
               {/* Title & Priority */}
               <div>
                 <div className="flex items-center space-x-1.5 mb-2">
@@ -6192,12 +6231,14 @@ export default function App() {
 
       {/* Modal: Create Task Card */}
       {isNewTaskModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-md shadow-2xl p-6">
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+            {/* Mobile Drag Handle indicator */}
+            <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto mb-3" />
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E8DEC9]">
               <h3 className="text-base font-bold text-[#2C241E]">Create New Task Card</h3>
-              <button onClick={() => setIsNewTaskModalOpen(false)} className="text-[#786D60] hover:text-[#2A231D]">
-                <X className="w-4 h-4" />
+              <button onClick={() => setIsNewTaskModalOpen(false)} className="text-[#786D60] hover:text-[#2A231D] p-1 rounded-lg touch-target flex items-center justify-center">
+                <X className="w-5 h-5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
@@ -6398,12 +6439,14 @@ export default function App() {
 
       {/* Modal: Create Dossier Note */}
       {isNewNoteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-md shadow-2xl p-6">
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+            {/* Mobile Drag Handle indicator */}
+            <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto mb-3" />
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E8DEC9]">
               <h3 className="text-base font-bold text-[#2C241E]">Create Dossier Memo</h3>
-              <button onClick={() => setIsNewNoteModalOpen(false)} className="text-[#786D60] hover:text-[#2A231D]">
-                <X className="w-4 h-4" />
+              <button onClick={() => setIsNewNoteModalOpen(false)} className="text-[#786D60] hover:text-[#2A231D] p-1 rounded-lg touch-target flex items-center justify-center">
+                <X className="w-5 h-5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
@@ -6491,12 +6534,14 @@ export default function App() {
 
       {/* Modal: Create Schedule Event */}
       {isNewScheduleModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-md shadow-2xl p-6">
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+            {/* Mobile Drag Handle indicator */}
+            <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto mb-3" />
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E8DEC9]">
               <h3 className="text-base font-bold text-[#2C241E]">Schedule Deliverable or Event</h3>
-              <button onClick={() => setIsNewScheduleModalOpen(false)} className="text-[#786D60] hover:text-[#2A231D]">
-                <X className="w-4 h-4" />
+              <button onClick={() => setIsNewScheduleModalOpen(false)} className="text-[#786D60] hover:text-[#2A231D] p-1 rounded-lg touch-target flex items-center justify-center">
+                <X className="w-5 h-5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
@@ -6641,22 +6686,24 @@ export default function App() {
 
       {/* Invite Team Member Modal */}
       {isInviteMemberModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+            {/* Mobile Drag Handle indicator */}
+            <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2" />
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Users className="w-4 h-4 text-[#665A4E]" />
                 <h3 className="text-sm font-bold text-[#2A231D]">Invite Team Member</h3>
               </div>
               <button
                 onClick={() => setIsInviteMemberModalOpen(false)}
-                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors touch-target"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleInviteMember} className="p-6 space-y-4">
+            <form onSubmit={handleInviteMember} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Full Name</label>
                 <input
@@ -6773,23 +6820,25 @@ export default function App() {
 
       {/* ClickUp-Style Invitation Email Sent Modal */}
       {showInviteSuccessModal && lastCreatedInvite && (
-        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+            {/* Mobile Drag Handle indicator */}
+            <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2" />
             {/* Header */}
-            <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-emerald-700" />
                 <h3 className="text-sm font-bold text-[#2A231D]">Work Email Invitation Dispatched!</h3>
               </div>
               <button
                 onClick={() => setShowInviteSuccessModal(false)}
-                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors touch-target"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               {/* Notification Banner */}
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start space-x-2.5 text-xs text-emerald-900">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -6888,11 +6937,13 @@ export default function App() {
         const totalFeatures = selectedProduct.features.length;
 
         return (
-          <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[90vh] pb-safe animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+              {/* Mobile Drag Handle indicator */}
+              <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2 shrink-0" />
               {/* Modal Header */}
-              <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+                <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap">
                   <Package className="w-4 h-4 text-[#665A4E]" />
                   <span className="text-xs font-bold text-[#7A6E60] uppercase tracking-wider font-mono">
                     {selectedProduct.code}
@@ -6910,14 +6961,14 @@ export default function App() {
                 </div>
                 <button
                   onClick={() => setSelectedProduct(null)}
-                  className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+                  className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors touch-target"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto space-y-5">
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-5">
                 <div>
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-black text-[#26201A] tracking-tight">
@@ -7070,22 +7121,24 @@ export default function App() {
 
       {/* New Product Dossier Modal */}
       {isNewProductModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#29221C]/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+            {/* Mobile Drag Handle indicator */}
+            <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2" />
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Package className="w-4 h-4 text-[#665A4E]" />
                 <h3 className="text-sm font-bold text-[#2A231D]">Catalog New Product Deliverable</h3>
               </div>
               <button
                 onClick={() => setIsNewProductModalOpen(false)}
-                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors"
+                className="p-1.5 rounded-lg text-[#786D60] hover:text-[#2A231D] hover:bg-[#E3D8C4] transition-colors touch-target"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateProduct} className="p-6 space-y-4">
+            <form onSubmit={handleCreateProduct} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
                   Product / Deliverable Name *
