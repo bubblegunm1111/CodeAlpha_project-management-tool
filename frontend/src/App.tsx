@@ -2654,7 +2654,7 @@ export default function App() {
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[#E5D7BF] opacity-30 blur-3xl pointer-events-none glow-ambient" />
 
         {/* Top Bar: Brand + Direct Skip to Sign In */}
-        <header className="relative z-20 flex items-center justify-between max-w-5xl mx-auto w-full pt-4 sm:pt-2">
+        <header className="relative z-20 flex items-center justify-between max-w-5xl mx-auto w-full pt-8 sm:pt-2">
           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-md border border-[#2C241E] shrink-0">
               <Folder className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -2889,7 +2889,7 @@ export default function App() {
         {/* Vintage Paper Texture Background */}
         <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
 
-        <div className="w-full max-w-md mx-auto relative z-10 pt-2 sm:pt-0">
+        <div className="w-full max-w-md mx-auto relative z-10 pt-8 sm:pt-0">
           {/* Logo & Header */}
           <div className="text-center mb-5 sm:mb-6">
             <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center mx-auto shadow-sm">
@@ -3217,7 +3217,7 @@ export default function App() {
         <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1.2px,transparent_1.2px)] [background-size:20px_20px] opacity-35 pointer-events-none" />
 
         {/* Top Header */}
-        <header className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-4 sm:pt-3 relative z-10">
+        <header className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-9 sm:pt-4 relative z-10">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-sm shrink-0">
               <Folder className="w-5 h-5" />
@@ -3543,7 +3543,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header */}
-      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-2 sm:pt-0">
+      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-8 sm:pt-0">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
         <div className="px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
@@ -3733,7 +3733,7 @@ export default function App() {
 
         {/* Left Sidebar (Image 1 Style) */}
         <aside
-          className={`bg-[#EFE8DC]/95 md:bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 ${
+          className={`bg-[#EFE8DC]/95 md:bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
             isSidebarOpen ? 'w-64 md:w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
           }`}
         >
