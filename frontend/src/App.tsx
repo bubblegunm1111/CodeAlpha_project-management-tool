@@ -5622,25 +5622,214 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW 5: ACTIVITY LOGS & REPORTS */}
-          {activeTab === 'reports' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-[#2A231D]">Activity Logs & System Telemetry</h2>
-              <div className="bg-[#F5EFEB] rounded-2xl border border-[#DCD1BC] p-6 space-y-3">
-                <p className="text-xs text-[#6A5E51]">
-                  All database activities, user permissions, and real-time events are tracked via the backend API.
-                </p>
-                <div className="space-y-2">
-                  <div className="p-3 bg-white rounded-xl border border-[#DCD1BC] text-xs">
-                    <span className="font-bold text-[#2A231D]">Mason Walker</span> (Admin) updated task color to Peach on "Wehiu product task"
+          {/* VIEW 5: ACTIVITY LOGS & ANALYTICS REPORTS */}
+          {activeTab === 'reports' && (() => {
+            const totalTasksCount = tasks.length;
+            const completedTasks = tasks.filter(t => t.columnId === 'inreview' || t.progress === 100).length;
+            const inProgressTasks = tasks.filter(t => t.columnId === 'inprogress').length;
+            const todoTasks = tasks.filter(t => t.columnId === 'todo').length;
+            const overallCompletionRate = totalTasksCount > 0 ? Math.round((completedTasks / totalTasksCount) * 100) : 0;
+            const totalHoursLogged = tasks.reduce((sum, t) => sum + (t.timeSpent || 0), 0);
+            const highRiskTasks = tasks.filter(t => t.aiRiskScore === 'High').length;
+
+            return (
+              <div className="space-y-5 sm:space-y-6">
+                {/* Header & Subtitle */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E5DBCA] gap-3">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F4E9D5] text-[#8A4A1C] border border-[#DFD1B8]">
+                        Archival Telemetry & Dossier Analytics
+                      </span>
+                      <span className="text-xs text-[#7B7062]">
+                        • Live Database Telemetry
+                      </span>
+                    </div>
+                    <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
+                      <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-[#756A5E]" />
+                      <span>Activity Logs & Project Reports</span>
+                    </h1>
+                    <p className="text-xs text-[#7B7062] mt-0.5">
+                      Comprehensive sprint analytics, team delivery velocity, risk radar, and real-time audit ledger.
+                    </p>
                   </div>
-                  <div className="p-3 bg-white rounded-xl border border-[#DCD1BC] text-xs">
-                    <span className="font-bold text-[#2A231D]">Sarah L.</span> posted a new discussion comment on "Search inspirations for upcoming project"
+
+                  <div className="flex items-center space-x-2 self-start sm:self-auto">
+                    <button
+                      onClick={() => {
+                        const reportText = `ARCHIVAL PM - SPRINT REPORT\nOrganization: ${currentOrg.name}\nFolder: ${currentFolder.name}\nCompletion Rate: ${overallCompletionRate}%\nTotal Tasks: ${totalTasksCount}\nCompleted: ${completedTasks}\nLogged Time: ${formatTimeSpent(totalHoursLogged)}\nGenerated: ${new Date().toLocaleString()}`;
+                        navigator.clipboard.writeText(reportText);
+                        alert('Sprint performance dossier copied to clipboard!');
+                      }}
+                      className="px-3.5 py-2 bg-[#2B231D] hover:bg-[#433931] text-[#FAF6EE] text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1.5 transition-colors"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Export Dossier Report</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4 Stat KPI Highlights */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                  <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                      <span>Overall Velocity</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <p className="text-2xl font-black text-[#2A231D]">{overallCompletionRate}%</p>
+                    <div className="w-full bg-[#E5DBC7] h-1.5 rounded-full overflow-hidden mt-1.5">
+                      <div className="bg-emerald-600 h-full rounded-full transition-all duration-300" style={{ width: `${overallCompletionRate}%` }} />
+                    </div>
+                    <p className="text-[10px] text-[#7A6F62] mt-1.5">{completedTasks} of {totalTasksCount} tasks resolved</p>
+                  </div>
+
+                  <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                      <span>Time Invested</span>
+                      <Timer className="w-4 h-4 text-[#8C7E6C]" />
+                    </div>
+                    <p className="text-2xl font-black font-mono text-[#2A231D]">{formatTimeSpent(totalHoursLogged)}</p>
+                    <p className="text-[10px] text-amber-800 font-bold mt-1">Logged across sprint tasks</p>
+                  </div>
+
+                  <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                      <span>Active Pipeline</span>
+                      <Layers className="w-4 h-4 text-[#8C7E6C]" />
+                    </div>
+                    <p className="text-2xl font-black text-[#2A231D]">{inProgressTasks}</p>
+                    <p className="text-[10px] text-[#7A6F62] mt-1">{todoTasks} waiting in queue</p>
+                  </div>
+
+                  <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                      <span>Risk Alert Radar</span>
+                      <Flame className="w-4 h-4 text-rose-600" />
+                    </div>
+                    <p className="text-2xl font-black text-rose-800">{highRiskTasks}</p>
+                    <p className="text-[10px] text-rose-700 font-bold mt-1">AI capacity alerts active</p>
+                  </div>
+                </div>
+
+                {/* Visual Sprint Progress Matrix & Task Distribution */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {/* Task Distribution Card */}
+                  <div className="bg-[#FAF6EE] border border-[#DCD1BC] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                    <h3 className="text-sm font-bold text-[#2A231D] flex items-center space-x-1.5">
+                      <LayoutDashboard className="w-4 h-4 text-[#786C5E]" />
+                      <span>Task Stage Distribution</span>
+                    </h3>
+                    <div className="space-y-2.5 pt-1">
+                      <div>
+                        <div className="flex justify-between text-xs font-semibold text-[#54483B] mb-1">
+                          <span>Todo Backlog</span>
+                          <span>{todoTasks} cards ({totalTasksCount > 0 ? Math.round((todoTasks / totalTasksCount) * 100) : 0}%)</span>
+                        </div>
+                        <div className="w-full bg-[#E5DBC7] h-2 rounded-full overflow-hidden">
+                          <div className="bg-[#9E8F7E] h-full" style={{ width: `${totalTasksCount > 0 ? (todoTasks / totalTasksCount) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between text-xs font-semibold text-[#54483B] mb-1">
+                          <span>In Progress</span>
+                          <span>{inProgressTasks} cards ({totalTasksCount > 0 ? Math.round((inProgressTasks / totalTasksCount) * 100) : 0}%)</span>
+                        </div>
+                        <div className="w-full bg-[#E5DBC7] h-2 rounded-full overflow-hidden">
+                          <div className="bg-amber-600 h-full" style={{ width: `${totalTasksCount > 0 ? (inProgressTasks / totalTasksCount) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between text-xs font-semibold text-[#54483B] mb-1">
+                          <span>In Review / Done</span>
+                          <span>{completedTasks} cards ({totalTasksCount > 0 ? Math.round((completedTasks / totalTasksCount) * 100) : 0}%)</span>
+                        </div>
+                        <div className="w-full bg-[#E5DBC7] h-2 rounded-full overflow-hidden">
+                          <div className="bg-emerald-600 h-full" style={{ width: `${totalTasksCount > 0 ? (completedTasks / totalTasksCount) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Team Workload Allocation */}
+                  <div className="bg-[#FAF6EE] border border-[#DCD1BC] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3 lg:col-span-2">
+                    <h3 className="text-sm font-bold text-[#2A231D] flex items-center space-x-1.5">
+                      <Users className="w-4 h-4 text-[#786C5E]" />
+                      <span>Contributor Allocation & Workload Index</span>
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto no-scrollbar pt-1">
+                      {teamMembers.map(member => (
+                        <div key={member.id} className="p-2.5 bg-white/70 rounded-xl border border-[#E8DEC9] space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2 min-w-0">
+                              <img src={member.avatar} alt={member.name} className="w-6 h-6 rounded-full object-cover border border-[#DCD1BC]" />
+                              <span className="text-xs font-bold text-[#2A231D] truncate">{member.name}</span>
+                            </div>
+                            <span className="text-[11px] font-mono font-bold text-[#6B5E4F]">{member.workload}%</span>
+                          </div>
+                          <div className="w-full bg-[#EAE0CE] h-1.5 rounded-full overflow-hidden">
+                            <div className={`h-full ${getWorkloadColor(member.workload)}`} style={{ width: `${Math.min(100, member.workload)}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Audit Ledger & Activity Stream */}
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E8DEC9] gap-2">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#2A231D] flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-amber-800" />
+                        <span>Real-Time Audit Ledger & Telemetry Events</span>
+                      </h3>
+                      <p className="text-[11px] text-[#7A7064]">Full forensic trace of dossier updates, task reassignments, and system broadcasts</p>
+                    </div>
+                    <span className="text-[10px] font-mono bg-[#EAE0CF] px-2.5 py-1 rounded-lg text-[#554A3E] font-bold self-start sm:self-auto">
+                      SQLite Synced • Live WebSockets
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {[
+                      { id: 1, user: 'Mason Walker', role: 'Admin', action: 'updated task palette to Peach on "Wehiu product task"', time: '2 mins ago', type: 'style' },
+                      { id: 2, user: 'Sarah Jenkins', role: 'Designer', action: 'posted new design review comment on "Search inspirations for upcoming project"', time: '14 mins ago', type: 'comment' },
+                      { id: 3, user: 'Lucas Wright', role: 'Systems Eng', action: 'marked milestone "API Gateway v2.1" as Completed', time: '1 hour ago', type: 'complete' },
+                      { id: 4, user: 'Emma Carter', role: 'Product Owner', action: 'dispatched team invitation to maya@archivalpm.com', time: '3 hours ago', type: 'invite' },
+                      { id: 5, user: 'System Telemetry', role: 'Engine', action: 'automated backup generated for Organization Apex Studio Agency', time: '6 hours ago', type: 'system' }
+                    ].map(log => (
+                      <div
+                        key={log.id}
+                        className="p-3 bg-white/80 hover:bg-white rounded-xl border border-[#E8DEC9] flex items-start justify-between gap-3 transition-colors"
+                      >
+                        <div className="flex items-start space-x-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-lg bg-[#EAE0CF] text-[#3F3730] flex items-center justify-center shrink-0 mt-0.5">
+                            {log.type === 'complete' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />}
+                            {log.type === 'comment' && <MessageSquare className="w-3.5 h-3.5 text-[#5A4E40]" />}
+                            {log.type === 'style' && <Palette className="w-3.5 h-3.5 text-amber-700" />}
+                            {log.type === 'invite' && <Mail className="w-3.5 h-3.5 text-blue-700" />}
+                            {log.type === 'system' && <ShieldAlert className="w-3.5 h-3.5 text-[#6D6052]" />}
+                          </div>
+                          <div className="min-w-0 text-xs">
+                            <p className="text-[#2C241E] leading-relaxed">
+                              <span className="font-bold text-[#1E1712]">{log.user}</span>{' '}
+                              <span className="text-[10px] font-semibold text-[#8C7E6C] bg-[#F2EAE0] px-1.5 py-0.2 rounded border border-black/5 mr-1">
+                                {log.role}
+                              </span>
+                              <span>{log.action}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-mono text-[#8C8072] shrink-0 whitespace-nowrap">{log.time}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* VIEW 6: PRODUCTS & DELIVERABLES CATALOG (Tactile Vintage Aesthetic) */}
           {activeTab === 'products' && (
