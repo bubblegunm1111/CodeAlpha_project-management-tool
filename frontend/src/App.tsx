@@ -3543,7 +3543,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header */}
-      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none">
+      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-2 sm:pt-0">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
         <div className="px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
@@ -3551,28 +3551,28 @@ export default function App() {
             {/* Mobile Hamburger to open sidebar */}
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-2 rounded-lg bg-[#FAF6EE] hover:bg-[#EAE0CF] active:scale-95 border border-[#D5CABB] text-[#3F3730] shadow-2xs touch-target flex items-center justify-center shrink-0"
+              className="md:hidden p-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EAE0CF] active:scale-95 border border-[#D5CABB] text-[#3F3730] shadow-2xs touch-target flex items-center justify-center shrink-0"
               title="Open Navigation Menu"
             >
               <Menu className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentScreen('folder_hub')}
-              className="w-8 h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
               title="Return to Folder Hub"
             >
-              <Folder className="w-4 h-4" />
+              <Folder className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="font-extrabold text-xs sm:text-sm tracking-tight text-[#2B241F] hover:underline truncate max-w-[80px] sm:max-w-[140px]"
+                className="font-extrabold text-xs sm:text-sm tracking-tight text-[#2B241F] hover:underline truncate max-w-[85px] sm:max-w-[140px]"
               >
                 {currentOrg.name}
               </button>
               <span className="text-[#8C8072] text-xs shrink-0">/</span>
               <span className="text-[10px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-1.5 sm:px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1 min-w-0">
-                <span className="truncate max-w-[70px] sm:max-w-none">{currentFolder.name}</span>
+                <span className="truncate max-w-[65px] sm:max-w-none">{currentFolder.name}</span>
                 <span className="font-mono text-[8px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1 sm:px-1.5 py-0.2 rounded shrink-0">
                   {formatFolderCode(currentFolder.code)}
                 </span>
@@ -3587,7 +3587,7 @@ export default function App() {
           </div>
 
           {/* Right Controls: Search, Notifications, Profile */}
-          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
             <div className="relative hidden xs:block sm:block">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
               <input
@@ -3602,10 +3602,10 @@ export default function App() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-1.5 bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#52493E] hover:bg-[#F2ECE0] relative transition-colors"
+                className="p-1 sm:p-1.5 bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#52493E] hover:bg-[#F2ECE0] relative transition-colors"
                 title="Notifications"
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-600 rounded-full border-2 border-[#FAF6EE]"></span>
               </button>
 
@@ -3627,7 +3627,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="relative pl-2 border-l border-[#DCD1BC]">
+            <div className="relative pl-1 sm:pl-2 border-l border-[#DCD1BC]">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2 text-left hover:opacity-85 transition-opacity"
@@ -3635,7 +3635,7 @@ export default function App() {
                 <img
                   src={currentUser.avatar}
                   alt={currentUser.name}
-                  className="w-7 h-7 rounded-full border border-[#C5B8A1] object-cover"
+                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-[#C5B8A1] object-cover"
                 />
                 <div className="hidden md:block text-left">
                   <p className="text-xs font-bold text-[#2A231D] leading-none">{currentUser.name}</p>
@@ -3686,28 +3686,29 @@ export default function App() {
         </div>
 
         {/* Lower Row: Full-width Folder Cutout Slips that dock cleanly into the canvas */}
-        <div className="px-3 sm:px-6 pt-2 flex items-center overflow-x-auto no-scrollbar max-w-full">
+        <div className="px-2 sm:px-6 pt-1.5 sm:pt-2 flex items-center overflow-x-auto no-scrollbar max-w-full">
           <nav className="flex space-x-1 sm:space-x-2 -mb-[1px] min-w-max">
             {[
-              { id: 'board' as const, label: 'Kanban Boards', count: tasks.length },
-              { id: 'products' as const, label: 'Products & Deliverables', count: products.length },
-              { id: 'schedule' as const, label: 'Schedule & Timeline', count: schedules.length },
-              { id: 'notes' as const, label: 'Dossier Notes', count: notes.length },
-              { id: 'reports' as const, label: 'Activity Logs' },
-              { id: 'team' as const, label: 'Team Members', count: teamMembers.length }
+              { id: 'board' as const, label: 'Kanban Boards', shortLabel: 'Boards', count: tasks.length },
+              { id: 'products' as const, label: 'Products & Deliverables', shortLabel: 'Products', count: products.length },
+              { id: 'schedule' as const, label: 'Schedule & Timeline', shortLabel: 'Timeline', count: schedules.length },
+              { id: 'notes' as const, label: 'Dossier Notes', shortLabel: 'Notes', count: notes.length },
+              { id: 'reports' as const, label: 'Activity Logs', shortLabel: 'Logs' },
+              { id: 'team' as const, label: 'Team Members', shortLabel: 'Team', count: teamMembers.length }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`folder-tab px-5 py-2.5 text-xs font-semibold rounded-t-lg border-t border-x transition-all flex items-center space-x-2 ${
+                className={`folder-tab px-3 sm:px-5 py-2 sm:py-2.5 text-xs font-semibold rounded-t-lg border-t border-x transition-all flex items-center space-x-1.5 sm:space-x-2 ${
                   activeTab === tab.id
                     ? 'active bg-[#FAF6EE] text-[#2C241E] border-[#DCD1BC] shadow-sm font-bold'
                     : 'bg-[#E5DCCB]/60 text-[#786D61] border-[#D9CEBC] hover:bg-[#EFE8DC] hover:text-[#3B332B]'
                 }`}
               >
-                <span>{tab.label}</span>
+                <span className="sm:inline hidden">{tab.label}</span>
+                <span className="sm:hidden inline font-bold">{tab.shortLabel}</span>
                 {tab.count !== undefined && (
-                  <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold leading-none ${
+                  <span className={`px-1.5 sm:px-2 py-0.5 text-[10px] rounded-full font-bold leading-none ${
                     activeTab === tab.id ? 'bg-[#3F3730] text-[#FAF6EE]' : 'bg-[#DCD1BC] text-[#554C42]'
                   }`}>
                     {tab.count}
