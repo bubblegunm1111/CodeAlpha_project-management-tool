@@ -2055,9 +2055,27 @@ export default function App() {
     }).catch(() => {});
   };
 
-  // Toggle Pin Note
+  // Toggle Pin Note with real-time sorting and backend persistence
   const togglePinNote = (noteId: string) => {
-    setNotes(prev => prev.map(n => n.id === noteId ? { ...n, isPinned: !n.isPinned } : n));
+    let nextPinnedState = false;
+    setNotes(prev => {
+      const updated = prev.map(n => {
+        if (n.id === noteId) {
+          nextPinnedState = !n.isPinned;
+          return { ...n, isPinned: nextPinnedState };
+        }
+        return n;
+      });
+      // Pinned notes stay at the top
+      return [...updated].sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+    });
+
+    const numId = noteId.replace('n-', '');
+    fetch(`${API_BASE}/notes/${numId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_pinned: nextPinnedState })
+    }).catch(() => {});
   };
 
   // Create Schedule Item
@@ -4767,17 +4785,27 @@ export default function App() {
 
               {/* Notes Grid (Vintage stationery sticky notes) */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {notes.map(note => {
+                {[...notes]
+                  .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0))
+                  .map(note => {
                   const paperClass = getNotePaperColor(note.color);
                   return (
                     <div
                       key={note.id}
-                      className={`${paperClass} rounded-2xl border p-5 shadow-sm relative group flex flex-col justify-between hover:shadow-md transition-all`}
+                      className={`${paperClass} rounded-2xl border ${
+                        note.isPinned ? 'ring-2 ring-amber-700/40 shadow-md -translate-y-0.5' : 'shadow-xs'
+                      } p-5 relative group flex flex-col justify-between hover:shadow-md transition-all`}
                     >
                       {/* Note Header: Pin Icon & Category */}
                       <div>
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex space-x-1">
+                          <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                            {note.isPinned && (
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-800 text-[#FAF6EE] shadow-2xs flex items-center space-x-1">
+                                <Pin className="w-2.5 h-2.5 fill-current" />
+                                <span>Pinned</span>
+                              </span>
+                            )}
                             {note.tags.map((t, idx) => (
                               <span key={idx} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/5 text-[#5A4F42]">
                                 {t}
@@ -4786,12 +4814,14 @@ export default function App() {
                           </div>
                           <button
                             onClick={() => togglePinNote(note.id)}
-                            className={`p-1 rounded-full transition-colors ${
-                              note.isPinned ? 'text-amber-800' : 'text-[#A09382] hover:text-[#2C241E]'
+                            className={`p-1.5 rounded-lg transition-all ${
+                              note.isPinned
+                                ? 'text-amber-800 bg-amber-200/60 shadow-inner'
+                                : 'text-[#A09382] hover:text-[#2C241E] hover:bg-black/5'
                             }`}
-                            title={note.isPinned ? 'Pinned note' : 'Pin note'}
+                            title={note.isPinned ? 'Unpin memo from top' : 'Pin memo to top of dossier'}
                           >
-                            <Pin className="w-4 h-4 fill-current" />
+                            <Pin className={`w-4 h-4 ${note.isPinned ? 'fill-current rotate-45' : 'hover:scale-110'}`} />
                           </button>
                         </div>
 
