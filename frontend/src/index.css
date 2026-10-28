@@ -24,21 +24,16 @@
   }
 }
 
-/* Custom scrollbar matching vintage paper */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+/* Hide scrollbars everywhere for ultra-clean mobile and desktop presentation */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
-::-webkit-scrollbar-track {
-  background: #EFE8DA;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb {
-  background: #CFC2A9;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #B4A487;
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Authentic Vintage Manila Folder Cutout Slips */
