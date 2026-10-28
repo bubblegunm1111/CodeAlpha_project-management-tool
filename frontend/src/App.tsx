@@ -6272,29 +6272,60 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CARD COLOR CHANGER SWATCHES (Core User Requirement!) */}
-              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-2">
+              {/* CARD COLOR CHANGER (Interactive Dropdown & Quick-Swatch Selector) */}
+              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
                   <span className="flex items-center space-x-1.5">
                     <Palette className="w-4 h-4 text-[#7A6E60]" />
-                    <span>Card Color Theme (Click to Change)</span>
+                    <span>Card Color Theme</span>
                   </span>
                   <span className="capitalize font-semibold text-[#8C8072]">Active: {selectedTask.color}</span>
                 </div>
-                <div className="flex items-center space-x-2.5 pt-1">
-                  {(['blue', 'peach', 'purple', 'mint', 'coral', 'canary'] as CardColor[]).map((c) => {
+
+                {/* Dropdown with live color circle indicator */}
+                <div className="relative">
+                  <select
+                    value={selectedTask.color}
+                    onChange={(e) => handleTaskColorChange(selectedTask.id, e.target.value as CardColor)}
+                    className="w-full bg-white border border-[#D5CABB] rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-[#2A231D] appearance-none focus:outline-none focus:border-[#8C7E6C] cursor-pointer shadow-2xs"
+                  >
+                    {[
+                      { id: 'peach', label: 'Peach Warmth' },
+                      { id: 'blue', label: 'Archival Blue' },
+                      { id: 'mint', label: 'Mint Herbal' },
+                      { id: 'purple', label: 'Lavender Purple' },
+                      { id: 'coral', label: 'Coral Flame' },
+                      { id: 'canary', label: 'Canary Yellow' }
+                    ].map(({ id, label }) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+                    <span className={`w-3.5 h-3.5 rounded-full border border-black/15 shadow-xs ${getColorStyles(selectedTask.color).bg}`} />
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-[#8C7E6C] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                {/* Quick Swatch Bar with Instant Color Changing */}
+                <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                  {(['peach', 'blue', 'mint', 'purple', 'coral', 'canary'] as CardColor[]).map((c) => {
                     const st = getColorStyles(c);
                     const isSelected = selectedTask.color === c;
                     return (
                       <button
                         key={c}
                         onClick={() => handleTaskColorChange(selectedTask.id, c)}
-                        className={`h-8 px-3 rounded-xl border flex items-center space-x-1.5 text-xs font-bold transition-all ${st.bg} ${st.border} ${st.textColor} ${
-                          isSelected ? 'ring-2 ring-[#2E2721] scale-105 shadow-sm' : 'opacity-80 hover:opacity-100'
+                        className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                          isSelected
+                            ? 'bg-[#2E2721] text-[#FAF6EE] border-[#2E2721] shadow-2xs ring-1 ring-[#2E2721]'
+                            : 'bg-white hover:bg-[#FAF6EE] text-[#4F4438] border-[#D5CABB]'
                         }`}
                       >
-                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                        <span className={`w-2.5 h-2.5 rounded-full border border-black/10 shrink-0 ${st.bg}`} />
                         <span className="capitalize">{c}</span>
+                        {isSelected && <Check className="w-3 h-3 text-[#FAF6EE]" />}
                       </button>
                     );
                   })}
@@ -6546,21 +6577,52 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Card Color Selector */}
-              <div>
+              {/* Card Color Selector: Interactive Dropdown with Color Pill Swatches */}
+              <div className="relative">
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Card Color Theme</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['blue', 'peach', 'purple', 'mint', 'coral', 'canary'] as CardColor[]).map(c => {
+                <div className="relative">
+                  <select
+                    value={newTaskColor}
+                    onChange={(e) => setNewTaskColor(e.target.value as CardColor)}
+                    className="w-full bg-white border border-[#D5CABB] rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-[#2A231D] appearance-none focus:outline-none focus:border-[#8C7E6C] cursor-pointer shadow-2xs"
+                  >
+                    {[
+                      { id: 'peach', label: 'Peach Warmth' },
+                      { id: 'blue', label: 'Archival Blue' },
+                      { id: 'mint', label: 'Mint Herbal' },
+                      { id: 'purple', label: 'Lavender Purple' },
+                      { id: 'coral', label: 'Coral Flame' },
+                      { id: 'canary', label: 'Canary Yellow' }
+                    ].map(({ id, label }) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  {/* Color preview circle swatch inside input */}
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+                    <span className={`w-3.5 h-3.5 rounded-full border border-black/15 shadow-xs ${getColorStyles(newTaskColor).bg}`} />
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-[#8C7E6C] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                {/* Instant Quick-Tap Color Swatches Palette */}
+                <div className="flex items-center gap-1.5 pt-2 flex-wrap">
+                  {(['peach', 'blue', 'mint', 'purple', 'coral', 'canary'] as CardColor[]).map((c) => {
                     const st = getColorStyles(c);
+                    const isSelected = newTaskColor === c;
                     return (
                       <button
-                        type="button"
                         key={c}
+                        type="button"
                         onClick={() => setNewTaskColor(c)}
-                        className={`px-3 py-1.5 text-xs rounded-xl font-bold border ${st.bg} ${st.textColor} ${
-                          newTaskColor === c ? 'ring-2 ring-[#322A22] border-transparent shadow-xs' : 'border-black/10'
+                        className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                          isSelected
+                            ? 'bg-[#2E2721] text-[#FAF6EE] border-[#2E2721] shadow-2xs'
+                            : 'bg-white hover:bg-[#F5EFEB] text-[#4F4438] border-[#D5CABB]'
                         }`}
                       >
+                        <span className={`w-2.5 h-2.5 rounded-full border border-black/10 shrink-0 ${st.bg}`} />
                         <span className="capitalize">{c}</span>
                       </button>
                     );
@@ -6924,21 +6986,54 @@ export default function App() {
                 </div>
               </div>
 
-              <div>
+              {/* Schedule Card Color Selector: Interactive Dropdown with Color Swatch */}
+              <div className="relative">
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Card Color Theme</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['blue', 'peach', 'purple', 'mint', 'coral', 'canary'] as CardColor[]).map(c => (
-                    <button
-                      type="button"
-                      key={c}
-                      onClick={() => setNewScheduleColor(c)}
-                      className={`px-3 py-1.5 text-xs rounded-xl font-bold border ${
-                        newScheduleColor === c ? 'bg-[#2E2721] text-[#FAF6EE]' : 'bg-[#EFE8DC] text-[#4E4438]'
-                      }`}
-                    >
-                      <span className="capitalize">{c}</span>
-                    </button>
-                  ))}
+                <div className="relative">
+                  <select
+                    value={newScheduleColor}
+                    onChange={(e) => setNewScheduleColor(e.target.value as CardColor)}
+                    className="w-full bg-white border border-[#D5CABB] rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-[#2A231D] appearance-none focus:outline-none focus:border-[#8C7E6C] cursor-pointer shadow-2xs"
+                  >
+                    {[
+                      { id: 'peach', label: 'Peach Warmth' },
+                      { id: 'blue', label: 'Archival Blue' },
+                      { id: 'mint', label: 'Mint Herbal' },
+                      { id: 'purple', label: 'Lavender Purple' },
+                      { id: 'coral', label: 'Coral Flame' },
+                      { id: 'canary', label: 'Canary Yellow' }
+                    ].map(({ id, label }) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+                    <span className={`w-3.5 h-3.5 rounded-full border border-black/15 shadow-xs ${getColorStyles(newScheduleColor).bg}`} />
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-[#8C7E6C] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                <div className="flex items-center gap-1.5 pt-2 flex-wrap">
+                  {(['peach', 'blue', 'mint', 'purple', 'coral', 'canary'] as CardColor[]).map((c) => {
+                    const st = getColorStyles(c);
+                    const isSelected = newScheduleColor === c;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setNewScheduleColor(c)}
+                        className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                          isSelected
+                            ? 'bg-[#2E2721] text-[#FAF6EE] border-[#2E2721] shadow-2xs'
+                            : 'bg-white hover:bg-[#F5EFEB] text-[#4F4438] border-[#D5CABB]'
+                        }`}
+                      >
+                        <span className={`w-2.5 h-2.5 rounded-full border border-black/10 shrink-0 ${st.bg}`} />
+                        <span className="capitalize">{c}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
