@@ -5025,9 +5025,11 @@ export default function App() {
                                 setSelectedScheduleItem(event);
                                 setTimelineViewMode('gantt');
                               }}
-                              className={`${style.bg} border ${
-                                isFallingOnSelectedDay ? 'ring-2 ring-[#2E2721] border-[#2E2721]' : style.border
-                              } rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all`}
+                              className={`${style.bg} rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-all ${
+                                isFallingOnSelectedDay
+                                  ? 'border-2 border-[#2E2721] shadow-md -translate-y-0.5'
+                                  : `border ${style.border} shadow-xs hover:shadow-md hover:-translate-y-0.5`
+                              }`}
                             >
                               <div className="space-y-1.5 flex-1 min-w-0">
                                 <div className="flex items-center space-x-2 flex-wrap gap-y-1">
