@@ -1035,10 +1035,13 @@ export default function App() {
   const [newScheduleStartDate, setNewScheduleStartDate] = useState('2026-05-08');
   const [newScheduleEndDate, setNewScheduleEndDate] = useState('2026-05-10');
 
-  // Interactive Timeline / Gantt State
-  const [timelineViewMode, setTimelineViewMode] = useState<'gantt' | 'calendar'>('gantt');
-  const [timelineZoom, setTimelineZoom] = useState<'Week' | 'Month' | 'Quarter'>('Week');
-  const [selectedScheduleItem, setSelectedScheduleItem] = useState<ScheduleItem | null>(INITIAL_SCHEDULE[0]);
+  // Interactive Timeline & Real-Time Dynamic Calendar State
+  const [timelineViewMode, setTimelineViewMode] = useState<'gantt' | 'calendar'>('calendar');
+  const [timelineZoom, setTimelineZoom] = useState<'Week' | 'Month' | 'Quarter'>('Month');
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<Date>(new Date());
+  const [calendarViewYear, setCalendarViewYear] = useState<number>(new Date().getFullYear());
+  const [calendarViewMonth, setCalendarViewMonth] = useState<number>(new Date().getMonth()); // 0-indexed
+  const [selectedScheduleItem, setSelectedScheduleItem] = useState<ScheduleItem | null>(null);
   const [timelineCommentInput, setTimelineCommentInput] = useState('');
   const [timelineNewSubtaskInput, setTimelineNewSubtaskInput] = useState('');
   const [timelineCollapsedPhases, setTimelineCollapsedPhases] = useState<Record<string, boolean>>({});
@@ -4247,16 +4250,23 @@ export default function App() {
                   <div className="flex items-center space-x-2 bg-[#F5EFEB] border border-[#DCD1BC] px-2 py-1 rounded-xl shadow-xs">
                     <button
                       onClick={() => {
-                        setNotifications(prev => [{ id: Date.now(), text: 'Jumped to current sprint week: May 5 – May 11, 2026', time: 'Just now' }, ...prev]);
+                        const today = new Date();
+                        setCalendarSelectedDate(today);
+                        setCalendarViewYear(today.getFullYear());
+                        setCalendarViewMonth(today.getMonth());
+                        setNotifications(prev => [{ id: Date.now(), text: `Jumped to today: ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`, time: 'Just now' }, ...prev]);
                       }}
                       className="px-2.5 py-1 rounded-lg text-xs font-bold text-[#4B4035] hover:bg-[#EAE1D1] transition-colors"
+                      title="Jump to today's date"
                     >
                       Today
                     </button>
                     <div className="h-4 w-px bg-[#D8CDBC]" />
                     <span className="text-xs font-bold text-[#2A221B] px-1.5 flex items-center space-x-1.5">
                       <CalendarIcon className="w-3.5 h-3.5 text-[#7C6F61]" />
-                      <span>May 5 – May 11, 2026</span>
+                      <span>
+                        {new Date(calendarViewYear, calendarViewMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </span>
                     </span>
                   </div>
 
@@ -4265,7 +4275,10 @@ export default function App() {
                     {(['Week', 'Month', 'Quarter'] as const).map(z => (
                       <button
                         key={z}
-                        onClick={() => setTimelineZoom(z)}
+                        onClick={() => {
+                          setTimelineZoom(z);
+                          setNotifications(prev => [{ id: Date.now(), text: `Switched calendar scope to ${z} view`, time: 'Just now' }, ...prev]);
+                        }}
                         className={`px-3 py-1 rounded-lg transition-all ${
                           timelineZoom === z
                             ? 'bg-[#2E2721] text-[#FAF6EE] shadow-xs'
@@ -4306,7 +4319,13 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => setIsNewScheduleModalOpen(true)}
+                    onClick={() => {
+                      const selStr = `${calendarSelectedDate.getFullYear()}-${String(calendarSelectedDate.getMonth() + 1).padStart(2, '0')}-${String(calendarSelectedDate.getDate()).padStart(2, '0')}`;
+                      setNewScheduleDate(selStr);
+                      setNewScheduleStartDate(selStr);
+                      setNewScheduleEndDate(selStr);
+                      setIsNewScheduleModalOpen(true);
+                    }}
                     className="px-3.5 py-1.5 bg-[#2E2721] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#463D34] shadow-sm flex items-center space-x-1.5 transition-all"
                   >
                     <Plus className="w-4 h-4" />
@@ -4329,27 +4348,35 @@ export default function App() {
                         </span>
                       </div>
                       <div className="flex-1 grid grid-cols-7 text-center">
-                        {[
-                          { day: 'Tue', date: '5', full: '2026-05-05' },
-                          { day: 'Wed', date: '6', full: '2026-05-06' },
-                          { day: 'Thu', date: '7', full: '2026-05-07' },
-                          { day: 'Fri', date: '8', full: '2026-05-08' },
-                          { day: 'Sat', date: '9', full: '2026-05-09' },
-                          { day: 'Sun', date: '10', full: '2026-05-10', isToday: true },
-                          { day: 'Mon', date: '11', full: '2026-05-11' },
-                        ].map(col => (
-                          <div
-                            key={col.full}
-                            className={`py-2 px-1 border-r border-[#E2D8C6] last:border-r-0 flex flex-col items-center justify-center ${
-                              col.isToday ? 'bg-[#E5DBC7]/60 font-black text-[#261E18]' : 'text-[#6D6153]'
-                            }`}
-                          >
-                            <span className="text-[10px] uppercase font-bold tracking-wider">{col.day}</span>
-                            <span className={`text-xs mt-0.5 ${col.isToday ? 'px-1.5 rounded-full bg-[#2E2721] text-[#FAF6EE]' : ''}`}>
-                              {col.date}
-                            </span>
-                          </div>
-                        ))}
+                        {(() => {
+                          const curr = new Date(calendarSelectedDate);
+                          const first = curr.getDate() - curr.getDay(); // Sunday
+                          const today = new Date();
+                          return Array.from({ length: 7 }).map((_, idx) => {
+                            const d = new Date(curr.getFullYear(), curr.getMonth(), first + idx);
+                            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+                            const dayNum = d.getDate();
+                            const isToday =
+                              d.getDate() === today.getDate() &&
+                              d.getMonth() === today.getMonth() &&
+                              d.getFullYear() === today.getFullYear();
+
+                            return (
+                              <div
+                                key={idx}
+                                onClick={() => setCalendarSelectedDate(d)}
+                                className={`py-2 px-1 border-r border-[#E2D8C6] last:border-r-0 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                                  isToday ? 'bg-[#E5DBC7]/60 font-black text-[#261E18]' : 'hover:bg-white/50 text-[#6D6153]'
+                                }`}
+                              >
+                                <span className="text-[10px] uppercase font-bold tracking-wider">{dayName}</span>
+                                <span className={`text-xs mt-0.5 ${isToday ? 'px-1.5 rounded-full bg-[#2E2721] text-[#FAF6EE]' : ''}`}>
+                                  {dayNum}
+                                </span>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
 
@@ -4389,10 +4416,21 @@ export default function App() {
                               const style = getColorStyles(item.color);
                               const isSelected = selectedScheduleItem?.id === item.id;
 
-                              // Date Span Calculation (Window May 5 - May 11, 2026: Day 0 to 6)
-                              const startIdx = Math.max(0, Math.min(6, (item.startDate ? parseInt(item.startDate.split('-')[2], 10) - 5 : 0)));
-                              const endIdx = Math.max(startIdx, Math.min(6, (item.endDate ? parseInt(item.endDate.split('-')[2], 10) - 5 : startIdx + 1)));
-                              const spanDays = endIdx - startIdx + 1;
+                              // Dynamic 7-day week span calculation based on calendarSelectedDate
+                              const curr = new Date(calendarSelectedDate);
+                              const sunday = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() - curr.getDay());
+                              const sundayMidnight = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate()).getTime();
+                              const msPerDay = 86400000;
+
+                              const itemStart = item.startDate ? new Date(item.startDate + 'T00:00:00').getTime() : new Date((item.date || '2026-10-28') + 'T00:00:00').getTime();
+                              const itemEnd = item.endDate ? new Date(item.endDate + 'T00:00:00').getTime() : itemStart;
+
+                              const rawStartDiff = Math.round((itemStart - sundayMidnight) / msPerDay);
+                              const rawEndDiff = Math.round((itemEnd - sundayMidnight) / msPerDay);
+
+                              const startIdx = Math.max(0, Math.min(6, rawStartDiff));
+                              const endIdx = Math.max(startIdx, Math.min(6, Math.max(rawStartDiff, rawEndDiff)));
+                              const spanDays = Math.max(1, endIdx - startIdx + 1);
                               const leftPercent = (startIdx / 7) * 100;
                               const widthPercent = (spanDays / 7) * 100;
 
@@ -4703,105 +4741,355 @@ export default function App() {
                 </div>
               )}
 
-              {/* CALENDAR & AGENDA VIEW MODE (Matches Screenshot 1) */}
-              {timelineViewMode === 'calendar' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* May 2026 Calendar Grid (Vintage Paper Stationery Theme) */}
-                  <div className="bg-[#F5EFEB] rounded-2xl border border-[#DCD1BC] p-5 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#DCD1BC]">
-                      <h2 className="text-sm font-black text-[#2C241E]">May 2026</h2>
-                      <span className="text-xs px-2.5 py-0.5 bg-[#E4DAC7] text-[#52473A] font-bold rounded-md">
-                        Week 19
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-[#867A6B] mb-2">
-                      <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-semibold">
-                      {Array.from({ length: 31 }).map((_, i) => {
-                        const day = i + 1;
-                        const isToday = day === 10;
-                        const hasEvent = [5, 6, 7, 8, 9, 10, 11, 14, 18].includes(day);
-                        return (
-                          <div
-                            key={day}
-                            className={`h-9 flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer ${
-                              isToday
-                                ? 'bg-[#2E2721] text-[#FAF6EE] font-black shadow-sm'
-                                : hasEvent
-                                ? 'bg-[#EAE0CF] text-[#2C241E] border border-[#D5CABB]'
-                                : 'text-[#695D50] hover:bg-[#EAE0CF]/50'
-                            }`}
-                          >
-                            <span>{day}</span>
-                            {hasEvent && !isToday && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 -mt-0.5"></span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+              {/* CALENDAR & AGENDA VIEW MODE (Real-time Dynamic Calendar Grid) */}
+              {timelineViewMode === 'calendar' && (() => {
+                const monthNames = [
+                  'January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                const currentMonthName = monthNames[calendarViewMonth];
+                const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+                const firstDayOfWeek = new Date(calendarViewYear, calendarViewMonth, 1).getDay(); // 0 = Sun
+                
+                // Helper to check if a day is today
+                const isRealToday = (dayNum: number) => {
+                  const today = new Date();
+                  return (
+                    today.getDate() === dayNum &&
+                    today.getMonth() === calendarViewMonth &&
+                    today.getFullYear() === calendarViewYear
+                  );
+                };
 
-                  {/* Scheduled Events List */}
-                  <div className="lg:col-span-2 space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                      <h2 className="text-sm font-black text-[#2C241E]">Upcoming Deliverables & Events ({schedules.length})</h2>
-                      <span className="text-xs text-[#7A6D5E]">Sorted by date & phase</span>
-                    </div>
-                    <div className="space-y-3">
-                      {schedules.map(event => {
-                        const style = getColorStyles(event.color);
-                        return (
-                          <div
-                            key={event.id}
+                // Helper to check if a day is the selected clicked day
+                const isSelectedDay = (dayNum: number) => {
+                  return (
+                    calendarSelectedDate.getDate() === dayNum &&
+                    calendarSelectedDate.getMonth() === calendarViewMonth &&
+                    calendarSelectedDate.getFullYear() === calendarViewYear
+                  );
+                };
+
+                // Format day string YYYY-MM-DD
+                const getDayStr = (dayNum: number) => {
+                  const mStr = String(calendarViewMonth + 1).padStart(2, '0');
+                  const dStr = String(dayNum).padStart(2, '0');
+                  return `${calendarViewYear}-${mStr}-${dStr}`;
+                };
+
+                // Find events on a specific day
+                const getEventsOnDay = (dayNum: number) => {
+                  const targetStr = getDayStr(dayNum);
+                  return schedules.filter(s => {
+                    const start = s.startDate || s.date;
+                    const end = s.endDate || s.date;
+                    return targetStr >= start && targetStr <= end;
+                  });
+                };
+
+                // Calculate week number of the selected or current date
+                const getWeekNumber = (d: Date) => {
+                  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+                  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+                  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                };
+
+                // Selected day string for event filtering
+                const selectedDayFormatted = `${calendarSelectedDate.getFullYear()}-${String(calendarSelectedDate.getMonth() + 1).padStart(2, '0')}-${String(calendarSelectedDate.getDate()).padStart(2, '0')}`;
+                const eventsForSelectedDay = schedules.filter(s => {
+                  const start = s.startDate || s.date;
+                  const end = s.endDate || s.date;
+                  return selectedDayFormatted >= start && selectedDayFormatted <= end;
+                });
+
+                // Display events according to timelineZoom (Week vs Month vs Quarter)
+                const displayedSchedules = (() => {
+                  if (timelineZoom === 'Week') {
+                    // Show events in the 7-day span of the selected day
+                    const curr = new Date(calendarSelectedDate);
+                    const first = curr.getDate() - curr.getDay();
+                    const weekStart = new Date(curr.setDate(first));
+                    const weekEnd = new Date(curr.setDate(first + 6));
+                    const startStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
+                    const endStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
+                    return schedules.filter(s => {
+                      const sStart = s.startDate || s.date;
+                      const sEnd = s.endDate || s.date;
+                      return sEnd >= startStr && sStart <= endStr;
+                    });
+                  } else if (timelineZoom === 'Quarter') {
+                    const quarter = Math.floor(calendarViewMonth / 3);
+                    const qStartMonth = quarter * 3;
+                    const qEndMonth = qStartMonth + 2;
+                    const qStartStr = `${calendarViewYear}-${String(qStartMonth + 1).padStart(2, '0')}-01`;
+                    const qEndDays = new Date(calendarViewYear, qEndMonth + 1, 0).getDate();
+                    const qEndStr = `${calendarViewYear}-${String(qEndMonth + 1).padStart(2, '0')}-${qEndDays}`;
+                    return schedules.filter(s => {
+                      const sStart = s.startDate || s.date;
+                      const sEnd = s.endDate || s.date;
+                      return sEnd >= qStartStr && sStart <= qEndStr;
+                    });
+                  } else {
+                    // Month View (Default)
+                    const mStartStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-01`;
+                    const mEndStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${daysInMonth}`;
+                    return schedules.filter(s => {
+                      const sStart = s.startDate || s.date;
+                      const sEnd = s.endDate || s.date;
+                      return sEnd >= mStartStr && sStart <= mEndStr;
+                    });
+                  }
+                })();
+
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Real-Time Interactive Month Calendar Grid */}
+                    <div className="lg:col-span-5 bg-[#F5EFEB] rounded-2xl border border-[#DCD1BC] p-5 shadow-sm space-y-4">
+                      {/* Calendar Navigation Header */}
+                      <div className="flex items-center justify-between pb-3 border-b border-[#DCD1BC]">
+                        <div className="flex items-center space-x-2">
+                          <button
                             onClick={() => {
-                              setSelectedScheduleItem(event);
-                              setTimelineViewMode('gantt');
+                              if (calendarViewMonth === 0) {
+                                setCalendarViewMonth(11);
+                                setCalendarViewYear(calendarViewYear - 1);
+                              } else {
+                                setCalendarViewMonth(calendarViewMonth - 1);
+                              }
                             }}
-                            className={`${style.bg} border ${style.border} rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs cursor-pointer hover:shadow-md transition-all`}
+                            className="p-1.5 rounded-lg hover:bg-[#EAE0CF] text-[#6E6153] hover:text-[#2C241E] transition-colors"
+                            title="Previous Month"
                           >
-                            <div className="space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${style.tagBg} ${style.tagText}`}>
-                                  {event.category}
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <h2 className="text-sm font-black text-[#2C241E] tracking-tight">
+                            {currentMonthName} {calendarViewYear}
+                          </h2>
+                          <button
+                            onClick={() => {
+                              if (calendarViewMonth === 11) {
+                                setCalendarViewMonth(0);
+                                setCalendarViewYear(calendarViewYear + 1);
+                              } else {
+                                setCalendarViewMonth(calendarViewMonth + 1);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-[#EAE0CF] text-[#6E6153] hover:text-[#2C241E] transition-colors"
+                            title="Next Month"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center space-x-1.5">
+                          <button
+                            onClick={() => {
+                              const today = new Date();
+                              setCalendarSelectedDate(today);
+                              setCalendarViewMonth(today.getMonth());
+                              setCalendarViewYear(today.getFullYear());
+                            }}
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#E4DAC7] hover:bg-[#DACBB4] text-[#4E4133] transition-colors"
+                            title="Go to current real date"
+                          >
+                            Today
+                          </button>
+                          <span className="text-xs px-2.5 py-0.5 bg-[#E4DAC7] text-[#52473A] font-extrabold rounded-md font-mono">
+                            Week {getWeekNumber(calendarSelectedDate)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Day of Week Header */}
+                      <div className="grid grid-cols-7 gap-1 text-center text-xs font-black text-[#867A6B] uppercase tracking-wider mb-2">
+                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                      </div>
+
+                      {/* Interactive Calendar Days Grid */}
+                      <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-semibold">
+                        {/* Empty leading padding slots for day of week offset */}
+                        {Array.from({ length: firstDayOfWeek }).map((_, idx) => (
+                          <div key={`empty-${idx}`} className="h-9 rounded-xl opacity-20 pointer-events-none" />
+                        ))}
+
+                        {/* All Month Days */}
+                        {Array.from({ length: daysInMonth }).map((_, i) => {
+                          const dayNum = i + 1;
+                          const isToday = isRealToday(dayNum);
+                          const isSelected = isSelectedDay(dayNum);
+                          const dayEvents = getEventsOnDay(dayNum);
+                          const hasEvents = dayEvents.length > 0;
+
+                          return (
+                            <div
+                              key={dayNum}
+                              onClick={() => {
+                                const newDate = new Date(calendarViewYear, calendarViewMonth, dayNum);
+                                setCalendarSelectedDate(newDate);
+                              }}
+                              className={`h-9 flex flex-col items-center justify-center rounded-xl transition-all cursor-pointer relative group ${
+                                isSelected
+                                  ? 'bg-[#2E2721] text-[#FAF6EE] font-black shadow-md scale-105 ring-2 ring-[#2E2721]/30 z-10'
+                                  : isToday
+                                  ? 'bg-[#E5DCC9] text-[#2C241E] font-black border-2 border-[#2E2721]'
+                                  : hasEvents
+                                  ? 'bg-[#EAE0CF] text-[#2C241E] border border-[#D5CABB] hover:bg-[#E3D6C1]'
+                                  : 'text-[#695D50] hover:bg-[#EAE0CF]/60'
+                              }`}
+                              title={
+                                hasEvents
+                                  ? `${dayEvents.length} event(s): ${dayEvents.map(e => e.title).join(', ')}`
+                                  : `${currentMonthName} ${dayNum}, ${calendarViewYear}`
+                              }
+                            >
+                              <span className="leading-none">{dayNum}</span>
+                              {hasEvents && (
+                                <span className="flex items-center space-x-0.5 mt-0.5">
+                                  {dayEvents.slice(0, 3).map((ev, eIdx) => (
+                                    <span
+                                      key={eIdx}
+                                      className={`w-1.5 h-1.5 rounded-full ${
+                                        isSelected
+                                          ? 'bg-[#EAAADD]'
+                                          : ev.priority === 'Urgent'
+                                          ? 'bg-rose-600'
+                                          : ev.priority === 'High'
+                                          ? 'bg-amber-600'
+                                          : 'bg-emerald-600'
+                                      }`}
+                                    />
+                                  ))}
                                 </span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/60 text-[#54483C]">
-                                  Phase: {event.phase || 'General'}
-                                </span>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/60 text-[#54483C]">
-                                  Priority: {event.priority}
-                                </span>
-                              </div>
-                              <h3 className={`text-sm font-bold ${style.textColor}`}>{event.title}</h3>
-                              <div className="flex items-center space-x-3 text-xs text-[#7A6D5E]">
-                                <span className="flex items-center space-x-1">
-                                  <CalendarIcon className="w-3.5 h-3.5" />
-                                  <span>{event.startDate || event.date} → {event.endDate || event.date}</span>
-                                </span>
-                                <span className="flex items-center space-x-1">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  <span>{event.time}</span>
-                                </span>
-                              </div>
+                              )}
                             </div>
-                            <div className="flex items-center space-x-2 self-end sm:self-center">
-                              <span className="text-xs px-2.5 py-1 rounded-lg bg-white/70 font-semibold text-[#44382C] border border-black/5 flex items-center space-x-1.5">
-                                <img
-                                  src={event.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
-                                  alt={event.assignee}
-                                  className="w-4 h-4 rounded-full object-cover"
-                                />
-                                <span>{event.assignee}</span>
-                              </span>
-                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Day Selected Scope Banner */}
+                      <div className="pt-2 border-t border-[#E2D8C6] flex items-center justify-between text-xs text-[#7A6D5E]">
+                        <span className="flex items-center space-x-1.5 font-bold text-[#2C241E]">
+                          <CalendarIcon className="w-3.5 h-3.5 text-amber-700" />
+                          <span>
+                            Selected: {calendarSelectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </span>
+                        <span className="text-[11px] font-semibold bg-[#E4DAC7] px-2 py-0.5 rounded-md">
+                          {eventsForSelectedDay.length} Scheduled
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Scheduled Events List for Selected Day or Zoom Period */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-[#E5DBCA] gap-2">
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#2E2721] text-[#FAF6EE]">
+                              {timelineZoom} View
+                            </span>
+                            <h2 className="text-sm font-black text-[#2C241E]">
+                              {timelineZoom === 'Week'
+                                ? `Sprint Deliverables for Week of ${calendarSelectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                                : timelineZoom === 'Quarter'
+                                ? `Quarterly Deliverables (${currentMonthName} Quarter)`
+                                : `${currentMonthName} ${calendarViewYear} Deliverables`}
+                            </h2>
                           </div>
-                        );
-                      })}
+                          <p className="text-[11px] text-[#7A6D5E] mt-0.5">
+                            {displayedSchedules.length} deliverables active in this timeframe • Click date or event to inspect
+                          </p>
+                        </div>
+
+                        {eventsForSelectedDay.length > 0 && (
+                          <span className="text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-lg self-start sm:self-auto">
+                            {eventsForSelectedDay.length} falling on {calendarSelectedDate.getDate()} {currentMonthName.slice(0, 3)}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 max-h-[620px] overflow-y-auto pr-1">
+                        {displayedSchedules.map(event => {
+                          const style = getColorStyles(event.color);
+                          const isFallingOnSelectedDay = (() => {
+                            const start = event.startDate || event.date;
+                            const end = event.endDate || event.date;
+                            return selectedDayFormatted >= start && selectedDayFormatted <= end;
+                          })();
+
+                          return (
+                            <div
+                              key={event.id}
+                              onClick={() => {
+                                setSelectedScheduleItem(event);
+                                setTimelineViewMode('gantt');
+                              }}
+                              className={`${style.bg} border ${
+                                isFallingOnSelectedDay ? 'ring-2 ring-[#2E2721] border-[#2E2721]' : style.border
+                              } rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all`}
+                            >
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${style.tagBg} ${style.tagText}`}>
+                                    {event.category}
+                                  </span>
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/60 text-[#54483C]">
+                                    Phase: {event.phase || 'General'}
+                                  </span>
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                                    event.priority === 'Urgent'
+                                      ? 'bg-rose-100 text-rose-800'
+                                      : event.priority === 'High'
+                                      ? 'bg-amber-100 text-amber-800'
+                                      : 'bg-white/60 text-[#54483C]'
+                                  }`}>
+                                    {event.priority} Priority
+                                  </span>
+                                  {isFallingOnSelectedDay && (
+                                    <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#2E2721] text-[#FAF6EE]">
+                                      Active on selected date
+                                    </span>
+                                  )}
+                                </div>
+                                <h3 className={`text-sm font-bold ${style.textColor} truncate`}>{event.title}</h3>
+                                <div className="flex items-center space-x-3 text-xs text-[#7A6D5E] flex-wrap">
+                                  <span className="flex items-center space-x-1">
+                                    <CalendarIcon className="w-3.5 h-3.5" />
+                                    <span>{event.startDate || event.date} → {event.endDate || event.date}</span>
+                                  </span>
+                                  <span className="flex items-center space-x-1">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    <span>{event.time}</span>
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2 self-end sm:self-center flex-shrink-0">
+                                <span className="text-xs px-2.5 py-1 rounded-lg bg-white/70 font-semibold text-[#44382C] border border-black/5 flex items-center space-x-1.5">
+                                  <img
+                                    src={event.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
+                                    alt={event.assignee}
+                                    className="w-4 h-4 rounded-full object-cover"
+                                  />
+                                  <span>{event.assignee}</span>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {displayedSchedules.length === 0 && (
+                          <div className="p-12 text-center bg-[#F5EFEB] rounded-2xl border-2 border-dashed border-[#DCD1BC] text-xs text-[#8A7D6E] space-y-2">
+                            <CalendarIcon className="w-8 h-8 text-[#A89C8C] mx-auto" />
+                            <p className="font-bold text-[#3B3127]">No Events Scheduled in {currentMonthName}</p>
+                            <p>Click on "+ Schedule Task" above to add deliverables for this date.</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
 
