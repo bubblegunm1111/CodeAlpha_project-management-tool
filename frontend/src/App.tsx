@@ -1047,6 +1047,11 @@ export default function App() {
   const [timelineNewSubtaskInput, setTimelineNewSubtaskInput] = useState('');
   const [timelineCollapsedPhases, setTimelineCollapsedPhases] = useState<Record<string, boolean>>({});
 
+  // Custom Color Theme Popover Dropdown open states
+  const [isTaskColorDropdownOpen, setIsTaskColorDropdownOpen] = useState(false);
+  const [isScheduleColorDropdownOpen, setIsScheduleColorDropdownOpen] = useState(false);
+  const [isDetailColorDropdownOpen, setIsDetailColorDropdownOpen] = useState(false);
+
   // Set sidebar open on wide screens and closed on mobile screens initially
   useEffect(() => {
     if (window.innerWidth >= 768) {
@@ -6272,8 +6277,8 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CARD COLOR CHANGER (Interactive Dropdown & Quick-Swatch Selector) */}
-              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-3">
+              {/* CARD COLOR CHANGER: Rich Custom Interactive Dropdown Menu */}
+              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
                   <span className="flex items-center space-x-1.5">
                     <Palette className="w-4 h-4 text-[#7A6E60]" />
@@ -6282,53 +6287,65 @@ export default function App() {
                   <span className="capitalize font-semibold text-[#8C8072]">Active: {selectedTask.color}</span>
                 </div>
 
-                {/* Dropdown with live color circle indicator */}
                 <div className="relative">
-                  <select
-                    value={selectedTask.color}
-                    onChange={(e) => handleTaskColorChange(selectedTask.id, e.target.value as CardColor)}
-                    className="w-full bg-white border border-[#D5CABB] rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-[#2A231D] appearance-none focus:outline-none focus:border-[#8C7E6C] cursor-pointer shadow-2xs"
+                  <button
+                    type="button"
+                    onClick={() => setIsDetailColorDropdownOpen(!isDetailColorDropdownOpen)}
+                    className="w-full bg-white border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all"
                   >
-                    {[
-                      { id: 'peach', label: 'Peach Warmth' },
-                      { id: 'blue', label: 'Archival Blue' },
-                      { id: 'mint', label: 'Mint Herbal' },
-                      { id: 'purple', label: 'Lavender Purple' },
-                      { id: 'coral', label: 'Coral Flame' },
-                      { id: 'canary', label: 'Canary Yellow' }
-                    ].map(({ id, label }) => (
-                      <option key={id} value={id}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
-                    <span className={`w-3.5 h-3.5 rounded-full border border-black/15 shadow-xs ${getColorStyles(selectedTask.color).bg}`} />
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-[#8C7E6C] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                    <div className="flex items-center space-x-2.5">
+                      <span className={`w-4 h-4 rounded-full border border-black/15 shadow-xs shrink-0 ${getColorStyles(selectedTask.color).bg}`} />
+                      <span className="capitalize font-extrabold text-[#2C241E]">
+                        {selectedTask.color === 'peach' ? 'Peach Warmth' :
+                         selectedTask.color === 'blue' ? 'Archival Blue' :
+                         selectedTask.color === 'mint' ? 'Mint Herbal' :
+                         selectedTask.color === 'purple' ? 'Lavender Purple' :
+                         selectedTask.color === 'coral' ? 'Coral Flame' : 'Canary Yellow'}
+                      </span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-[#8C7E6C] transition-transform duration-200 ${isDetailColorDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-                {/* Quick Swatch Bar with Instant Color Changing */}
-                <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                  {(['peach', 'blue', 'mint', 'purple', 'coral', 'canary'] as CardColor[]).map((c) => {
-                    const st = getColorStyles(c);
-                    const isSelected = selectedTask.color === c;
-                    return (
-                      <button
-                        key={c}
-                        onClick={() => handleTaskColorChange(selectedTask.id, c)}
-                        className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                          isSelected
-                            ? 'bg-[#2E2721] text-[#FAF6EE] border-[#2E2721] shadow-2xs ring-1 ring-[#2E2721]'
-                            : 'bg-white hover:bg-[#FAF6EE] text-[#4F4438] border-[#D5CABB]'
-                        }`}
-                      >
-                        <span className={`w-2.5 h-2.5 rounded-full border border-black/10 shrink-0 ${st.bg}`} />
-                        <span className="capitalize">{c}</span>
-                        {isSelected && <Check className="w-3 h-3 text-[#FAF6EE]" />}
-                      </button>
-                    );
-                  })}
+                  {/* Rich Custom Dropdown Menu with Color Swatches */}
+                  {isDetailColorDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      {[
+                        { id: 'peach' as CardColor, label: 'Peach Warmth', desc: 'Warm archival hue' },
+                        { id: 'blue' as CardColor, label: 'Archival Blue', desc: 'Classic dossier tone' },
+                        { id: 'mint' as CardColor, label: 'Mint Herbal', desc: 'Refreshing focus green' },
+                        { id: 'purple' as CardColor, label: 'Lavender Purple', desc: 'Creative design tint' },
+                        { id: 'coral' as CardColor, label: 'Coral Flame', desc: 'Urgent priority tone' },
+                        { id: 'canary' as CardColor, label: 'Canary Yellow', desc: 'Noticeable highlight' }
+                      ].map(({ id, label, desc }) => {
+                        const st = getColorStyles(id);
+                        const isSelected = selectedTask.color === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => {
+                              handleTaskColorChange(selectedTask.id, id);
+                              setIsDetailColorDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all ${
+                              isSelected
+                                ? 'bg-[#EAE0CF] text-[#2C241E] font-bold shadow-2xs'
+                                : 'hover:bg-white text-[#4A3F33]'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span className={`w-5 h-5 rounded-full border border-black/15 shadow-xs shrink-0 ${st.bg}`} />
+                              <div className="text-left">
+                                <p className="font-bold leading-tight">{label}</p>
+                                <p className="text-[10px] text-[#8C7E6C]">{desc}</p>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-[#2C241E] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -6577,56 +6594,68 @@ export default function App() {
                 </select>
               </div>
 
-              {/* Card Color Selector: Interactive Dropdown with Color Pill Swatches */}
+              {/* Card Color Selector: Rich Custom Interactive Dropdown Menu */}
               <div className="relative">
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Card Color Theme</label>
                 <div className="relative">
-                  <select
-                    value={newTaskColor}
-                    onChange={(e) => setNewTaskColor(e.target.value as CardColor)}
-                    className="w-full bg-white border border-[#D5CABB] rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-[#2A231D] appearance-none focus:outline-none focus:border-[#8C7E6C] cursor-pointer shadow-2xs"
+                  <button
+                    type="button"
+                    onClick={() => setIsTaskColorDropdownOpen(!isTaskColorDropdownOpen)}
+                    className="w-full bg-white border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all"
                   >
-                    {[
-                      { id: 'peach', label: 'Peach Warmth' },
-                      { id: 'blue', label: 'Archival Blue' },
-                      { id: 'mint', label: 'Mint Herbal' },
-                      { id: 'purple', label: 'Lavender Purple' },
-                      { id: 'coral', label: 'Coral Flame' },
-                      { id: 'canary', label: 'Canary Yellow' }
-                    ].map(({ id, label }) => (
-                      <option key={id} value={id}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  {/* Color preview circle swatch inside input */}
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
-                    <span className={`w-3.5 h-3.5 rounded-full border border-black/15 shadow-xs ${getColorStyles(newTaskColor).bg}`} />
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-[#8C7E6C] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                    <div className="flex items-center space-x-2.5">
+                      <span className={`w-4 h-4 rounded-full border border-black/15 shadow-xs shrink-0 ${getColorStyles(newTaskColor).bg}`} />
+                      <span className="capitalize font-extrabold text-[#2C241E]">
+                        {newTaskColor === 'peach' ? 'Peach Warmth' :
+                         newTaskColor === 'blue' ? 'Archival Blue' :
+                         newTaskColor === 'mint' ? 'Mint Herbal' :
+                         newTaskColor === 'purple' ? 'Lavender Purple' :
+                         newTaskColor === 'coral' ? 'Coral Flame' : 'Canary Yellow'}
+                      </span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-[#8C7E6C] transition-transform duration-200 ${isTaskColorDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-                {/* Instant Quick-Tap Color Swatches Palette */}
-                <div className="flex items-center gap-1.5 pt-2 flex-wrap">
-                  {(['peach', 'blue', 'mint', 'purple', 'coral', 'canary'] as CardColor[]).map((c) => {
-                    const st = getColorStyles(c);
-                    const isSelected = newTaskColor === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setNewTaskColor(c)}
-                        className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                          isSelected
-                            ? 'bg-[#2E2721] text-[#FAF6EE] border-[#2E2721] shadow-2xs'
-                            : 'bg-white hover:bg-[#F5EFEB] text-[#4F4438] border-[#D5CABB]'
-                        }`}
-                      >
-                        <span className={`w-2.5 h-2.5 rounded-full border border-black/10 shrink-0 ${st.bg}`} />
-                        <span className="capitalize">{c}</span>
-                      </button>
-                    );
-                  })}
+                  {/* Rich Custom Dropdown Menu with Color Swatches */}
+                  {isTaskColorDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      {[
+                        { id: 'peach' as CardColor, label: 'Peach Warmth', desc: 'Warm archival hue' },
+                        { id: 'blue' as CardColor, label: 'Archival Blue', desc: 'Classic dossier tone' },
+                        { id: 'mint' as CardColor, label: 'Mint Herbal', desc: 'Refreshing focus green' },
+                        { id: 'purple' as CardColor, label: 'Lavender Purple', desc: 'Creative design tint' },
+                        { id: 'coral' as CardColor, label: 'Coral Flame', desc: 'Urgent priority tone' },
+                        { id: 'canary' as CardColor, label: 'Canary Yellow', desc: 'Noticeable highlight' }
+                      ].map(({ id, label, desc }) => {
+                        const st = getColorStyles(id);
+                        const isSelected = newTaskColor === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => {
+                              setNewTaskColor(id);
+                              setIsTaskColorDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all ${
+                              isSelected
+                                ? 'bg-[#EAE0CF] text-[#2C241E] font-bold shadow-2xs'
+                                : 'hover:bg-white text-[#4A3F33]'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span className={`w-4 h-4 rounded-full border border-black/15 shadow-xs shrink-0 ${st.bg}`} />
+                              <div className="text-left">
+                                <p className="font-bold leading-tight">{label}</p>
+                                <p className="text-[10px] text-[#8C7E6C]">{desc}</p>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[#2C241E] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -6986,54 +7015,68 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Schedule Card Color Selector: Interactive Dropdown with Color Swatch */}
+              {/* Schedule Card Color Selector: Rich Custom Interactive Dropdown Menu */}
               <div className="relative">
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Card Color Theme</label>
                 <div className="relative">
-                  <select
-                    value={newScheduleColor}
-                    onChange={(e) => setNewScheduleColor(e.target.value as CardColor)}
-                    className="w-full bg-white border border-[#D5CABB] rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-[#2A231D] appearance-none focus:outline-none focus:border-[#8C7E6C] cursor-pointer shadow-2xs"
+                  <button
+                    type="button"
+                    onClick={() => setIsScheduleColorDropdownOpen(!isScheduleColorDropdownOpen)}
+                    className="w-full bg-white border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all"
                   >
-                    {[
-                      { id: 'peach', label: 'Peach Warmth' },
-                      { id: 'blue', label: 'Archival Blue' },
-                      { id: 'mint', label: 'Mint Herbal' },
-                      { id: 'purple', label: 'Lavender Purple' },
-                      { id: 'coral', label: 'Coral Flame' },
-                      { id: 'canary', label: 'Canary Yellow' }
-                    ].map(({ id, label }) => (
-                      <option key={id} value={id}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
-                    <span className={`w-3.5 h-3.5 rounded-full border border-black/15 shadow-xs ${getColorStyles(newScheduleColor).bg}`} />
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-[#8C7E6C] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                    <div className="flex items-center space-x-2.5">
+                      <span className={`w-4 h-4 rounded-full border border-black/15 shadow-xs shrink-0 ${getColorStyles(newScheduleColor).bg}`} />
+                      <span className="capitalize font-extrabold text-[#2C241E]">
+                        {newScheduleColor === 'peach' ? 'Peach Warmth' :
+                         newScheduleColor === 'blue' ? 'Archival Blue' :
+                         newScheduleColor === 'mint' ? 'Mint Herbal' :
+                         newScheduleColor === 'purple' ? 'Lavender Purple' :
+                         newScheduleColor === 'coral' ? 'Coral Flame' : 'Canary Yellow'}
+                      </span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-[#8C7E6C] transition-transform duration-200 ${isScheduleColorDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-                <div className="flex items-center gap-1.5 pt-2 flex-wrap">
-                  {(['peach', 'blue', 'mint', 'purple', 'coral', 'canary'] as CardColor[]).map((c) => {
-                    const st = getColorStyles(c);
-                    const isSelected = newScheduleColor === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setNewScheduleColor(c)}
-                        className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                          isSelected
-                            ? 'bg-[#2E2721] text-[#FAF6EE] border-[#2E2721] shadow-2xs'
-                            : 'bg-white hover:bg-[#F5EFEB] text-[#4F4438] border-[#D5CABB]'
-                        }`}
-                      >
-                        <span className={`w-2.5 h-2.5 rounded-full border border-black/10 shrink-0 ${st.bg}`} />
-                        <span className="capitalize">{c}</span>
-                      </button>
-                    );
-                  })}
+                  {/* Rich Custom Dropdown Menu with Color Swatches */}
+                  {isScheduleColorDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      {[
+                        { id: 'peach' as CardColor, label: 'Peach Warmth', desc: 'Warm archival hue' },
+                        { id: 'blue' as CardColor, label: 'Archival Blue', desc: 'Classic dossier tone' },
+                        { id: 'mint' as CardColor, label: 'Mint Herbal', desc: 'Refreshing focus green' },
+                        { id: 'purple' as CardColor, label: 'Lavender Purple', desc: 'Creative design tint' },
+                        { id: 'coral' as CardColor, label: 'Coral Flame', desc: 'Urgent priority tone' },
+                        { id: 'canary' as CardColor, label: 'Canary Yellow', desc: 'Noticeable highlight' }
+                      ].map(({ id, label, desc }) => {
+                        const st = getColorStyles(id);
+                        const isSelected = newScheduleColor === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => {
+                              setNewScheduleColor(id);
+                              setIsScheduleColorDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all ${
+                              isSelected
+                                ? 'bg-[#EAE0CF] text-[#2C241E] font-bold shadow-2xs'
+                                : 'hover:bg-white text-[#4A3F33]'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span className={`w-4 h-4 rounded-full border border-black/15 shadow-xs shrink-0 ${st.bg}`} />
+                              <div className="text-left">
+                                <p className="font-bold leading-tight">{label}</p>
+                                <p className="text-[10px] text-[#8C7E6C]">{desc}</p>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[#2C241E] shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
