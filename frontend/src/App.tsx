@@ -5526,44 +5526,44 @@ export default function App() {
 
           {/* VIEW 6: PRODUCTS & DELIVERABLES CATALOG (Tactile Vintage Aesthetic) */}
           {activeTab === 'products' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Top Action Header */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-[#E5DBCA] gap-4">
-                <div>
-                  <div className="flex items-center space-x-2">
+              <div className="flex flex-col md:flex-row md:items-start justify-between pb-3 sm:pb-4 border-b border-[#E5DBCA] gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F4E9D5] text-[#8A4A1C] border border-[#DFD1B8]">
-                      Product Engineering & Releases
+                      Product Engineering
                     </span>
                     <span className="text-xs text-[#7B7062]">
                       • {products.length} Active Deliverables
                     </span>
                   </div>
-                  <h1 className="text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
-                    <Package className="w-6 h-6 text-[#756A5E]" />
-                    <span>Products & Deliverables Directory</span>
+                  <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
+                    <Package className="w-5 h-5 sm:w-6 sm:h-6 text-[#756A5E] shrink-0" />
+                    <span>Products & Deliverables</span>
                   </h1>
-                  <p className="text-xs text-[#7B7062] mt-0.5">
+                  <p className="text-xs text-[#7B7062] mt-0.5 max-w-xl">
                     Centralized product portfolios, milestone tracking, and task allocations matching your vintage archival dossier system.
                   </p>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
                   {/* Search */}
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-initial">
                     <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C7E6C]" />
                     <input
                       type="text"
-                      placeholder="Search deliverables, codes, leads..."
+                      placeholder="Search deliverables..."
                       value={productSearchQuery}
                       onChange={(e) => setProductSearchQuery(e.target.value)}
-                      className="pl-9 pr-3.5 py-2 bg-white/90 border border-[#DCD1BC] rounded-xl text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C] focus:bg-white w-52 md:w-64 shadow-xs transition-all"
+                      className="w-full pl-9 pr-3.5 py-2 bg-white/90 border border-[#DCD1BC] rounded-xl text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C] focus:bg-white sm:w-56 shadow-xs transition-all"
                     />
                   </div>
 
                   {/* Add Product Button */}
                   <button
                     onClick={() => setIsNewProductModalOpen(true)}
-                    className="flex items-center space-x-1.5 px-4 py-2 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-all active:scale-95 shrink-0"
+                    className="flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-all active:scale-95 shrink-0"
                   >
                     <Plus className="w-4 h-4" />
                     <span>New Product Dossier</span>
@@ -5571,62 +5571,62 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Quick Stat Highlights */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
-                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
-                    <span>Total Deliverables</span>
-                    <Boxes className="w-4 h-4 text-[#8C7E6C]" />
+              {/* Quick Stat Highlights - 2 cols on mobile, 4 on desktop */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Deliverables</span>
+                    <Boxes className="w-3.5 h-3.5 text-[#8C7E6C]" />
                   </div>
-                  <p className="text-2xl font-black text-[#2A231D]">{products.length}</p>
-                  <p className="text-[10px] text-emerald-700 font-bold mt-1">100% synced with task board</p>
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">{products.length}</p>
+                  <p className="text-[9px] sm:text-[10px] text-emerald-700 font-bold mt-0.5 truncate">100% synced with tasks</p>
                 </div>
 
-                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
-                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
                     <span>On Track</span>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   </div>
-                  <p className="text-2xl font-black text-[#2A231D]">
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">
                     {products.filter(p => p.health === 'On Track').length}
                   </p>
-                  <p className="text-[10px] text-[#7A6F62] mt-1">Healthy milestone velocity</p>
+                  <p className="text-[9px] sm:text-[10px] text-[#7A6F62] mt-0.5 truncate">Healthy velocity</p>
                 </div>
 
-                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
-                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
-                    <span>Needs Attention / Risk</span>
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Needs Attention</span>
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                   </div>
-                  <p className="text-2xl font-black text-amber-800">
+                  <p className="text-xl sm:text-2xl font-black text-amber-800">
                     {products.filter(p => p.health !== 'On Track').length}
                   </p>
-                  <p className="text-[10px] text-amber-700 mt-1">AI radar pacing alert</p>
+                  <p className="text-[9px] sm:text-[10px] text-amber-700 mt-0.5 truncate">Pacing radar alert</p>
                 </div>
 
-                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-4 rounded-2xl shadow-xs">
-                  <div className="flex items-center justify-between text-xs text-[#7A6F62] font-semibold mb-1">
-                    <span>Average Completion</span>
-                    <Gauge className="w-4 h-4 text-[#8C7E6C]" />
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Avg Completion</span>
+                    <Gauge className="w-3.5 h-3.5 text-[#8C7E6C]" />
                   </div>
-                  <p className="text-2xl font-black text-[#2A231D]">
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">
                     {products.length > 0
                       ? Math.round(products.reduce((acc, p) => acc + (p.metrics?.completionRate || 0), 0) / products.length)
                       : 0}%
                   </p>
-                  <p className="text-[10px] text-[#7A6F62] mt-1">Calculated across active features</p>
+                  <p className="text-[9px] sm:text-[10px] text-[#7A6F62] mt-0.5 truncate">Across all features</p>
                 </div>
               </div>
 
-              {/* Filter Pills */}
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#F5EFEB]/90 p-3 rounded-2xl border border-[#DCD1BC]">
-                <div className="flex items-center space-x-2">
-                  <span className="text-[11px] font-bold text-[#8C7E6C] uppercase mr-1">Category:</span>
+              {/* Filter Pills: Horizontal scrolling without pushing layout on phone screens */}
+              <div className="space-y-2 bg-[#F5EFEB]/90 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-[#DCD1BC] overflow-hidden">
+                <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  <span className="text-[10px] font-bold text-[#8C7E6C] uppercase shrink-0 mr-1">Category:</span>
                   {['All', 'Web App', 'Mobile App', 'Design System', 'API & Service'].map(cat => (
                     <button
                       key={cat}
                       onClick={() => setProductCategoryFilter(cat)}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 whitespace-nowrap ${
                         productCategoryFilter === cat
                           ? 'bg-[#2B231D] text-[#FAF6EE] shadow-xs'
                           : 'bg-white/80 hover:bg-white text-[#635547] border border-[#DCD1BC]'
@@ -5637,13 +5637,13 @@ export default function App() {
                   ))}
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <span className="text-[11px] font-bold text-[#8C7E6C] uppercase mr-1">Stage:</span>
+                <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 border-t border-[#E8DEC9] pt-2">
+                  <span className="text-[10px] font-bold text-[#8C7E6C] uppercase shrink-0 mr-1">Stage:</span>
                   {['All', 'Discovery', 'In Development', 'Review & QA', 'Launched'].map(stg => (
                     <button
                       key={stg}
                       onClick={() => setProductStageFilter(stg)}
-                      className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 whitespace-nowrap ${
                         productStageFilter === stg
                           ? 'bg-[#3F3730] text-[#FAF6EE]'
                           : 'bg-white/70 hover:bg-white text-[#635547] border border-[#E3D9C8]'
