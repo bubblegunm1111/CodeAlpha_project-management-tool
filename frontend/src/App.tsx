@@ -97,6 +97,8 @@ interface Task {
   isTimerRunning?: boolean;
   aiRiskScore?: 'Low' | 'Medium' | 'High' | 'Overdue';
   aiRiskReason?: string;
+  product_id?: string;
+  product_name?: string;
 }
 
 interface NoteItem {
@@ -309,6 +311,8 @@ const INITIAL_TASKS: Task[] = [
     attachmentsCount: 8,
     dueDate: 'May 18, 2026',
     priority: 'Medium',
+    product_id: 'prd-1',
+    product_name: 'Acme Digital Portal',
     timeSpent: 3600, // 1h 00m
     estimatedHours: 3.5,
     isTimerRunning: false,
@@ -346,6 +350,8 @@ const INITIAL_TASKS: Task[] = [
     attachmentsCount: 2,
     dueDate: 'May 20, 2026',
     priority: 'High',
+    product_id: 'prd-2',
+    product_name: 'Ginko Mobile Native App',
     comments: [
       { id: 'c3', author: 'Marcus W.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces', time: 'Yesterday', content: 'Wireframes review scheduled right after breakfast.' }
     ]
@@ -372,6 +378,8 @@ const INITIAL_TASKS: Task[] = [
     attachmentsCount: 1,
     dueDate: 'May 14, 2026',
     priority: 'Urgent',
+    product_id: 'prd-1',
+    product_name: 'Acme Digital Portal',
     comments: [
       { id: 'c4', author: 'Elena R.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces', time: '10 mins ago', content: 'Finalized the responsive navigation breakpoints.' }
     ]
@@ -396,6 +404,8 @@ const INITIAL_TASKS: Task[] = [
     attachmentsCount: 8,
     dueDate: 'May 22, 2026',
     priority: 'Medium',
+    product_id: 'prd-3',
+    product_name: 'Orion Design System & UI Kit',
     comments: []
   },
   {
@@ -439,6 +449,8 @@ const INITIAL_TASKS: Task[] = [
     attachmentsCount: 8,
     dueDate: 'May 16, 2026',
     priority: 'Medium',
+    product_id: 'prd-4',
+    product_name: 'Telemetry AI Risk Radar API',
     comments: []
   }
 ];
@@ -939,8 +951,9 @@ export default function App() {
   const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Products Page State
+  // Products Page & Multi-Product Board Filtering State
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [boardProductFilter, setBoardProductFilter] = useState<string>('all');
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('All');
   const [productStageFilter, setProductStageFilter] = useState('All');
@@ -2577,16 +2590,23 @@ export default function App() {
     }
   };
 
-  const columns = [
-    { id: 'todo', title: 'Todo list', count: tasks.filter(t => t.columnId === 'todo').length },
-    { id: 'inprogress', title: 'In Progress', count: tasks.filter(t => t.columnId === 'inprogress').length },
-    { id: 'inreview', title: 'In Review', count: tasks.filter(t => t.columnId === 'inreview').length },
-  ];
+  const filteredTasks = tasks.filter(t => {
+    const matchSearch =
+      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (t.product_name && t.product_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchProduct =
+      boardProductFilter === 'all' ||
+      t.product_id === boardProductFilter ||
+      t.product_name === boardProductFilter;
+    return matchSearch && matchProduct;
+  });
 
-  const filteredTasks = tasks.filter(t =>
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const columns = [
+    { id: 'todo', title: 'Todo list', count: filteredTasks.filter(t => t.columnId === 'todo').length },
+    { id: 'inprogress', title: 'In Progress', count: filteredTasks.filter(t => t.columnId === 'inprogress').length },
+    { id: 'inreview', title: 'In Review', count: filteredTasks.filter(t => t.columnId === 'inreview').length },
+  ];
 
   // 1. Splash & Onboarding Screen: Cinematic 3D Folder Dossier & Interactive Walkthrough
   if (currentScreen === 'splash') {
@@ -3854,6 +3874,24 @@ export default function App() {
                     </span>
                   </div>
 
+                  {/* Multi-Product Filter Dropdown */}
+                  <div className="relative">
+                    <select
+                      value={boardProductFilter}
+                      onChange={(e) => setBoardProductFilter(e.target.value)}
+                      className="appearance-none bg-[#EFE8DC] border border-[#DCD1BC] hover:border-[#8C7E6C] rounded-xl px-3 py-2 pr-8 text-xs font-bold text-[#2C241E] focus:outline-none shadow-xs cursor-pointer transition-all"
+                      title="Filter board by specific product deliverable"
+                    >
+                      <option value="all">📦 All Products & Backlogs ({tasks.length})</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.name}>
+                          {p.code} • {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-[#7A6D5E] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+
                   <button
                     onClick={() => {
                       setNewTaskTargetColumn('todo');
@@ -3914,6 +3952,12 @@ export default function App() {
                             >
                               <div className="flex items-center justify-between mb-2.5">
                                 <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                                  {task.product_name && (
+                                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-black/10 text-[#2B231D] font-mono flex items-center space-x-1" title={`Belongs to product: ${task.product_name}`}>
+                                      <Package className="w-2.5 h-2.5 text-[#5C4F41]" />
+                                      <span>{task.product_name}</span>
+                                    </span>
+                                  )}
                                   {task.tags.map((tag, idx) => (
                                     <span key={idx} className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${style.tagBg} ${style.tagText}`}>
                                       {tag}
