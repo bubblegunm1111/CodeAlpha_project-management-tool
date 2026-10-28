@@ -5201,38 +5201,38 @@ export default function App() {
 
           {/* VIEW 4: TEAM MEMBERS & PERMISSIONS */}
           {activeTab === 'team' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Header & Controls matching user mockup */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-1 border-b border-[#E5DBCA] md:border-b-0 pb-3 md:pb-0">
                 <div>
-                  <div className="flex items-center space-x-3">
-                    <h1 className="text-2xl font-black text-[#2A231D] tracking-tight">Team members</h1>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EFE8DC] text-[#6B5E4F] border border-[#DCD1BC]">
+                  <div className="flex items-center space-x-2.5">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#2A231D] tracking-tight">Team members</h1>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#EFE8DC] text-[#6B5E4F] border border-[#DCD1BC]">
                       {teamMembers.length}
                     </span>
                   </div>
-                  <p className="text-xs text-[#7F7364] mt-1">
+                  <p className="text-xs text-[#7F7364] mt-0.5">
                     Manage your team, roles, and project assignments. Keep everyone aligned and productive.
                   </p>
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
                   {/* Search Bar */}
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-initial">
                     <Search className="w-4 h-4 text-[#8C7E6C] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       placeholder="Search team members..."
                       value={teamSearchQuery}
                       onChange={(e) => setTeamSearchQuery(e.target.value)}
-                      className="pl-9 pr-4 py-2 bg-white/90 border border-[#DCD1BC] rounded-xl text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C] focus:bg-white w-48 md:w-64 shadow-xs transition-all"
+                      className="w-full pl-9 pr-4 py-2 bg-white/90 border border-[#DCD1BC] rounded-xl text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C] focus:bg-white sm:w-56 shadow-xs transition-all"
                     />
                   </div>
 
                   {/* Invite Member CTA */}
                   <button
                     onClick={() => setIsInviteMemberModalOpen(true)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-colors shrink-0"
+                    className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-colors shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Invite Member</span>
@@ -5241,12 +5241,12 @@ export default function App() {
               </div>
 
               {/* Filters Row */}
-              <div className="flex items-center space-x-3">
-                <div className="relative">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative flex-1 sm:flex-initial min-w-[120px]">
                   <select
                     value={teamRoleFilter}
                     onChange={(e) => setTeamRoleFilter(e.target.value)}
-                    className="appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
+                    className="w-full appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
                   >
                     <option value="All Roles">All Roles</option>
                     <option value="Product Owner">Product Owner</option>
@@ -5260,11 +5260,11 @@ export default function App() {
                   <ChevronDown className="w-3.5 h-3.5 text-[#8C7E6C] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
 
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-initial min-w-[120px]">
                   <select
                     value={teamProjectFilter}
                     onChange={(e) => setTeamProjectFilter(e.target.value)}
-                    className="appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
+                    className="w-full appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
                   >
                     <option value="All Projects">All Projects</option>
                     <option value="Acme Digital Revamp">Acme Digital Revamp</option>
@@ -5291,8 +5291,117 @@ export default function App() {
                 )}
               </div>
 
-              {/* Members Table */}
-              <div className="bg-[#FAF7F2] rounded-2xl border border-[#DCD1BC] shadow-xs overflow-hidden">
+              {/* Mobile View: Dedicated Adaptive Cards (hidden on md and up) */}
+              <div className="md:hidden space-y-3">
+                {teamMembers
+                  .filter(m => {
+                    const matchesSearch =
+                      m.name.toLowerCase().includes(teamSearchQuery.toLowerCase()) ||
+                      m.email.toLowerCase().includes(teamSearchQuery.toLowerCase());
+                    const matchesRole = teamRoleFilter === 'All Roles' || m.role === teamRoleFilter;
+                    const matchesProject =
+                      teamProjectFilter === 'All Projects' || m.projects.includes(teamProjectFilter);
+                    return matchesSearch && matchesRole && matchesProject;
+                  })
+                  .map(member => (
+                    <div
+                      key={member.id}
+                      className="bg-[#FAF7F2] rounded-2xl border border-[#DCD1BC] p-4 shadow-xs space-y-3"
+                    >
+                      {/* Name & Role Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <img
+                            src={member.avatar}
+                            alt={member.name}
+                            className="w-10 h-10 rounded-full object-cover border border-[#DCD1BC] shrink-0 shadow-2xs"
+                          />
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-sm text-[#2A231D] truncate">{member.name}</h3>
+                            <p className="text-[11px] text-[#7F7364] truncate">{member.email}</p>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getRoleBadgeStyle(
+                            member.role
+                          )}`}
+                        >
+                          {member.role}
+                        </span>
+                      </div>
+
+                      {/* Workload Progress Bar */}
+                      <div className="bg-white/70 p-2.5 rounded-xl border border-[#E8DEC9] space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#4B3E32]">
+                          <span>Workload Capacity</span>
+                          <div className="flex items-center space-x-1.5">
+                            <span>{member.workload}%</span>
+                            {member.workload >= 75 ? (
+                              <span className="text-[9px] font-black uppercase text-rose-700 bg-rose-100 px-1.5 py-0.2 rounded border border-rose-200">
+                                High
+                              </span>
+                            ) : member.workload <= 50 ? (
+                              <span className="text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200">
+                                Free
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-black uppercase text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200">
+                                Normal
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="w-full bg-[#E5DBC7] h-2 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${getWorkloadColor(
+                              member.workload
+                            )}`}
+                            style={{ width: `${Math.min(100, member.workload)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Assigned Projects */}
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase font-bold text-[#8C7E6C] block">Projects:</span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {member.projects.map(proj => (
+                            <button
+                              key={proj}
+                              title="Click to toggle assignment"
+                              onClick={() => handleToggleProjectAssignment(member.id, proj)}
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all ${getProjectTagStyle(
+                                proj
+                              )}`}
+                            >
+                              {proj}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Footer: Activity & Actions */}
+                      <div className="pt-2 border-t border-[#EAE1D2] flex items-center justify-between text-xs text-[#7F7364]">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span>{member.lastActive}</span>
+                        </span>
+
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="text-[11px] font-bold text-rose-700 hover:text-rose-900 flex items-center space-x-1 p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Desktop View: Full Data Table (hidden on mobile) */}
+              <div className="hidden md:block bg-[#FAF7F2] rounded-2xl border border-[#DCD1BC] shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
