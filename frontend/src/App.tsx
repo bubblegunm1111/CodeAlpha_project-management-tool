@@ -43,6 +43,7 @@ import {
   Layers,
   PanelLeftClose,
   PanelLeftOpen,
+  Menu,
   ChevronDown,
   CheckSquare,
   Play,
@@ -3543,9 +3544,17 @@ export default function App() {
       {/* Top Manila Folder Cutout Tab Header */}
       <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
-        <div className="px-6 py-2.5 flex items-center justify-between border-b border-[#E4DAC7]">
+        <div className="px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between border-b border-[#E4DAC7] gap-3">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
-          <div className="flex items-center space-x-3 shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            {/* Mobile Hamburger to open sidebar */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden p-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EAE0CF] border border-[#D5CABB] text-[#3F3730] shadow-2xs"
+              title="Open Navigation Menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
             <button
               onClick={() => setCurrentScreen('folder_hub')}
               className="w-8 h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
@@ -3553,23 +3562,23 @@ export default function App() {
             >
               <Folder className="w-4 h-4" />
             </button>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="font-extrabold text-sm tracking-tight text-[#2B241F] hover:underline"
+                className="font-extrabold text-xs sm:text-sm tracking-tight text-[#2B241F] hover:underline"
               >
                 {currentOrg.name}
               </button>
               <span className="text-[#8C8072] text-xs">/</span>
-              <span className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5">
-                <span>{currentFolder.name}</span>
-                <span className="font-mono text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1.5 py-0.2 rounded">
+              <span className="text-[11px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-2 sm:px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1 sm:space-x-1.5">
+                <span className="truncate max-w-[120px] sm:max-w-none">{currentFolder.name}</span>
+                <span className="font-mono text-[9px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1 sm:px-1.5 py-0.2 rounded">
                   {formatFolderCode(currentFolder.code)}
                 </span>
               </span>
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium ml-2 px-2 py-0.5 rounded hover:bg-[#E5DCBE] transition-colors"
+                className="hidden sm:inline text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded hover:bg-[#E5DCBE] transition-colors"
               >
                 Switch
               </button>
@@ -3577,15 +3586,15 @@ export default function App() {
           </div>
 
           {/* Right Controls: Search, Notifications, Profile */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D7366]" />
               <input
                 type="text"
-                placeholder="Search tasks & tags..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-52 shadow-inner"
+                className="pl-8 pr-3 py-1.5 text-xs bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#2C2621] placeholder-[#9E9486] focus:outline-none focus:ring-1 focus:ring-[#8E8070] w-32 sm:w-52 shadow-inner"
               />
             </div>
 
@@ -3676,8 +3685,8 @@ export default function App() {
         </div>
 
         {/* Lower Row: Full-width Folder Cutout Slips that dock cleanly into the canvas */}
-        <div className="px-6 pt-2 flex items-center">
-          <nav className="flex space-x-2 -mb-[1px]">
+        <div className="px-4 sm:px-6 pt-2 flex items-center overflow-x-auto no-scrollbar">
+          <nav className="flex space-x-1 sm:space-x-2 -mb-[1px] min-w-max">
             {[
               { id: 'board' as const, label: 'Kanban Boards', count: tasks.length },
               { id: 'products' as const, label: 'Products & Deliverables', count: products.length },
@@ -3711,10 +3720,19 @@ export default function App() {
 
       {/* Main Body with Sidebar + Active View */}
       <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Sidebar Backdrop Overlay */}
+        {isSidebarOpen && (
+          <div
+            onClick={() => setIsSidebarOpen(false)}
+            className="md:hidden fixed inset-0 bg-[#2C2621]/40 backdrop-blur-xs z-30 transition-opacity"
+            title="Close sidebar"
+          />
+        )}
+
         {/* Left Sidebar (Image 1 Style) */}
         <aside
-          className={`bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-20 shrink-0 ${
-            isSidebarOpen ? 'w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
+          className={`bg-[#EFE8DC]/95 md:bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 ${
+            isSidebarOpen ? 'w-64 md:w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
           }`}
         >
           <div className="space-y-6">
@@ -3833,7 +3851,7 @@ export default function App() {
         </aside>
 
         {/* Dynamic Main View */}
-        <main className="flex-1 bg-[#FAF6EE] overflow-y-auto p-6 flex flex-col relative">
+        <main className="flex-1 bg-[#FAF6EE] overflow-y-auto p-4 sm:p-6 flex flex-col relative">
           {/* VIEW 1: KANBAN BOARD */}
           {activeTab === 'board' && (
             <>
@@ -4338,7 +4356,8 @@ export default function App() {
               {timelineViewMode === 'gantt' && (
                 <div className="flex flex-col xl:flex-row items-start gap-5">
                   {/* Left & Center: Phase Tree + Horizontal 7-Day Timeline Grid */}
-                  <div className="flex-1 w-full bg-[#FAF6EE] rounded-2xl border border-[#D5CABB] shadow-sm overflow-hidden">
+                  <div className="flex-1 w-full bg-[#FAF6EE] rounded-2xl border border-[#D5CABB] shadow-sm overflow-x-auto">
+                    <div className="min-w-[680px]">
                     {/* Gantt Header: Left Phase label + 7 Days columns (Tue May 5 – Mon May 11) */}
                     <div className="flex border-b border-[#DCD1BC] bg-[#EFE8DC] text-xs font-bold text-[#554A3D]">
                       <div className="w-72 sm:w-80 flex-shrink-0 px-4 py-3 border-r border-[#DCD1BC] flex items-center justify-between">
@@ -4504,11 +4523,11 @@ export default function App() {
                                         marginLeft: `${leftPercent}%`,
                                         width: `calc(${widthPercent}% - 8px)`
                                       }}
-                                      className={`h-9 rounded-2xl border px-3 flex items-center justify-between shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
+                                      className={`h-9 rounded-2xl border px-2 sm:px-3 flex items-center justify-between shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
                                         isSelected ? 'ring-2 ring-[#2E2721] shadow-md scale-[1.01]' : 'hover:shadow-sm hover:scale-[1.005]'
                                       }`}
                                     >
-                                      <div className="flex flex-col min-w-0 pr-2">
+                                      <div className="flex flex-col min-w-0 pr-1 sm:pr-2">
                                         <span className="text-[11px] font-black tracking-tight truncate leading-tight">
                                           {item.category || item.title}
                                         </span>
@@ -4516,11 +4535,11 @@ export default function App() {
                                           {item.startDate ? `${new Date(item.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date((item.endDate || item.startDate) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : item.date}
                                         </span>
                                       </div>
-                                      <div className="flex items-center flex-shrink-0">
+                                      <div className="flex items-center flex-shrink-0 ml-1">
                                         <img
                                           src={item.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
                                           alt={item.assignee}
-                                          className="w-5 h-5 rounded-full border border-white object-cover shadow-xs"
+                                          className="w-5 h-5 rounded-full border border-white object-cover shadow-xs shrink-0"
                                           title={`Assigned: ${item.assignee}`}
                                         />
                                       </div>
@@ -4538,6 +4557,7 @@ export default function App() {
                           </div>
                         );
                       })}
+                    </div>
                     </div>
                   </div>
 
