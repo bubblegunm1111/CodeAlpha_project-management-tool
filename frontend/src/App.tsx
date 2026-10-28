@@ -2882,7 +2882,7 @@ export default function App() {
     );
   }
 
-  // 2. Authentication Screen: Native mobile card + Desktop archival tab layout
+  // 2. Authentication Screen: Authentic Manila Folder Dossier with Raised Cutout Tabs
   if (currentScreen === 'auth') {
     return (
       <div className="min-h-screen bg-[#F5EFEB] flex flex-col justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 relative selection:bg-[#E8DECA]">
@@ -2891,7 +2891,7 @@ export default function App() {
 
         <div className="w-full max-w-md mx-auto relative z-10 pt-8 sm:pt-0">
           {/* Logo & Header */}
-          <div className="text-center mb-5 sm:mb-6">
+          <div className="text-center mb-6">
             <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center mx-auto shadow-sm">
               <Folder className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
@@ -2903,38 +2903,47 @@ export default function App() {
             </p>
           </div>
 
-          {/* iOS-Native Segmented Control for Mobile / Tabbed for Desktop */}
-          <div className="mb-3 p-1 bg-[#E8DECA] rounded-xl border border-[#D5CABB] grid grid-cols-2 gap-1 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setAuthMode('signin')}
-              className={`py-2 rounded-lg text-xs font-black tracking-wider transition-all flex items-center justify-center space-x-1.5 ${
-                authMode === 'signin'
-                  ? 'bg-[#FAF6EE] text-[#2C241E] shadow-xs'
-                  : 'text-[#7A6E5E] hover:text-[#2C241E]'
-              }`}
-            >
-              <Folder className="w-3.5 h-3.5" />
-              <span>SIGN IN</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthMode('signup')}
-              className={`py-2 rounded-lg text-xs font-black tracking-wider transition-all flex items-center justify-center space-x-1.5 ${
-                authMode === 'signup'
-                  ? 'bg-[#FAF6EE] text-[#2C241E] shadow-xs'
-                  : 'text-[#7A6E5E] hover:text-[#2C241E]'
-              }`}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>NEW ACCOUNT</span>
-            </button>
-          </div>
-
-          {/* Auth Dossier Card */}
+          {/* Authentic Raised Manila Folder Tabs & Pocket */}
           <div className="relative">
-            {/* Folder Main Pocket Body */}
-            <div className="bg-[#FAF6EE] border-2 border-[#D5CABB] rounded-2xl py-5 sm:py-7 px-4 sm:px-8 shadow-xl relative z-10 overflow-hidden">
+            {/* Top Cutout Folder Tab Slips */}
+            <div className="flex items-end justify-between px-1.5 -mb-px relative z-20">
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signin')}
+                  className={`px-4 sm:px-5 py-2.5 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-1.5 border-t-2 border-l-2 border-r-2 whitespace-nowrap ${
+                    authMode === 'signin'
+                      ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
+                      : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
+                  }`}
+                >
+                  <Folder className="w-3.5 h-3.5" />
+                  <span>SIGN IN</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signup')}
+                  className={`px-4 sm:px-5 py-2.5 rounded-t-xl text-xs font-black tracking-wider transition-all flex items-center space-x-1.5 border-t-2 border-l-2 border-r-2 whitespace-nowrap ${
+                    authMode === 'signup'
+                      ? 'bg-[#FAF6EE] text-[#2C241E] border-[#D5CABB] shadow-xs translate-y-0.5 z-30'
+                      : 'bg-[#EAE0CF] text-[#7A6E5E] border-[#D0C4AF] hover:bg-[#E5D7BF]'
+                  }`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>NEW ACCOUNT</span>
+                </button>
+              </div>
+
+              {/* Archival Stamp / Clearance Tag on Folder Tab */}
+              <div className="hidden xs:flex items-center space-x-1 px-2.5 py-1 rounded-t-lg bg-[#E5D9C4] border-t border-l border-r border-[#CFBF9F] text-[9px] font-mono font-bold text-[#70624E] tracking-widest uppercase">
+                <Lock className="w-2.5 h-2.5 text-amber-800" />
+                <span>CONFIDENTIAL</span>
+              </div>
+            </div>
+
+            {/* Folder Main Pocket Body with seamless cutout tab connection */}
+            <div className="bg-[#FAF6EE] border-2 border-[#D5CABB] rounded-2xl rounded-tl-none py-5 sm:py-7 px-4 sm:px-8 shadow-xl relative z-10 overflow-hidden">
               {/* Folder Internal Paper Watermark */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(#D5CABB_1px,transparent_1px)] [background-size:12px_12px] opacity-40 pointer-events-none" />
 
