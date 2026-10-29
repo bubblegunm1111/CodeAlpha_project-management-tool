@@ -4219,9 +4219,9 @@ export default function App() {
 
   // 3. Main Application Screen (Board for currentFolder)
   return (
-    <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
+    <div className="h-screen bg-[#FAF6EE] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA] overflow-hidden">
       {/* Top Manila Folder Cutout Tab Header */}
-      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-8 sm:pt-0 relative z-40">
+      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-8 sm:pt-0 relative z-40 shrink-0">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
         <div className="px-2 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
@@ -4442,7 +4442,7 @@ export default function App() {
 
         {/* Left Sidebar (Image 1 Style) */}
         <aside
-          className={`bg-[#FAF6EE] border-r border-[#DCD1BC] flex flex-col h-full py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
+          className={`bg-[#FAF6EE] border-r border-[#DCD1BC] flex flex-col h-full py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 bottom-0 ${
             isSidebarOpen ? 'w-64 md:w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
           }`}
         >
