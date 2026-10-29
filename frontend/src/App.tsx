@@ -4034,7 +4034,7 @@ export default function App() {
                 {[
                   {
                     name: 'Shahd Hosni',
-                    email: 'shahdhos123ni@gmail.com',
+                    email: 'shahdhosni144@gmail.com',
                     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'
                   },
                   {
