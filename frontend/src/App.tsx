@@ -4631,11 +4631,11 @@ export default function App() {
                   {!isSidebarOpen && (
                     <button
                       onClick={() => setIsSidebarOpen(true)}
-                      className="mt-0.5 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-2xs flex items-center space-x-1.5 transition-all shrink-0 touch-target"
+                      className="mt-0.5 px-3 py-1.5 rounded-lg bg-[#EFE8DC] hover:bg-[#E8DECA] border border-[#DCD1BC] text-xs font-bold text-[#3F3730] shadow-2xs items-center space-x-1.5 transition-all shrink-0 touch-target hidden md:flex"
                       title="Show Folders sidebar"
                     >
                       <PanelLeftOpen className="w-4 h-4" />
-                      <span className="hidden sm:inline">Show Folders</span>
+                      <span>Show Folders</span>
                     </button>
                   )}
                   <div>
