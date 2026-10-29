@@ -58,7 +58,9 @@ import {
   Target,
   Gauge,
   Phone,
-  Award
+  Award,
+  UploadCloud,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -1251,6 +1253,8 @@ export default function App() {
   const [settingsCompactMode, setSettingsCompactMode] = useState(false);
   const [settingsSaveMessage, setSettingsSaveMessage] = useState<string | null>(null);
   const [settingsSaveError, setSettingsSaveError] = useState<string | null>(null);
+  const [isAvatarDragging, setIsAvatarDragging] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   // Clients Page State & Modals
   const [selectedClient, setSelectedClient] = useState<ClientItem | null>(null);
@@ -7311,32 +7315,114 @@ export default function App() {
                     <p className="text-xs text-[#7A7064]">Update your avatar, display name, and communication email across all task cards.</p>
                   </div>
 
-                  {/* Avatar Picker */}
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-5 pt-2">
-                    <img
-                      src={settingsAvatar || currentUser.avatar}
-                      alt={settingsName}
-                      className="w-16 h-16 rounded-2xl object-cover border-2 border-[#D5CABB] shadow-xs"
+                  {/* Avatar Picker (Interactive Drag & Drop / Choose from Files) */}
+                  <div className="pt-2 space-y-3">
+                    <label className="block text-[11px] font-bold text-[#7A6E60] uppercase">
+                      Profile Picture
+                    </label>
+
+                    {/* Hidden Native File Input */}
+                    <input
+                      ref={avatarFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            if (typeof ev.target?.result === 'string') {
+                              setSettingsAvatar(ev.target.result);
+                              setSettingsSaveMessage('Image loaded. Click "Save Profile Changes" to apply.');
+                              setTimeout(() => setSettingsSaveMessage(null), 4000);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
                     />
-                    <div className="space-y-1.5 flex-1">
-                      <label className="block text-[11px] font-bold text-[#7A6E60] uppercase">
-                        Avatar Image URL
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="url"
-                          value={settingsAvatar}
-                          onChange={(e) => setSettingsAvatar(e.target.value)}
-                          placeholder="https://..."
-                          className="flex-1 px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                      {/* Avatar Preview */}
+                      <div className="relative group shrink-0 w-20 h-20 mx-auto sm:mx-0">
+                        <img
+                          src={settingsAvatar || currentUser.avatar}
+                          alt={settingsName}
+                          className="w-20 h-20 rounded-2xl object-cover border-2 border-[#D5CABB] shadow-sm bg-white"
                         />
                         <button
                           type="button"
-                          onClick={() => setSettingsAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop')}
-                          className="px-2.5 py-2 text-xs font-semibold rounded-xl bg-white border border-[#D5CABB] hover:bg-[#F5EFEB] text-[#5A4E40] shrink-0"
-                          title="Reset to default portrait"
+                          onClick={() => avatarFileInputRef.current?.click()}
+                          className="absolute inset-0 bg-black/40 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-[10px] font-bold cursor-pointer"
                         >
-                          Default
+                          <UploadCloud className="w-5 h-5 mb-0.5" />
+                          <span>Change</span>
+                        </button>
+                      </div>
+
+                      {/* Drag & Drop Zone */}
+                      <div
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsAvatarDragging(true);
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          setIsAvatarDragging(false);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsAvatarDragging(false);
+                          const file = e.dataTransfer.files?.[0];
+                          if (file && file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (typeof ev.target?.result === 'string') {
+                                setSettingsAvatar(ev.target.result);
+                                setSettingsSaveMessage('Image dropped successfully. Click "Save Profile Changes" to apply.');
+                                setTimeout(() => setSettingsSaveMessage(null), 4000);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        className={`flex-1 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center text-center ${
+                          isAvatarDragging
+                            ? 'border-[#2E2721] bg-[#F2ECE0] scale-[0.99]'
+                            : 'border-[#D5CABB] hover:border-[#8C7E6C] bg-white/70 hover:bg-white'
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-[#EFE8DC] text-[#4F4438] flex items-center justify-center mb-1.5 shadow-2xs">
+                          <UploadCloud className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs font-bold text-[#2A231D]">
+                          <span className="text-[#8A4A1C] underline">Choose a file</span> or drag & drop photo here
+                        </p>
+                        <p className="text-[10px] text-[#7A7064] mt-0.5">PNG, JPG, WebP, or GIF up to 5MB</p>
+                      </div>
+
+                      {/* Quick Reset to Default Button */}
+                      <div className="flex sm:flex-col justify-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => avatarFileInputRef.current?.click()}
+                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white border border-[#D5CABB] hover:bg-[#FAF6EE] text-[#433A31] transition-colors cursor-pointer shadow-2xs flex items-center justify-center space-x-1"
+                        >
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          <span>Browse</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSettingsAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop');
+                            setSettingsSaveMessage('Reset to default portrait. Click "Save Profile Changes" to apply.');
+                            setTimeout(() => setSettingsSaveMessage(null), 3000);
+                          }}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-xl text-[#7A7064] hover:bg-[#EFE8DC] transition-colors cursor-pointer"
+                        >
+                          Reset
                         </button>
                       </div>
                     </div>

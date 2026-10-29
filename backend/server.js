@@ -91,7 +91,8 @@ initMailer();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Database setup
 const db = new sqlite3.Database('./app.db', (err) => {
