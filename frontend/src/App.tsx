@@ -1250,7 +1250,7 @@ export default function App() {
   const [settingsName, setSettingsName] = useState(currentUser.name);
   const [settingsEmail, setSettingsEmail] = useState(currentUser.email);
   const [settingsAvatar, setSettingsAvatar] = useState(currentUser.avatar);
-  const [settingsRole, setSettingsRole] = useState('Lead Archival Architect');
+  const [settingsRole, setSettingsRole] = useState('');
   const [settingsOrgName, setSettingsOrgName] = useState('');
   const [settingsOrgDescription, setSettingsOrgDescription] = useState('');
   const [settingsCurrentPassword, setSettingsCurrentPassword] = useState('');
@@ -7846,9 +7846,10 @@ export default function App() {
                       </label>
                       <input
                         type="text"
+                        placeholder="e.g. Lead Archival Architect, Product Designer, Developer..."
                         value={settingsRole}
                         onChange={(e) => setSettingsRole(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                        className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] placeholder-[#A4988A] focus:outline-none focus:border-[#8C7E6C]"
                       />
                     </div>
 
