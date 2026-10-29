@@ -1456,8 +1456,7 @@ export default function App() {
             body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
           }).catch(() => {});
 
-          setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
-          setCurrentScreen('folder_hub');
+          applyUserData(targetEmail, targetName, targetAvatar);
         }
       })
       .catch((err) => {
@@ -1477,9 +1476,7 @@ export default function App() {
           body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
         }).catch(() => {});
 
-        setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
-        // Automatically unlock Foldable workspace for signed-in user
-        setCurrentScreen('folder_hub');
+        applyUserData(targetEmail, targetName, targetAvatar);
         setNotifications(prev => [
           { id: Date.now(), text: `Authenticated as ${targetName} (${targetEmail})`, time: 'Just now' },
           ...prev
@@ -1490,7 +1487,106 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Splash Screen Animation sequence: opens folder smoothly without rushing user away
+  const applyUserData = (email: string, name?: string, avatar?: string) => {
+    const isTestAccount = email === 'shahdhosni144@gmail.com' || email === 'mason.walker@example.com';
+    const targetName = name || email.split('@')[0];
+    const targetAvatar = avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
+
+    setCurrentUser({
+      name: targetName,
+      email: email,
+      avatar: targetAvatar
+    });
+
+    if (isTestAccount) {
+      // Keep rich dummy data for the tested account
+      setOrganizations([
+        {
+          id: 'org-1',
+          name: 'Apex Studio Agency',
+          slug: 'apex-studio',
+          description: 'Digital product design, brand identity & architecture studio',
+          folders: [
+            {
+              id: 'f-1',
+              name: 'Client Deliverables',
+              code: 'D-01',
+              description: 'Active client design systems & production builds',
+              color: 'peach',
+              status: 'Active',
+              tasksCount: 4
+            },
+            {
+              id: 'f-2',
+              name: 'Internal Research & Labs',
+              code: 'D-02',
+              description: 'Product specs, AI models & wireframes',
+              color: 'mint',
+              status: 'Active',
+              tasksCount: 2
+            },
+            {
+              id: 'f-3',
+              name: 'Brand & Marketing Ops',
+              code: 'D-03',
+              description: 'Press kits, typography guides & launch schedules',
+              color: 'blue',
+              status: 'Active',
+              tasksCount: 0
+            }
+          ]
+        }
+      ]);
+      setTasks(INITIAL_TASKS);
+      setNotes(INITIAL_NOTES);
+      setSchedules(INITIAL_SCHEDULE);
+      setTeamMembers(INITIAL_TEAM);
+      setProducts(INITIAL_PRODUCTS);
+      setClients(INITIAL_CLIENTS);
+      setCurrentScreen('folder_hub');
+    } else {
+      // Completely clean slate for ANY new user: no dummy records or clutter
+      const userCleanOrg: Organization = {
+        id: `org-${Date.now()}`,
+        name: `${targetName.split(' ')[0]}'s Workspace`,
+        slug: `${targetName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-workspace`,
+        description: 'Personal organization workspace',
+        folders: [
+          {
+            id: `f-${Date.now()}-1`,
+            name: 'Primary Tasks',
+            code: 'D-01',
+            description: 'My active tasks and deliverables',
+            color: 'peach',
+            status: 'Active',
+            tasksCount: 0
+          }
+        ]
+      };
+
+      setOrganizations([userCleanOrg]);
+      setCurrentOrg(userCleanOrg);
+      setCurrentFolder(userCleanOrg.folders[0]);
+      setTasks([]);
+      setNotes([]);
+      setSchedules([]);
+      setTeamMembers([
+        {
+          id: `tm-${Date.now()}`,
+          name: targetName,
+          email: email,
+          role: 'Workspace Owner',
+          avatar: targetAvatar,
+          projects: ['Primary Tasks'],
+          workload: 0,
+          lastActive: 'Just now'
+        }
+      ]);
+      setProducts([]);
+      setClients([]);
+      setCurrentScreen('folder_hub');
+    }
+  };
   useEffect(() => {
     if (currentScreen === 'splash') {
       setIsFolderOpened(false);
@@ -1621,8 +1717,7 @@ export default function App() {
         });
       } catch {}
 
-      setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
-      setCurrentScreen('folder_hub');
+      applyUserData(targetEmail, targetName, targetAvatar);
     } catch (err: any) {
       console.warn('Firebase popup error, attempting redirect fallback:', err);
       if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
