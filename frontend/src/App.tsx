@@ -7687,10 +7687,10 @@ export default function App() {
                 <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
                   <div>
                     <h3 className="text-base font-bold text-[#2A231D] mb-1">Display & System Preferences</h3>
-                    <p className="text-xs text-[#7A7064]">Fine-tune layout density and view telemetry status.</p>
+                    <p className="text-xs text-[#7A7064]">Fine-tune layout density and viewing options.</p>
                   </div>
 
-                  <div className="p-4 bg-white rounded-xl border border-[#D5CABB] space-y-3">
+                  <div className="p-4 bg-white rounded-xl border border-[#D5CABB]">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs font-bold text-[#2A231D]">Compact Board Density</p>
@@ -7703,33 +7703,12 @@ export default function App() {
                           setSettingsSaveMessage(`Compact view ${!settingsCompactMode ? 'enabled' : 'disabled'}.`);
                           setTimeout(() => setSettingsSaveMessage(null), 3000);
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                           settingsCompactMode ? 'bg-[#2E2721] text-white' : 'bg-[#EAE0CF] text-[#4F4438]'
                         }`}
                       >
                         {settingsCompactMode ? 'Enabled' : 'Disabled'}
                       </button>
-                    </div>
-
-                    <div className="pt-2 border-t border-[#E8DEC9] flex items-center justify-between text-xs">
-                      <div>
-                        <p className="font-bold text-[#2A231D]">WebSocket Tunnel Status</p>
-                        <p className="text-[11px] text-[#7A7064]">Port 3001 live event synchronization</p>
-                      </div>
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping mr-1"></span>
-                        Connected
-                      </span>
-                    </div>
-
-                    <div className="pt-2 border-t border-[#E8DEC9] flex items-center justify-between text-xs">
-                      <div>
-                        <p className="font-bold text-[#2A231D]">SQLite Storage Database</p>
-                        <p className="text-[11px] text-[#7A7064]">Local persistence file at ./backend/app.db</p>
-                      </div>
-                      <span className="font-mono text-[10px] font-bold text-[#695D50] bg-[#EFE8DC] px-2 py-0.5 rounded">
-                        Healthy • Ready
-                      </span>
                     </div>
                   </div>
                 </div>
