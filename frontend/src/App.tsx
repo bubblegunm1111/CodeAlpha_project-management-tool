@@ -3268,7 +3268,7 @@ export default function App() {
   if (currentScreen === 'splash') {
     const onboardingSteps = [
       {
-        badge: 'Archival PM Dossier',
+        badge: 'Foldable Dossier',
         title: 'Tactile Project Management',
         description: 'Experience your work through an analog-inspired, vintage file-folder aesthetic engineered for focus, clarity, and rapid execution.',
         statLabel: 'CONFIDENTIAL DOSSIER',
@@ -3306,7 +3306,7 @@ export default function App() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap">
-                <span className="font-extrabold text-base sm:text-lg tracking-tight text-[#2C241E] whitespace-nowrap">Archival PM</span>
+                <span className="font-extrabold text-base sm:text-lg tracking-tight text-[#2C241E] whitespace-nowrap">Foldable</span>
                 <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded bg-[#E8DECA] text-[#5A5046] border border-[#D5CABB] whitespace-nowrap">
                   Onboarding
                 </span>
@@ -3389,7 +3389,7 @@ export default function App() {
                     onClick={() => setCurrentScreen('auth')}
                     className="px-5 sm:px-6 py-2.5 rounded-xl bg-[#3F3730] text-[#FAF6EE] text-xs font-bold hover:bg-[#2C241E] active:scale-95 transition-all shadow-md flex items-center space-x-1.5 whitespace-nowrap"
                   >
-                    <span>Enter Archival PM</span>
+                    <span>Enter Foldable</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
@@ -3541,7 +3541,7 @@ export default function App() {
               <Folder className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <h2 className="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-[#2C2621]">
-              {authMode === 'signin' ? 'Archival PM' : 'Create an Account'}
+              {authMode === 'signin' ? 'Foldable' : 'Create an Account'}
             </h2>
             <p className="mt-1 text-xs text-[#7A7064]">
               Organize, track, and deliver your work. All in one place.
@@ -3754,7 +3754,7 @@ export default function App() {
               {/* Toggle Sign Up / Sign In footer */}
               <div className="text-center mt-5 pt-3 border-t border-[#E8DEC9]">
                 <p className="text-xs text-[#7A7064]">
-                  {authMode === 'signin' ? 'New to Archival PM? ' : 'Already have an account? '}
+                  {authMode === 'signin' ? 'New to Foldable? ' : 'Already have an account? '}
                   <button
                     type="button"
                     onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
@@ -3878,7 +3878,7 @@ export default function App() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-base tracking-tight text-[#2C241E] whitespace-nowrap">Archival PM</span>
+                <span className="font-extrabold text-base tracking-tight text-[#2C241E] whitespace-nowrap">Foldable</span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#E4DAC7] text-[#5A5046] border border-[#D5CABB] whitespace-nowrap">
                   Folder Hub
                 </span>
@@ -4081,7 +4081,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="px-6 py-4 bg-[#EFE8DC] border-t border-[#DCD1BC] flex items-center justify-between text-xs text-[#7A7064] relative z-10">
-          <span>Archival PM Dossier System • Organization: {currentOrg.name}</span>
+          <span>Foldable Dossier System • Organization: {currentOrg.name}</span>
           <button
             onClick={() => setCurrentScreen('splash')}
             className="hover:text-[#2C2621] font-semibold underline"
@@ -4615,7 +4615,7 @@ export default function App() {
             </button>
             <button
               onClick={() => {
-                alert('Archival PM System Documentation & Support is active. Contact sys1.admin.system@gmail.com for enterprise inquiries.');
+                alert('Foldable System Documentation & Support is active. Contact sys1.admin.system@gmail.com for enterprise inquiries.');
               }}
               className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#FAF6EE] transition-all cursor-pointer"
             >
@@ -6504,7 +6504,7 @@ export default function App() {
                   <div className="flex items-center space-x-2 self-start sm:self-auto">
                     <button
                       onClick={() => {
-                        const reportText = `ARCHIVAL PM - SPRINT REPORT\nOrganization: ${currentOrg.name}\nFolder: ${currentFolder.name}\nCompletion Rate: ${overallCompletionRate}%\nTotal Tasks: ${totalTasksCount}\nCompleted: ${completedTasks}\nLogged Time: ${formatTimeSpent(totalHoursLogged)}\nGenerated: ${new Date().toLocaleString()}`;
+                        const reportText = `FOLDABLE - SPRINT REPORT\nOrganization: ${currentOrg.name}\nFolder: ${currentFolder.name}\nCompletion Rate: ${overallCompletionRate}%\nTotal Tasks: ${totalTasksCount}\nCompleted: ${completedTasks}\nLogged Time: ${formatTimeSpent(totalHoursLogged)}\nGenerated: ${new Date().toLocaleString()}`;
                         navigator.clipboard.writeText(reportText);
                         alert('Sprint performance dossier copied to clipboard!');
                       }}
@@ -9130,7 +9130,7 @@ export default function App() {
               {/* ClickUp Email Preview Card */}
               <div className="bg-white rounded-xl border border-[#DCD1BC] p-4 shadow-inner space-y-3">
                 <div className="flex items-center justify-between border-b border-[#F0EAE1] pb-2 text-[11px] text-[#7F7364]">
-                  <span>From: <strong className="text-[#2A231D]">Archival PM &lt;invites@archivalpm.com&gt;</strong></span>
+                  <span>From: <strong className="text-[#2A231D]">Foldable &lt;invites@archivalpm.com&gt;</strong></span>
                   <span>To: <strong className="text-[#2A231D]">{lastCreatedInvite.email}</strong></span>
                 </div>
 
@@ -9142,7 +9142,7 @@ export default function App() {
                     {currentUser.name} invited you to join {lastCreatedInvite.organization_name}
                   </h4>
                   <p className="text-xs text-[#6B5E4F] max-w-sm mx-auto">
-                    Collaborate on confidential project dossiers, interactive schedules, and sprint boards on Archival PM.
+                    Collaborate on confidential project dossiers, interactive schedules, and sprint boards on Foldable.
                   </p>
 
                   <div className="pt-2">
