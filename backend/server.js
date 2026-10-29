@@ -295,6 +295,31 @@ const initializeDB = () => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Clients / Dossier Client Accounts table
+    db.run(`CREATE TABLE IF NOT EXISTS clients (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      organization_id INTEGER,
+      name TEXT NOT NULL,
+      code TEXT NOT NULL,
+      company TEXT,
+      industry TEXT DEFAULT 'Technology',
+      contact_name TEXT,
+      contact_email TEXT,
+      contact_phone TEXT,
+      avatar TEXT,
+      status TEXT DEFAULT 'Active', -- 'Active', 'In Negotiation', 'Onboarding', 'Retainer', 'Completed'
+      contract_value TEXT DEFAULT '$0',
+      tier TEXT DEFAULT 'Standard', -- 'Enterprise', 'Retainer', 'Growth', 'Standard'
+      lead_owner TEXT,
+      lead_avatar TEXT,
+      active_projects TEXT DEFAULT '[]',
+      deliverables_count INTEGER DEFAULT 0,
+      notes TEXT,
+      website TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
     // Organization Members table (links registered users to organizations they belong to)
     db.run(`CREATE TABLE IF NOT EXISTS organization_members (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1750,6 +1775,222 @@ app.put('/api/v1/products/:id', authMiddleware, async (req, res) => {
 app.delete('/api/v1/products/:id', authMiddleware, async (req, res) => {
   try {
     await runAsync('DELETE FROM products WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ CLIENTS / CLIENT DOSSIERS ENDPOINTS ============
+app.get('/api/v1/clients', authMiddleware, async (req, res) => {
+  try {
+    let clients = await allAsync('SELECT * FROM clients ORDER BY id DESC');
+    if (clients.length === 0) {
+      const seedClients = [
+        {
+          name: 'Nexus Dynamics Group',
+          code: 'CL-01',
+          company: 'Nexus Dynamics Corp.',
+          industry: 'Enterprise Software & Cloud',
+          contact_name: 'Elena Rostova',
+          contact_email: 'elena.rostova@nexusdynamics.io',
+          contact_phone: '+1 (555) 349-1029',
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop',
+          status: 'Active',
+          contract_value: '$120,000',
+          tier: 'Enterprise',
+          lead_owner: 'Mason Walker',
+          lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+          active_projects: ['Brand & Marketing Ops', 'Client Deliverables'],
+          deliverables_count: 8,
+          notes: 'Priority enterprise retainer. Quarterly security audit & design system refresh due in Q3.',
+          website: 'https://nexusdynamics.io'
+        },
+        {
+          name: 'Starlight Media Studios',
+          code: 'CL-02',
+          company: 'Starlight Interactive Ltd.',
+          industry: 'Streaming & Digital Entertainment',
+          contact_name: 'Marcus Vance',
+          contact_email: 'm.vance@starlightstudios.com',
+          contact_phone: '+1 (555) 782-9901',
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+          status: 'Retainer',
+          contract_value: '$85,000',
+          tier: 'Retainer',
+          lead_owner: 'Sofia Delgado',
+          lead_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
+          active_projects: ['Client Deliverables'],
+          deliverables_count: 5,
+          notes: 'Ongoing monthly retainer for digital streaming portal UI and mobile companion apps.',
+          website: 'https://starlightstudios.com'
+        },
+        {
+          name: 'Aetheria Health Systems',
+          code: 'CL-03',
+          company: 'Aetheria Health LLC',
+          industry: 'Biotech & HealthTech',
+          contact_name: 'Dr. Aris Chen',
+          contact_email: 'aris.chen@aetheriahealth.org',
+          contact_phone: '+1 (555) 412-8820',
+          avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop',
+          status: 'Onboarding',
+          contract_value: '$94,000',
+          tier: 'Growth',
+          lead_owner: 'Julian Thorne',
+          lead_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop',
+          active_projects: ['Internal Research & Labs'],
+          deliverables_count: 3,
+          notes: 'New account completing HIPAA compliant data telemetry and clinician dashboard onboarding.',
+          website: 'https://aetheriahealth.org'
+        },
+        {
+          name: 'Solaria FinTech Capital',
+          code: 'CL-04',
+          company: 'Solaria Ventures Inc.',
+          industry: 'Decentralized Finance & Asset Management',
+          contact_name: 'Liam Sterling',
+          contact_email: 'liam@solariacapital.com',
+          contact_phone: '+1 (555) 902-1244',
+          avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop',
+          status: 'Active',
+          contract_value: '$165,000',
+          tier: 'Enterprise',
+          lead_owner: 'Mason Walker',
+          lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+          active_projects: ['Client Deliverables', 'Brand & Marketing Ops'],
+          deliverables_count: 12,
+          notes: 'Tier-1 client. Automated high-frequency clearing portal and executive investor dossiers.',
+          website: 'https://solariacapital.com'
+        }
+      ];
+
+      for (const c of seedClients) {
+        await runAsync(
+          `INSERT INTO clients (name, code, company, industry, contact_name, contact_email, contact_phone, avatar, status, contract_value, tier, lead_owner, lead_avatar, active_projects, deliverables_count, notes, website)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            c.name, c.code, c.company, c.industry, c.contact_name, c.contact_email, c.contact_phone,
+            c.avatar, c.status, c.contract_value, c.tier, c.lead_owner, c.lead_avatar,
+            JSON.stringify(c.active_projects), c.deliverables_count, c.notes, c.website
+          ]
+        );
+      }
+      clients = await allAsync('SELECT * FROM clients ORDER BY id DESC');
+    }
+
+    const formatted = clients.map(c => ({
+      ...c,
+      active_projects: JSON.parse(c.active_projects || '[]')
+    }));
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/v1/clients', authMiddleware, async (req, res) => {
+  try {
+    const {
+      name,
+      code,
+      company,
+      industry,
+      contact_name,
+      contact_email,
+      contact_phone,
+      avatar,
+      status,
+      contract_value,
+      tier,
+      lead_owner,
+      lead_avatar,
+      active_projects,
+      deliverables_count,
+      notes,
+      website,
+      organization_id
+    } = req.body;
+
+    if (!name) return res.status(400).json({ error: 'Client name is required' });
+
+    const clientCode = code || `CL-${Math.floor(10 + Math.random() * 90)}`;
+    const result = await runAsync(
+      `INSERT INTO clients (name, code, company, industry, contact_name, contact_email, contact_phone, avatar, status, contract_value, tier, lead_owner, lead_avatar, active_projects, deliverables_count, notes, website, organization_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        clientCode,
+        company || name,
+        industry || 'Technology',
+        contact_name || '',
+        contact_email || '',
+        contact_phone || '',
+        avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop',
+        status || 'Active',
+        contract_value || '$50,000',
+        tier || 'Standard',
+        lead_owner || 'Mason Walker',
+        lead_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+        JSON.stringify(active_projects || ['Client Deliverables']),
+        deliverables_count || 1,
+        notes || '',
+        website || '',
+        organization_id || null
+      ]
+    );
+
+    const client = await getAsync('SELECT * FROM clients WHERE id = ?', [result.lastID]);
+    client.active_projects = JSON.parse(client.active_projects || '[]');
+    broadcast({ type: 'CLIENT_CREATED', client });
+    res.status(201).json(client);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/v1/clients/:id', authMiddleware, async (req, res) => {
+  try {
+    const updates = [];
+    const params = [];
+
+    const fields = [
+      'name', 'code', 'company', 'industry', 'contact_name', 'contact_email',
+      'contact_phone', 'avatar', 'status', 'contract_value', 'tier',
+      'lead_owner', 'lead_avatar', 'deliverables_count', 'notes', 'website'
+    ];
+
+    fields.forEach(f => {
+      if (req.body[f] !== undefined) {
+        updates.push(`${f} = ?`);
+        params.push(req.body[f]);
+      }
+    });
+
+    if (req.body.active_projects !== undefined) {
+      updates.push('active_projects = ?');
+      params.push(JSON.stringify(req.body.active_projects));
+    }
+
+    if (updates.length > 0) {
+      params.push(req.params.id);
+      await runAsync(`UPDATE clients SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, params);
+    }
+
+    const client = await getAsync('SELECT * FROM clients WHERE id = ?', [req.params.id]);
+    if (!client) return res.status(404).json({ error: 'Client not found' });
+    client.active_projects = JSON.parse(client.active_projects || '[]');
+    broadcast({ type: 'CLIENT_UPDATED', client });
+    res.json(client);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/v1/clients/:id', authMiddleware, async (req, res) => {
+  try {
+    await runAsync('DELETE FROM clients WHERE id = ?', [req.params.id]);
+    broadcast({ type: 'CLIENT_DELETED', id: req.params.id });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });

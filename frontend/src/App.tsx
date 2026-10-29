@@ -56,7 +56,9 @@ import {
   Boxes,
   ExternalLink,
   Target,
-  Gauge
+  Gauge,
+  Phone,
+  Award
 } from 'lucide-react';
 
 const API_BASE = 'http://localhost:3001/api/v1';
@@ -326,6 +328,111 @@ export interface ProductMetrics {
   openBugs: number;
   totalMilestones: number;
 }
+
+export interface ClientItem {
+  id: string;
+  name: string;
+  code: string;
+  company: string;
+  industry: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  avatar: string;
+  status: 'Active' | 'In Negotiation' | 'Onboarding' | 'Retainer' | 'Completed';
+  contract_value: string;
+  tier: 'Enterprise' | 'Retainer' | 'Growth' | 'Standard';
+  lead_owner: string;
+  lead_avatar: string;
+  active_projects: string[];
+  deliverables_count: number;
+  notes: string;
+  website: string;
+  organization_id?: number | string;
+}
+
+const INITIAL_CLIENTS: ClientItem[] = [
+  {
+    id: 'cl-1',
+    name: 'Nexus Dynamics Group',
+    code: 'CL-01',
+    company: 'Nexus Dynamics Corp.',
+    industry: 'Enterprise Software & Cloud',
+    contact_name: 'Elena Rostova',
+    contact_email: 'elena.rostova@nexusdynamics.io',
+    contact_phone: '+1 (555) 349-1029',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop',
+    status: 'Active',
+    contract_value: '$120,000',
+    tier: 'Enterprise',
+    lead_owner: 'Mason Walker',
+    lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    active_projects: ['Brand & Marketing Ops', 'Client Deliverables'],
+    deliverables_count: 8,
+    notes: 'Priority enterprise retainer. Quarterly security audit & design system refresh due in Q3.',
+    website: 'https://nexusdynamics.io'
+  },
+  {
+    id: 'cl-2',
+    name: 'Starlight Media Studios',
+    code: 'CL-02',
+    company: 'Starlight Interactive Ltd.',
+    industry: 'Streaming & Digital Entertainment',
+    contact_name: 'Marcus Vance',
+    contact_email: 'm.vance@starlightstudios.com',
+    contact_phone: '+1 (555) 782-9901',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+    status: 'Retainer',
+    contract_value: '$85,000',
+    tier: 'Retainer',
+    lead_owner: 'Sofia Delgado',
+    lead_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
+    active_projects: ['Client Deliverables'],
+    deliverables_count: 5,
+    notes: 'Ongoing monthly retainer for digital streaming portal UI and mobile companion apps.',
+    website: 'https://starlightstudios.com'
+  },
+  {
+    id: 'cl-3',
+    name: 'Aetheria Health Systems',
+    code: 'CL-03',
+    company: 'Aetheria Health LLC',
+    industry: 'Biotech & HealthTech',
+    contact_name: 'Dr. Aris Chen',
+    contact_email: 'aris.chen@aetheriahealth.org',
+    contact_phone: '+1 (555) 412-8820',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop',
+    status: 'Onboarding',
+    contract_value: '$94,000',
+    tier: 'Growth',
+    lead_owner: 'Julian Thorne',
+    lead_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop',
+    active_projects: ['Internal Research & Labs'],
+    deliverables_count: 3,
+    notes: 'New account completing HIPAA compliant data telemetry and clinician dashboard onboarding.',
+    website: 'https://aetheriahealth.org'
+  },
+  {
+    id: 'cl-4',
+    name: 'Solaria FinTech Capital',
+    code: 'CL-04',
+    company: 'Solaria Ventures Inc.',
+    industry: 'Decentralized Finance & Asset Management',
+    contact_name: 'Liam Sterling',
+    contact_email: 'liam@solariacapital.com',
+    contact_phone: '+1 (555) 902-1244',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop',
+    status: 'Active',
+    contract_value: '$165,000',
+    tier: 'Enterprise',
+    lead_owner: 'Mason Walker',
+    lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+    active_projects: ['Client Deliverables', 'Brand & Marketing Ops'],
+    deliverables_count: 12,
+    notes: 'Tier-1 client. Automated high-frequency clearing portal and executive investor dossiers.',
+    website: 'https://solariacapital.com'
+  }
+];
 
 export interface ProductItem {
   id: string;
@@ -1117,13 +1224,34 @@ export default function App() {
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
   });
 
-  const [activeTab, setActiveTab] = useState<'board' | 'schedule' | 'notes' | 'reports' | 'team' | 'products'>('board');
+  const [activeTab, setActiveTab] = useState<'board' | 'schedule' | 'notes' | 'reports' | 'team' | 'products' | 'clients'>('board');
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
   const [schedules, setSchedules] = useState<ScheduleItem[]>(INITIAL_SCHEDULE);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(INITIAL_TEAM);
   const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
+  const [clients, setClients] = useState<ClientItem[]>(INITIAL_CLIENTS);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Clients Page State & Modals
+  const [selectedClient, setSelectedClient] = useState<ClientItem | null>(null);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [clientStatusFilter, setClientStatusFilter] = useState('All');
+  const [clientTierFilter, setClientTierFilter] = useState('All');
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientCode, setNewClientCode] = useState('');
+  const [newClientCompany, setNewClientCompany] = useState('');
+  const [newClientIndustry, setNewClientIndustry] = useState('Technology');
+  const [newClientContactName, setNewClientContactName] = useState('');
+  const [newClientContactEmail, setNewClientContactEmail] = useState('');
+  const [newClientContactPhone, setNewClientContactPhone] = useState('');
+  const [newClientStatus, setNewClientStatus] = useState<'Active' | 'In Negotiation' | 'Onboarding' | 'Retainer' | 'Completed'>('Active');
+  const [newClientValue, setNewClientValue] = useState('$50,000');
+  const [newClientTier, setNewClientTier] = useState<'Enterprise' | 'Retainer' | 'Growth' | 'Standard'>('Standard');
+  const [newClientLead, setNewClientLead] = useState('Mason Walker');
+  const [newClientNotes, setNewClientNotes] = useState('');
+  const [newClientWebsite, setNewClientWebsite] = useState('');
 
   // Products Page & Multi-Product Board Filtering State
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
@@ -1584,6 +1712,36 @@ export default function App() {
             metrics: d.metrics || { completionRate: 50, openBugs: 0, totalMilestones: 4 }
           }));
           setProducts(apiProducts);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE}/clients`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          const apiClients: ClientItem[] = data.map((d: any) => ({
+            id: `cl-${d.id}`,
+            name: d.name,
+            code: d.code,
+            company: d.company || d.name,
+            industry: d.industry || 'Technology',
+            contact_name: d.contact_name || '',
+            contact_email: d.contact_email || '',
+            contact_phone: d.contact_phone || '',
+            avatar: d.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop',
+            status: d.status || 'Active',
+            contract_value: d.contract_value || '$50,000',
+            tier: d.tier || 'Standard',
+            lead_owner: d.lead_owner || 'Mason Walker',
+            lead_avatar: d.lead_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+            active_projects: Array.isArray(d.active_projects) ? d.active_projects : ['Client Deliverables'],
+            deliverables_count: d.deliverables_count || 1,
+            notes: d.notes || '',
+            website: d.website || '',
+            organization_id: d.organization_id
+          }));
+          setClients(apiClients);
         }
       })
       .catch(() => {});
@@ -4241,6 +4399,7 @@ export default function App() {
             {[
               { id: 'board' as const, label: 'Kanban Boards', shortLabel: 'Boards', count: currentOrgTasks.length },
               { id: 'products' as const, label: 'Products & Deliverables', shortLabel: 'Products', count: currentOrgProducts.length },
+              { id: 'clients' as const, label: 'Client Accounts', shortLabel: 'Clients', count: clients.length },
               { id: 'schedule' as const, label: 'Schedule & Timeline', shortLabel: 'Timeline', count: currentOrgSchedules.length },
               { id: 'notes' as const, label: 'Dossier Notes', shortLabel: 'Notes', count: currentOrgNotes.length },
               { id: 'reports' as const, label: 'Activity Logs', shortLabel: 'Logs' },
@@ -4365,13 +4524,23 @@ export default function App() {
                   </span>
                 </button>
                 <button
-                  onClick={() => setActiveTab('team')}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E] transition-all"
+                  onClick={() => setActiveTab('clients')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    activeTab === 'clients'
+                      ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
+                      : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
+                  }`}
                 >
                   <div className="flex items-center space-x-2.5">
                     <Briefcase className="w-4 h-4 text-[#756A5E]" />
                     <span>Clients</span>
                   </div>
+                  <span className="flex items-center space-x-1">
+                    <span className="px-1.5 py-0.2 text-[10px] rounded-full font-bold bg-[#DCD1BC] text-[#554C42]">
+                      {clients.length}
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#9C9081]" />
+                  </span>
                 </button>
               </nav>
             </div>
@@ -6475,7 +6644,283 @@ export default function App() {
             );
           })()}
 
-          {/* VIEW 6: PRODUCTS & DELIVERABLES CATALOG (Tactile Vintage Aesthetic) */}
+          {/* VIEW 7: CLIENT ACCOUNTS & DOSSIERS (Tactile Archival Client Management) */}
+          {activeTab === 'clients' && (
+            <div className="space-y-4 sm:space-y-6">
+              {/* Top Header & Search Bar */}
+              <div className="flex flex-col md:flex-row md:items-start justify-between pb-3 sm:pb-4 border-b border-[#E5DBCA] gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F4E9D5] text-[#8A4A1C] border border-[#DFD1B8]">
+                      Client Relations & Accounts
+                    </span>
+                    <span className="text-xs text-[#7B7062]">
+                      • {clients.length} Active Client Dossiers
+                    </span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
+                    <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-[#756A5E] shrink-0" />
+                    <span>Client Accounts & Dossiers</span>
+                  </h1>
+                  <p className="text-xs text-[#7B7062] mt-0.5 max-w-xl">
+                    Manage key agency clients, enterprise retainers, contact persons, active deliverables, and contract scopes.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+                  {/* Search */}
+                  <div className="relative flex-1 sm:flex-initial">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8C7E6C]" />
+                    <input
+                      type="text"
+                      placeholder="Search clients..."
+                      value={clientSearchQuery}
+                      onChange={(e) => setClientSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2 bg-white/90 border border-[#DCD1BC] rounded-xl text-xs text-[#2A231D] placeholder-[#A09383] focus:outline-none focus:border-[#8C7E6C] focus:bg-white sm:w-56 shadow-xs transition-all"
+                    />
+                  </div>
+
+                  {/* Add Client Button */}
+                  <button
+                    onClick={() => {
+                      setNewClientName('');
+                      setNewClientCompany('');
+                      setNewClientContactName('');
+                      setNewClientContactEmail('');
+                      setNewClientContactPhone('');
+                      setNewClientValue('$50,000');
+                      setNewClientNotes('');
+                      setNewClientWebsite('');
+                      setIsNewClientModalOpen(true);
+                    }}
+                    className="flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-all active:scale-95 shrink-0 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>New Client Dossier</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Summary Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Total Accounts</span>
+                    <Building2 className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">{clients.length}</p>
+                  <p className="text-[9px] sm:text-[10px] text-emerald-700 font-bold mt-0.5 truncate">
+                    {clients.filter(c => c.status === 'Active' || c.status === 'Retainer').length} active partnerships
+                  </p>
+                </div>
+
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Active Retainers</span>
+                    <Clock className="w-3.5 h-3.5 text-blue-600" />
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">
+                    {clients.filter(c => c.tier === 'Retainer' || c.status === 'Retainer').length}
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] text-[#7A6F62] mt-0.5 truncate">Monthly recurring scope</p>
+                </div>
+
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Enterprise Tier</span>
+                    <Award className="w-3.5 h-3.5 text-purple-600" />
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">
+                    {clients.filter(c => c.tier === 'Enterprise').length}
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] text-purple-800 font-semibold mt-0.5 truncate">Key Strategic Partners</p>
+                </div>
+
+                <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-xs">
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-[#7A6F62] font-semibold mb-1">
+                    <span>Pipeline Onboarding</span>
+                    <Users className="w-3.5 h-3.5 text-amber-600" />
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">
+                    {clients.filter(c => c.status === 'Onboarding' || c.status === 'In Negotiation').length}
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] text-amber-800 font-semibold mt-0.5 truncate">New client setup in flight</p>
+                </div>
+              </div>
+
+              {/* Status & Tier Filter Tabs */}
+              <div className="bg-[#FAF6EE] border border-[#DCD1BC] p-3 rounded-xl sm:rounded-2xl space-y-2.5">
+                <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  <span className="text-[10px] font-bold text-[#8C7E6C] uppercase shrink-0 mr-1">Status:</span>
+                  {['All', 'Active', 'Retainer', 'Onboarding', 'In Negotiation', 'Completed'].map(st => (
+                    <button
+                      key={st}
+                      onClick={() => setClientStatusFilter(st)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                        clientStatusFilter === st
+                          ? 'bg-[#2E2721] text-[#FAF6EE] shadow-2xs font-bold'
+                          : 'bg-white/80 hover:bg-white text-[#635547] border border-[#DCD1BC]'
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 border-t border-[#E8DEC9] pt-2">
+                  <span className="text-[10px] font-bold text-[#8C7E6C] uppercase shrink-0 mr-1">Tier:</span>
+                  {['All', 'Enterprise', 'Retainer', 'Growth', 'Standard'].map(tr => (
+                    <button
+                      key={tr}
+                      onClick={() => setClientTierFilter(tr)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+                        clientTierFilter === tr
+                          ? 'bg-[#3F3730] text-[#FAF6EE]'
+                          : 'bg-white/70 hover:bg-white text-[#635547] border border-[#E3D9C8]'
+                      }`}
+                    >
+                      {tr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clients Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {clients
+                  .filter(c => {
+                    const matchQuery =
+                      c.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+                      c.company.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+                      c.industry.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+                      c.contact_name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+                      c.code.toLowerCase().includes(clientSearchQuery.toLowerCase());
+                    const matchStatus = clientStatusFilter === 'All' || c.status === clientStatusFilter;
+                    const matchTier = clientTierFilter === 'All' || c.tier === clientTierFilter;
+                    return matchQuery && matchStatus && matchTier;
+                  })
+                  .map(client => {
+                    return (
+                      <div
+                        key={client.id}
+                        onClick={() => setSelectedClient(client)}
+                        className="bg-[#FAF6EE] border border-[#D5CABB] hover:border-[#8C7E6C] rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+                      >
+                        {/* Manila Folder Subtle Top Indicator */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-[#D5CABB] group-hover:bg-[#8C7E6C] transition-colors" />
+
+                        <div>
+                          {/* Top Tag Badges */}
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <span className="font-mono text-[10px] font-black text-[#5C4F41] bg-[#EAE0CF] px-2 py-0.5 rounded border border-[#D5CABB]">
+                              {client.code}
+                            </span>
+                            <div className="flex items-center space-x-1.5">
+                              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                                client.tier === 'Enterprise'
+                                  ? 'bg-purple-100 text-purple-800 border-purple-200'
+                                  : client.tier === 'Retainer'
+                                  ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                  : 'bg-[#EAE0CF] text-[#5C4F41] border-[#D5CABB]'
+                              }`}>
+                                {client.tier}
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                client.status === 'Active'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : client.status === 'Retainer'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : client.status === 'Onboarding'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-zinc-100 text-zinc-700'
+                              }`}>
+                                {client.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Client Name & Company */}
+                          <div className="flex items-start space-x-3 mb-3">
+                            <img
+                              src={client.avatar}
+                              alt={client.name}
+                              className="w-11 h-11 rounded-xl object-cover border border-[#DCD1BC] shrink-0 shadow-2xs"
+                            />
+                            <div className="min-w-0">
+                              <h3 className="text-base font-black text-[#26201A] tracking-tight group-hover:underline truncate">
+                                {client.name}
+                              </h3>
+                              <p className="text-xs text-[#7A6F62] truncate font-medium">
+                                {client.company}
+                              </p>
+                              <span className="text-[10px] font-semibold text-[#8C7E6C] uppercase tracking-wider block mt-0.5">
+                                {client.industry}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Primary Contact Person Box */}
+                          <div className="bg-[#F4ECE1] p-3 rounded-xl border border-[#DFD4C2] mb-3 space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-[#7A6F62] font-semibold">Primary Contact:</span>
+                              <span className="font-bold text-[#2A231D]">{client.contact_name}</span>
+                            </div>
+                            <div className="text-[11px] text-[#635547] flex items-center space-x-1.5 truncate">
+                              <Mail className="w-3 h-3 text-[#8C7E6C] shrink-0" />
+                              <span className="truncate">{client.contact_email}</span>
+                            </div>
+                            {client.contact_phone && (
+                              <div className="text-[11px] text-[#635547] flex items-center space-x-1.5 truncate">
+                                <Phone className="w-3 h-3 text-[#8C7E6C] shrink-0" />
+                                <span className="truncate">{client.contact_phone}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Active Projects Tags */}
+                          <div className="mb-3">
+                            <span className="text-[10px] font-bold text-[#8C7E6C] uppercase tracking-wider block mb-1">
+                              Assigned Dossiers:
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {client.active_projects.map((proj, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/80 text-[#43392E] border border-[#D5CABB]"
+                                >
+                                  {proj}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Card Bottom: Contract Value & Account Lead */}
+                        <div className="pt-3 border-t border-[#E5DBCA] flex items-center justify-between text-xs mt-2">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#8C7E6C] block uppercase">Scope Value</span>
+                            <span className="text-sm font-black text-[#26201A] font-mono">{client.contract_value}</span>
+                          </div>
+
+                          <div className="flex items-center space-x-2 text-right">
+                            <div>
+                              <span className="text-[9px] font-bold text-[#8C7E6C] block uppercase">Lead</span>
+                              <span className="text-xs font-bold text-[#3B322A]">{client.lead_owner}</span>
+                            </div>
+                            <img
+                              src={client.lead_avatar}
+                              alt={client.lead_owner}
+                              className="w-6 h-6 rounded-full object-cover border border-[#D5CABB] shadow-2xs"
+                              title={`Account Lead: ${client.lead_owner}`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
           {activeTab === 'products' && (
             <div className="space-y-4 sm:space-y-6">
               {/* Top Action Header */}
@@ -8337,7 +8782,387 @@ export default function App() {
         );
       })()}
 
-      {/* New Product Dossier Modal */}
+      {/* New Client Dossier Modal */}
+      {isNewClientModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden p-6 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8DEC9] mb-4">
+              <div className="flex items-center space-x-2">
+                <Briefcase className="w-5 h-5 text-[#8C7E6C]" />
+                <h3 className="text-lg font-bold text-[#2A231D]">New Client Dossier</h3>
+              </div>
+              <button
+                onClick={() => setIsNewClientModalOpen(false)}
+                className="p-1.5 rounded-lg text-[#7C6F61] hover:bg-[#EAE0CD]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newClientName.trim()) return;
+
+                const clientPayload = {
+                  name: newClientName.trim(),
+                  code: newClientCode.trim() || `CL-${Math.floor(10 + Math.random() * 90)}`,
+                  company: newClientCompany.trim() || newClientName.trim(),
+                  industry: newClientIndustry.trim() || 'Technology',
+                  contact_name: newClientContactName.trim() || 'Primary Contact',
+                  contact_email: newClientContactEmail.trim() || 'contact@client.com',
+                  contact_phone: newClientContactPhone.trim() || '+1 (555) 000-0000',
+                  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop',
+                  status: newClientStatus,
+                  contract_value: newClientValue.trim() || '$50,000',
+                  tier: newClientTier,
+                  lead_owner: newClientLead,
+                  lead_avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop',
+                  active_projects: ['Client Deliverables'],
+                  deliverables_count: 1,
+                  notes: newClientNotes.trim() || 'Account dossier initialized.',
+                  website: newClientWebsite.trim() || '',
+                  organization_id: currentOrg.id.replace('org-', '')
+                };
+
+                const optimisticClient: ClientItem = {
+                  id: `cl-${Date.now()}`,
+                  ...clientPayload,
+                  organization_id: currentOrg.id
+                };
+
+                setClients(prev => [optimisticClient, ...prev]);
+                setIsNewClientModalOpen(false);
+
+                try {
+                  const res = await fetch(`${API_BASE}/clients`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(clientPayload)
+                  });
+                  if (res.ok) {
+                    const saved = await res.json();
+                    setClients(prev => prev.map(c => c.id === optimisticClient.id ? { ...saved, id: `cl-${saved.id}` } : c));
+                  }
+                } catch (err) {
+                  console.error('Failed to save client:', err);
+                }
+              }}
+              className="space-y-3.5"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Client Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Acme Global"
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Dossier Code
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. CL-05"
+                    value={newClientCode}
+                    onChange={(e) => setNewClientCode(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Company Legal Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Acme Corp Ltd."
+                    value={newClientCompany}
+                    onChange={(e) => setNewClientCompany(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Industry Domain
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. FinTech / SaaS"
+                    value={newClientIndustry}
+                    onChange={(e) => setNewClientIndustry(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                  />
+                </div>
+              </div>
+
+              {/* Contact Person Details */}
+              <div className="p-3 bg-[#F4ECE1] rounded-xl border border-[#DFD4C2] space-y-2.5">
+                <span className="text-[10px] font-bold text-[#7A6E60] uppercase block">
+                  Primary Contact Person
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Contact Name"
+                    value={newClientContactName}
+                    onChange={(e) => setNewClientContactName(e.target.value)}
+                    className="px-2.5 py-1.5 bg-white border border-[#D5CABB] rounded-lg text-xs text-[#2A231D]"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Contact Email"
+                    value={newClientContactEmail}
+                    onChange={(e) => setNewClientContactEmail(e.target.value)}
+                    className="px-2.5 py-1.5 bg-white border border-[#D5CABB] rounded-lg text-xs text-[#2A231D]"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Contact Phone"
+                    value={newClientContactPhone}
+                    onChange={(e) => setNewClientContactPhone(e.target.value)}
+                    className="px-2.5 py-1.5 bg-white border border-[#D5CABB] rounded-lg text-xs text-[#2A231D]"
+                  />
+                </div>
+              </div>
+
+              {/* Status, Tier, and Contract Scope */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Partnership Tier
+                  </label>
+                  <select
+                    value={newClientTier}
+                    onChange={(e) => setNewClientTier(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D]"
+                  >
+                    <option value="Enterprise">Enterprise</option>
+                    <option value="Retainer">Retainer</option>
+                    <option value="Growth">Growth</option>
+                    <option value="Standard">Standard</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={newClientStatus}
+                    onChange={(e) => setNewClientStatus(e.target.value as any)}
+                    className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D]"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Retainer">Retainer</option>
+                    <option value="Onboarding">Onboarding</option>
+                    <option value="In Negotiation">In Negotiation</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                    Contract Value
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="$120,000"
+                    value={newClientValue}
+                    onChange={(e) => setNewClientValue(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                  Account Lead
+                </label>
+                <select
+                  value={newClientLead}
+                  onChange={(e) => setNewClientLead(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D]"
+                >
+                  {teamMembers.map(m => (
+                    <option key={m.id} value={m.name}>{m.name} ({m.role})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                  Dossier Notes & Retainer Scope
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Key milestones, SLA details, and account background..."
+                  value={newClientNotes}
+                  onChange={(e) => setNewClientNotes(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D]"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNewClientModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl text-[#6B5E4F] hover:bg-[#EAE0CD]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2B231D] text-[#FAF6EE] hover:bg-[#433931]"
+                >
+                  Create Client Dossier
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Client Detail View Modal */}
+      {selectedClient && (
+        <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden p-6 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between pb-4 border-b border-[#E8DEC9] mb-4">
+              <div className="flex items-start space-x-3.5">
+                <img
+                  src={selectedClient.avatar}
+                  alt={selectedClient.name}
+                  className="w-14 h-14 rounded-2xl object-cover border border-[#DCD1BC] shadow-xs"
+                />
+                <div>
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="font-mono text-[10px] font-black text-[#5C4F41] bg-[#EAE0CF] px-2 py-0.5 rounded border border-[#D5CABB]">
+                      {selectedClient.code}
+                    </span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                      {selectedClient.tier}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      {selectedClient.status}
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black text-[#26201A]">{selectedClient.name}</h2>
+                  <p className="text-xs text-[#7A6F62] font-medium">{selectedClient.company} • {selectedClient.industry}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedClient(null)}
+                className="p-1.5 rounded-lg text-[#7C6F61] hover:bg-[#EAE0CD]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Primary Contact & Scope */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[#F4ECE1] p-3.5 rounded-xl border border-[#DFD4C2] space-y-1">
+                  <span className="text-[10px] font-bold text-[#7A6F62] uppercase block">Direct Contact</span>
+                  <p className="font-bold text-[#2A231D] text-sm">{selectedClient.contact_name}</p>
+                  <p className="text-[#635547] flex items-center space-x-1.5 pt-0.5">
+                    <Mail className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                    <span>{selectedClient.contact_email}</span>
+                  </p>
+                  {selectedClient.contact_phone && (
+                    <p className="text-[#635547] flex items-center space-x-1.5">
+                      <Phone className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                      <span>{selectedClient.contact_phone}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="bg-[#F4ECE1] p-3.5 rounded-xl border border-[#DFD4C2] space-y-1">
+                  <span className="text-[10px] font-bold text-[#7A6F62] uppercase block">Engagement Scope</span>
+                  <div className="flex items-baseline space-x-2">
+                    <span className="text-xl font-black font-mono text-[#26201A]">{selectedClient.contract_value}</span>
+                    <span className="text-[10px] font-bold text-emerald-700">Contract Value</span>
+                  </div>
+                  <div className="flex items-center space-x-2 pt-1">
+                    <img
+                      src={selectedClient.lead_avatar}
+                      alt={selectedClient.lead_owner}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                    <span className="text-[#635547]">Lead: <strong className="text-[#2A231D]">{selectedClient.lead_owner}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dossier Notes */}
+              <div>
+                <span className="text-[10px] font-bold text-[#7A6F62] uppercase block mb-1">
+                  Dossier Notes & Scope Specs
+                </span>
+                <p className="p-3 bg-white/80 rounded-xl border border-[#D5CABB] text-[#43392E] leading-relaxed">
+                  {selectedClient.notes || 'No confidential dossier notes recorded.'}
+                </p>
+              </div>
+
+              {/* Active Assigned Dossiers */}
+              <div>
+                <span className="text-[10px] font-bold text-[#7A6F62] uppercase block mb-1.5">
+                  Assigned Project Dossiers
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {selectedClient.active_projects.map((proj, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 rounded-lg bg-white border border-[#D5CABB] font-bold text-[#3B322A] flex items-center space-x-1.5 shadow-2xs"
+                    >
+                      <Folder className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{proj}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-[#E8DEC9] flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const confirmDel = window.confirm(`Remove client dossier for "${selectedClient.name}"?`);
+                    if (!confirmDel) return;
+                    setClients(prev => prev.filter(c => c.id !== selectedClient.id));
+                    setSelectedClient(null);
+                    try {
+                      const numId = selectedClient.id.replace('cl-', '');
+                      await fetch(`${API_BASE}/clients/${numId}`, { method: 'DELETE' });
+                    } catch (err) {
+                      console.error('Delete failed:', err);
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs font-bold rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
+                >
+                  Delete Dossier
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedClient(null)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#2B231D] text-[#FAF6EE] hover:bg-[#433931]"
+                >
+                  Close Dossier
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {isNewProductModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden pb-8 sm:pb-6 max-h-[88vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
