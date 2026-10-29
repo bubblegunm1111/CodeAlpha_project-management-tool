@@ -63,7 +63,9 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:3001/api/v1';
+const API_BASE = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${window.location.hostname}:3001/api/v1`
+  : 'http://localhost:3001/api/v1';
 
 export type CardColor = 'blue' | 'peach' | 'purple' | 'mint' | 'coral' | 'canary';
 
