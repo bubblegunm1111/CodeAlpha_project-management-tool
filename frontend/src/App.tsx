@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   Calendar as CalendarIcon,
@@ -168,6 +168,127 @@ export interface TaskFolder {
   color: CardColor;
   status: string;
   tasksCount?: number;
+}
+
+// Archival Select Dropdown option interface and component
+interface ArchivalOption<T extends string | number = string> {
+  value: T;
+  label: string;
+  icon?: React.ReactNode;
+  badge?: string;
+  sublabel?: string;
+}
+
+interface ArchivalSelectProps<T extends string | number = string> {
+  value: T;
+  onChange: (value: T) => void;
+  options: ArchivalOption<T>[];
+  placeholder?: string;
+  className?: string;
+  buttonClassName?: string;
+  menuClassName?: string;
+  title?: string;
+}
+
+function ArchivalSelect<T extends string | number = string>({
+  value,
+  onChange,
+  options,
+  placeholder = 'Select option',
+  className = '',
+  buttonClassName = '',
+  menuClassName = '',
+  title
+}: ArchivalSelectProps<T>) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className={`relative ${className}`}>
+      <button
+        type="button"
+        title={title}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full bg-[#FAF6EE] border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3 py-2 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all active:scale-[0.99] touch-target ${
+          isOpen ? 'ring-2 ring-[#2E2721]/20 border-[#2E2721]' : ''
+        } ${buttonClassName}`}
+      >
+        <div className="flex items-center space-x-2 truncate mr-1.5">
+          {selectedOption?.icon && (
+            <span className="shrink-0">{selectedOption.icon}</span>
+          )}
+          <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+          {selectedOption?.badge && (
+            <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-[#E8DEC9] text-[#554A3E] shrink-0">
+              {selectedOption.badge}
+            </span>
+          )}
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 text-[#8C7E6C] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div
+          className={`absolute left-0 right-0 top-full mt-1.5 bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar ${menuClassName}`}
+        >
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all text-left mb-0.5 last:mb-0 ${
+                  isSelected
+                    ? 'bg-[#2E2721] text-[#FAF6EE] font-bold shadow-2xs'
+                    : 'text-[#3E342B] hover:bg-[#EAE0CF] font-medium'
+                }`}
+              >
+                <div className="flex items-center space-x-2 truncate mr-2">
+                  {opt.icon && <span className="shrink-0">{opt.icon}</span>}
+                  <div className="truncate">
+                    <span className="truncate block">{opt.label}</span>
+                    {opt.sublabel && (
+                      <span className={`text-[10px] block truncate ${isSelected ? 'text-[#DCD1BC]' : 'text-[#8C7E6C]'}`}>
+                        {opt.sublabel}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1 shrink-0 ml-1">
+                  {opt.badge && (
+                    <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-[#FAF6EE]' : 'bg-[#E8DEC9] text-[#554A3E]'}`}>
+                      {opt.badge}
+                    </span>
+                  )}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#FAF6EE] ml-1 shrink-0" />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export interface ProductFeature {
@@ -3422,11 +3543,11 @@ export default function App() {
 
           {/* Org Selector & Controls */}
           <div className="flex items-center flex-wrap gap-2 sm:gap-3">
-            <div className="relative flex-1 sm:flex-initial min-w-[140px]">
-              <select
+            <div className="relative flex-1 sm:flex-initial min-w-[170px]">
+              <ArchivalSelect
                 value={currentOrg.id}
-                onChange={(e) => {
-                  const found = organizations.find(o => o.id === e.target.value);
+                onChange={(val) => {
+                  const found = organizations.find(o => o.id === val);
                   if (found) {
                     setCurrentOrg(found);
                     if (found.folders && found.folders.length > 0) {
@@ -3434,14 +3555,13 @@ export default function App() {
                     }
                   }
                 }}
-                className="w-full pl-3 pr-8 py-1.5 text-xs font-bold bg-[#FAF6EE] border border-[#D5CABB] rounded-lg text-[#2C2621] focus:outline-none cursor-pointer shadow-xs"
-              >
-                {organizations.map(org => (
-                  <option key={org.id} value={org.id}>
-                    🏢 {org.name}
-                  </option>
-                ))}
-              </select>
+                options={organizations.map(org => ({
+                  value: org.id,
+                  label: org.name,
+                  icon: <Building2 className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                }))}
+                title="Select Active Organization"
+              />
             </div>
 
             <button
@@ -4085,21 +4205,21 @@ export default function App() {
                   </div>
 
                   {/* Multi-Product Filter Dropdown */}
-                  <div className="relative flex-1 sm:flex-initial min-w-[140px]">
-                    <select
+                  <div className="relative flex-1 sm:flex-initial min-w-[170px]">
+                    <ArchivalSelect
                       value={boardProductFilter}
-                      onChange={(e) => setBoardProductFilter(e.target.value)}
-                      className="w-full appearance-none bg-[#EFE8DC] border border-[#DCD1BC] hover:border-[#8C7E6C] rounded-xl px-2.5 sm:px-3 py-2 pr-7 text-xs font-bold text-[#2C241E] focus:outline-none shadow-xs cursor-pointer transition-all"
+                      onChange={(val) => setBoardProductFilter(val)}
+                      options={[
+                        { value: 'all', label: `All Products (${tasks.length})`, icon: <Boxes className="w-3.5 h-3.5 text-[#8C7E6C]" /> },
+                        ...products.map(p => ({
+                          value: p.name,
+                          label: p.name,
+                          badge: p.code,
+                          icon: <Package className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                        }))
+                      ]}
                       title="Filter board by specific product deliverable"
-                    >
-                      <option value="all">📦 All Products ({tasks.length})</option>
-                      {products.map(p => (
-                        <option key={p.id} value={p.name}>
-                          {p.code} • {p.name}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-[#7A6D5E] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    />
                   </div>
 
                   <button
@@ -4484,7 +4604,7 @@ export default function App() {
                         key={z}
                         onClick={() => {
                           setTimelineZoom(z);
-                          setNotifications(prev => [{ id: Date.now(), text: `Switched calendar scope to ${z} view`, time: 'Just now' }, ...prev]);
+                          setNotifications(prev => [{ id: Date.now(), text: `Switched calendar & Gantt scope to ${z} view`, time: 'Just now' }, ...prev]);
                         }}
                         className={`px-3 py-1 rounded-lg transition-all ${
                           timelineZoom === z
@@ -4542,49 +4662,127 @@ export default function App() {
               </div>
 
               {/* TIMELINE / GANTT VIEW MODE (Matches Screenshot 2) */}
-              {timelineViewMode === 'gantt' && (
+              {timelineViewMode === 'gantt' && (() => {
+                // Dynamic time unit headers and grid calculations based on timelineZoom
+                const curr = new Date(calendarSelectedDate);
+                const year = curr.getFullYear();
+                const month = curr.getMonth();
+
+                type TimelineUnit = {
+                  label: string;
+                  sublabel: string;
+                  dateStart: Date;
+                  dateEnd: Date;
+                  isCurrent: boolean;
+                };
+
+                let units: TimelineUnit[] = [];
+                let gridTemplateClass = 'grid-cols-7';
+                let bgSizePercent = '14.285%';
+
+                if (timelineZoom === 'Week') {
+                  const first = curr.getDate() - curr.getDay(); // Sunday
+                  const today = new Date();
+                  gridTemplateClass = 'grid-cols-7';
+                  bgSizePercent = '14.285%';
+                  units = Array.from({ length: 7 }).map((_, idx) => {
+                    const d = new Date(curr.getFullYear(), curr.getMonth(), first + idx);
+                    const dStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+                    const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+                    const isToday =
+                      d.getDate() === today.getDate() &&
+                      d.getMonth() === today.getMonth() &&
+                      d.getFullYear() === today.getFullYear();
+                    return {
+                      label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                      sublabel: String(d.getDate()),
+                      dateStart: dStart,
+                      dateEnd: dEnd,
+                      isCurrent: isToday
+                    };
+                  });
+                } else if (timelineZoom === 'Month') {
+                  // Break Month down into 4 or 5 sprint weeks
+                  const daysCount = new Date(year, month + 1, 0).getDate();
+                  const numWeeks = Math.ceil(daysCount / 7);
+                  gridTemplateClass = numWeeks === 5 ? 'grid-cols-5' : 'grid-cols-4';
+                  bgSizePercent = `${(100 / numWeeks).toFixed(3)}%`;
+
+                  units = Array.from({ length: numWeeks }).map((_, idx) => {
+                    const startDay = idx * 7 + 1;
+                    const endDay = Math.min(daysCount, (idx + 1) * 7);
+                    const dStart = new Date(year, month, startDay, 0, 0, 0);
+                    const dEnd = new Date(year, month, endDay, 23, 59, 59);
+                    const isCurr = new Date() >= dStart && new Date() <= dEnd;
+                    return {
+                      label: `Wk ${idx + 1}`,
+                      sublabel: `${startDay} - ${endDay}`,
+                      dateStart: dStart,
+                      dateEnd: dEnd,
+                      isCurrent: isCurr
+                    };
+                  });
+                } else {
+                  // Quarter View: 3 Months of the active Quarter
+                  const quarter = Math.floor(month / 3);
+                  const qStartMonth = quarter * 3;
+                  gridTemplateClass = 'grid-cols-3';
+                  bgSizePercent = '33.333%';
+
+                  units = [0, 1, 2].map((offset) => {
+                    const m = qStartMonth + offset;
+                    const mDays = new Date(year, m + 1, 0).getDate();
+                    const dStart = new Date(year, m, 1, 0, 0, 0);
+                    const dEnd = new Date(year, m, mDays, 23, 59, 59);
+                    const isCurr = new Date() >= dStart && new Date() <= dEnd;
+                    const mName = dStart.toLocaleDateString('en-US', { month: 'short' });
+                    return {
+                      label: mName,
+                      sublabel: `Q${quarter + 1} • ${mDays}d`,
+                      dateStart: dStart,
+                      dateEnd: dEnd,
+                      isCurrent: isCurr
+                    };
+                  });
+                }
+
+                const rangeStartMs = units[0].dateStart.getTime();
+                const rangeEndMs = units[units.length - 1].dateEnd.getTime();
+                const totalRangeMs = Math.max(1, rangeEndMs - rangeStartMs);
+
+                return (
                 <div className="flex flex-col xl:flex-row items-start gap-5">
-                  {/* Left & Center: Phase Tree + Horizontal 7-Day Timeline Grid */}
+                  {/* Left & Center: Phase Tree + Horizontal Timeline Grid */}
                   <div className="flex-1 w-full bg-[#FAF6EE] rounded-2xl border border-[#D5CABB] shadow-sm overflow-x-auto">
                     <div className="min-w-[680px]">
-                    {/* Gantt Header: Left Phase label + 7 Days columns (Tue May 5 – Mon May 11) */}
+                    {/* Gantt Header: Left Phase label + Dynamic Zoom Columns */}
                     <div className="flex border-b border-[#DCD1BC] bg-[#EFE8DC] text-xs font-bold text-[#554A3D]">
                       <div className="w-72 sm:w-80 flex-shrink-0 px-4 py-3 border-r border-[#DCD1BC] flex items-center justify-between">
-                        <span className="uppercase tracking-wider text-[11px] text-[#7A6D5E]">Project Roadmap & Tasks</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="uppercase tracking-wider text-[11px] text-[#7A6D5E]">Project Roadmap & Tasks</span>
+                          <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded bg-[#2E2721] text-[#FAF6EE]">
+                            {timelineZoom}
+                          </span>
+                        </div>
                         <span className="text-[10px] bg-[#E2D8C6] px-2 py-0.5 rounded-md font-semibold text-[#665A4E]">
                           {schedules.length} Items
                         </span>
                       </div>
-                      <div className="flex-1 grid grid-cols-7 text-center">
-                        {(() => {
-                          const curr = new Date(calendarSelectedDate);
-                          const first = curr.getDate() - curr.getDay(); // Sunday
-                          const today = new Date();
-                          return Array.from({ length: 7 }).map((_, idx) => {
-                            const d = new Date(curr.getFullYear(), curr.getMonth(), first + idx);
-                            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-                            const dayNum = d.getDate();
-                            const isToday =
-                              d.getDate() === today.getDate() &&
-                              d.getMonth() === today.getMonth() &&
-                              d.getFullYear() === today.getFullYear();
-
-                            return (
-                              <div
-                                key={idx}
-                                onClick={() => setCalendarSelectedDate(d)}
-                                className={`py-2 px-1 border-r border-[#E2D8C6] last:border-r-0 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                                  isToday ? 'bg-[#E5DBC7]/60 font-black text-[#261E18]' : 'hover:bg-white/50 text-[#6D6153]'
-                                }`}
-                              >
-                                <span className="text-[10px] uppercase font-bold tracking-wider">{dayName}</span>
-                                <span className={`text-xs mt-0.5 ${isToday ? 'px-1.5 rounded-full bg-[#2E2721] text-[#FAF6EE]' : ''}`}>
-                                  {dayNum}
-                                </span>
-                              </div>
-                            );
-                          });
-                        })()}
+                      <div className={`flex-1 grid ${gridTemplateClass} text-center`}>
+                        {units.map((unit, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => setCalendarSelectedDate(unit.dateStart)}
+                            className={`py-2 px-1 border-r border-[#E2D8C6] last:border-r-0 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                              unit.isCurrent ? 'bg-[#E5DBC7]/60 font-black text-[#261E18]' : 'hover:bg-white/50 text-[#6D6153]'
+                            }`}
+                          >
+                            <span className="text-[10px] uppercase font-bold tracking-wider">{unit.label}</span>
+                            <span className={`text-xs mt-0.5 ${unit.isCurrent ? 'px-1.5 rounded-full bg-[#2E2721] text-[#FAF6EE]' : ''}`}>
+                              {unit.sublabel}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -4624,26 +4822,17 @@ export default function App() {
                               const style = getColorStyles(item.color);
                               const isSelected = selectedScheduleItem?.id === item.id;
 
-                              // Dynamic 7-day week span calculation based on calendarSelectedDate
-                              const curr = new Date(calendarSelectedDate);
-                              const sunday = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() - curr.getDay());
-                              const sundayMidnight = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate()).getTime();
-                              const msPerDay = 86400000;
-
                               const itemStart = item.startDate ? new Date(item.startDate + 'T00:00:00').getTime() : new Date((item.date || '2026-10-28') + 'T00:00:00').getTime();
-                              const itemEnd = item.endDate ? new Date(item.endDate + 'T00:00:00').getTime() : itemStart;
+                              const itemEnd = item.endDate ? new Date(item.endDate + 'T23:59:59').getTime() : (itemStart + 86400000 - 1);
 
-                              const rawStartDiff = Math.round((itemStart - sundayMidnight) / msPerDay);
-                              const rawEndDiff = Math.round((itemEnd - sundayMidnight) / msPerDay);
+                              // Clamp item inside active timeline zoom bounds
+                              const clampedStart = Math.max(rangeStartMs, Math.min(rangeEndMs, itemStart));
+                              const clampedEnd = Math.max(clampedStart, Math.min(rangeEndMs, itemEnd));
 
-                              // Clamp strictly to the visible 7-day grid [0, 6]
-                              const startIdx = Math.max(0, Math.min(6, rawStartDiff));
-                              const endIdx = Math.max(startIdx, Math.min(6, rawEndDiff));
-                              const spanDays = Math.max(1, endIdx - startIdx + 1);
+                              const leftPercent = Math.max(0, Math.min(95, ((clampedStart - rangeStartMs) / totalRangeMs) * 100));
+                              const widthPercent = Math.max(4, Math.min(100 - leftPercent, ((clampedEnd - clampedStart) / totalRangeMs) * 100));
 
-                              // Percentage placement inside the grid container
-                              const leftPercent = (startIdx / 7) * 100;
-                              const widthPercent = (spanDays / 7) * 100;
+                              const isVisibleInRange = itemEnd >= rangeStartMs && itemStart <= rangeEndMs;
 
                               const completedSubs = (item.subtasks || []).filter(st => st.completed).length;
                               const totalSubs = (item.subtasks || []).length;
@@ -4705,34 +4894,43 @@ export default function App() {
                                     </div>
                                   </div>
 
-                                  {/* Right: Gantt bar spanning calculated days */}
-                                  <div className="flex-1 relative py-2 px-1 bg-[linear-gradient(to_right,#EFE8DC_1px,transparent_1px)] bg-[size:14.285%_100%] min-h-[44px] flex items-center overflow-hidden">
-                                    <div
-                                      style={{
-                                        marginLeft: `${leftPercent}%`,
-                                        width: `calc(${widthPercent}% - 8px)`
-                                      }}
-                                      className={`h-9 rounded-2xl border px-2 sm:px-3 flex items-center justify-between shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
-                                        isSelected ? 'ring-2 ring-[#2E2721] shadow-md scale-[1.01]' : 'hover:shadow-sm hover:scale-[1.005]'
-                                      }`}
-                                    >
-                                      <div className="flex flex-col min-w-0 pr-1 sm:pr-2">
-                                        <span className="text-[11px] font-black tracking-tight truncate leading-tight">
-                                          {item.category || item.title}
-                                        </span>
-                                        <span className="text-[9px] font-bold opacity-75 truncate leading-tight">
-                                          {item.startDate ? `${new Date(item.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date((item.endDate || item.startDate) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : item.date}
-                                        </span>
+                                  {/* Right: Gantt bar spanning calculated days/weeks/months */}
+                                  <div
+                                    style={{ backgroundSize: `${bgSizePercent} 100%` }}
+                                    className="flex-1 relative py-2 px-1 bg-[linear-gradient(to_right,#EFE8DC_1px,transparent_1px)] min-h-[44px] flex items-center overflow-hidden"
+                                  >
+                                    {isVisibleInRange ? (
+                                      <div
+                                        style={{
+                                          marginLeft: `${leftPercent}%`,
+                                          width: `calc(${widthPercent}% - 6px)`
+                                        }}
+                                        className={`h-9 rounded-2xl border px-2 sm:px-3 flex items-center justify-between shadow-xs transition-all ${style.bg} ${style.border} ${style.textColor} ${
+                                          isSelected ? 'ring-2 ring-[#2E2721] shadow-md scale-[1.01]' : 'hover:shadow-sm hover:scale-[1.005]'
+                                        }`}
+                                      >
+                                        <div className="flex flex-col min-w-0 pr-1 sm:pr-2">
+                                          <span className="text-[11px] font-black tracking-tight truncate leading-tight">
+                                            {item.category || item.title}
+                                          </span>
+                                          <span className="text-[9px] font-bold opacity-75 truncate leading-tight">
+                                            {item.startDate ? `${new Date(item.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date((item.endDate || item.startDate) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : item.date}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center flex-shrink-0 ml-1">
+                                          <img
+                                            src={item.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
+                                            alt={item.assignee}
+                                            className="w-5 h-5 rounded-full border border-white object-cover shadow-xs shrink-0"
+                                            title={`Assigned: ${item.assignee}`}
+                                          />
+                                        </div>
                                       </div>
-                                      <div className="flex items-center flex-shrink-0 ml-1">
-                                        <img
-                                          src={item.assigneeAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop'}
-                                          alt={item.assignee}
-                                          className="w-5 h-5 rounded-full border border-white object-cover shadow-xs shrink-0"
-                                          title={`Assigned: ${item.assignee}`}
-                                        />
-                                      </div>
-                                    </div>
+                                    ) : (
+                                      <span className="text-[10px] text-[#A69989] italic px-3 select-none">
+                                        Scheduled outside active {timelineZoom.toLowerCase()} window
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               );
@@ -4946,7 +5144,8 @@ export default function App() {
                     </div>
                   )}
                 </div>
-              )}
+                );
+              })()}
 
               {/* CALENDAR & AGENDA VIEW MODE (Real-time Dynamic Calendar Grid) */}
               {timelineViewMode === 'calendar' && (() => {
@@ -5429,39 +5628,39 @@ export default function App() {
 
               {/* Filters Row */}
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="relative flex-1 sm:flex-initial min-w-[120px]">
-                  <select
+                <div className="relative flex-1 sm:flex-initial min-w-[140px]">
+                  <ArchivalSelect
                     value={teamRoleFilter}
-                    onChange={(e) => setTeamRoleFilter(e.target.value)}
-                    className="w-full appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
-                  >
-                    <option value="All Roles">All Roles</option>
-                    <option value="Product Owner">Product Owner</option>
-                    <option value="Project Manager">Project Manager</option>
-                    <option value="Developer">Developer</option>
-                    <option value="Frontend Engineer">Frontend Engineer</option>
-                    <option value="Backend Engineer">Backend Engineer</option>
-                    <option value="Designer">Designer</option>
-                    <option value="QA Engineer">QA Engineer</option>
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-[#8C7E6C] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    onChange={(val) => setTeamRoleFilter(val)}
+                    options={[
+                      { value: 'All Roles', label: 'All Roles', icon: <Users className="w-3.5 h-3.5 text-[#8C7E6C]" /> },
+                      { value: 'Product Owner', label: 'Product Owner' },
+                      { value: 'Project Manager', label: 'Project Manager' },
+                      { value: 'Developer', label: 'Developer' },
+                      { value: 'Frontend Engineer', label: 'Frontend Engineer' },
+                      { value: 'Backend Engineer', label: 'Backend Engineer' },
+                      { value: 'Designer', label: 'Designer' },
+                      { value: 'QA Engineer', label: 'QA Engineer' }
+                    ]}
+                    title="Filter Team by Role"
+                  />
                 </div>
 
-                <div className="relative flex-1 sm:flex-initial min-w-[120px]">
-                  <select
+                <div className="relative flex-1 sm:flex-initial min-w-[160px]">
+                  <ArchivalSelect
                     value={teamProjectFilter}
-                    onChange={(e) => setTeamProjectFilter(e.target.value)}
-                    className="w-full appearance-none bg-white/90 border border-[#DCD1BC] rounded-xl px-3 py-1.5 pr-8 text-xs font-bold text-[#4B3E32] focus:outline-none focus:border-[#8C7E6C] shadow-2xs cursor-pointer"
-                  >
-                    <option value="All Projects">All Projects</option>
-                    <option value="Acme Digital Revamp">Acme Digital Revamp</option>
-                    <option value="CRM Platform">CRM Platform</option>
-                    <option value="Web Platform">Web Platform</option>
-                    <option value="Mobile App">Mobile App</option>
-                    <option value="Brand Refresh">Brand Refresh</option>
-                    <option value="API Integration">API Integration</option>
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-[#8C7E6C] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    onChange={(val) => setTeamProjectFilter(val)}
+                    options={[
+                      { value: 'All Projects', label: 'All Projects', icon: <Folder className="w-3.5 h-3.5 text-[#8C7E6C]" /> },
+                      { value: 'Acme Digital Revamp', label: 'Acme Digital Revamp' },
+                      { value: 'CRM Platform', label: 'CRM Platform' },
+                      { value: 'Web Platform', label: 'Web Platform' },
+                      { value: 'Mobile App', label: 'Mobile App' },
+                      { value: 'Brand Refresh', label: 'Brand Refresh' },
+                      { value: 'API Integration', label: 'API Integration' }
+                    ]}
+                    title="Filter Team by Project"
+                  />
                 </div>
 
                 {(teamRoleFilter !== 'All Roles' || teamProjectFilter !== 'All Projects' || teamSearchQuery) && (
@@ -6793,15 +6992,16 @@ export default function App() {
 
               <div>
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Column</label>
-                <select
+                <ArchivalSelect
                   value={newTaskTargetColumn}
-                  onChange={(e) => setNewTaskTargetColumn(e.target.value as any)}
-                  className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
-                >
-                  <option value="todo">Todo list</option>
-                  <option value="inprogress">In Progress</option>
-                  <option value="inreview">In Review</option>
-                </select>
+                  onChange={(val) => setNewTaskTargetColumn(val as any)}
+                  options={[
+                    { value: 'todo', label: 'Todo list', badge: 'Draft' },
+                    { value: 'inprogress', label: 'In Progress', badge: 'Active' },
+                    { value: 'inreview', label: 'In Review', badge: 'QA' }
+                  ]}
+                  title="Select Column"
+                />
               </div>
 
               {/* Card Color Selector: Rich Custom Interactive Dropdown Menu */}
@@ -6871,31 +7071,33 @@ export default function App() {
 
               <div>
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Tag / Category</label>
-                <select
+                <ArchivalSelect
                   value={newTaskTag}
-                  onChange={(e) => setNewTaskTag(e.target.value)}
-                  className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
-                >
-                  <option value="#client">#client</option>
-                  <option value="#website">#website</option>
-                  <option value="#mobile app">#mobile app</option>
-                  <option value="#product">#product</option>
-                  <option value="#development">#development</option>
-                </select>
+                  onChange={(val) => setNewTaskTag(val)}
+                  options={[
+                    { value: '#client', label: '#client' },
+                    { value: '#website', label: '#website' },
+                    { value: '#mobile app', label: '#mobile app' },
+                    { value: '#product', label: '#product' },
+                    { value: '#development', label: '#development' }
+                  ]}
+                  title="Select Tag / Category"
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Priority</label>
-                <select
+                <ArchivalSelect
                   value={newTaskPriority}
-                  onChange={(e) => setNewTaskPriority(e.target.value as any)}
-                  className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
-                </select>
+                  onChange={(val) => setNewTaskPriority(val as any)}
+                  options={[
+                    { value: 'Low', label: 'Low Priority' },
+                    { value: 'Medium', label: 'Medium Priority' },
+                    { value: 'High', label: 'High Priority', badge: 'Important' },
+                    { value: 'Urgent', label: 'Urgent Priority', badge: 'Critical' }
+                  ]}
+                  title="Select Priority"
+                />
               </div>
 
               {/* Optional Checklist / Todo Tasks */}
@@ -7106,16 +7308,17 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#5C5042] mb-1">Paper Tone</label>
-                  <select
+                  <ArchivalSelect
                     value={newNoteColor}
-                    onChange={(e) => setNewNoteColor(e.target.value as any)}
-                    className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
-                  >
-                    <option value="cream">Cream Paper</option>
-                    <option value="sand">Warm Sand</option>
-                    <option value="mint">Mint Herb</option>
-                    <option value="rose">Dusty Rose</option>
-                  </select>
+                    onChange={(val) => setNewNoteColor(val as any)}
+                    options={[
+                      { value: 'cream', label: 'Cream Paper', icon: <span className="w-2.5 h-2.5 rounded-full bg-[#FAF6EE] border border-[#D5CABB]" /> },
+                      { value: 'sand', label: 'Warm Sand', icon: <span className="w-2.5 h-2.5 rounded-full bg-[#EFE8DC] border border-[#D5CABB]" /> },
+                      { value: 'mint', label: 'Mint Herb', icon: <span className="w-2.5 h-2.5 rounded-full bg-[#E5F0E8] border border-[#BED7C6]" /> },
+                      { value: 'rose', label: 'Dusty Rose', icon: <span className="w-2.5 h-2.5 rounded-full bg-[#FCECE9] border border-[#ECCECE]" /> }
+                    ]}
+                    title="Select Paper Tone"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-[#5C5042] mb-1">Tag</label>
@@ -7211,17 +7414,18 @@ export default function App() {
 
               <div>
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Roadmap Phase</label>
-                <select
+                <ArchivalSelect
                   value={newSchedulePhase}
-                  onChange={(e) => setNewSchedulePhase(e.target.value)}
-                  className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
-                >
-                  <option value="Discovery & Research">Discovery & Research</option>
-                  <option value="Design & Planning">Design & Planning</option>
-                  <option value="Development">Development</option>
-                  <option value="Review & QA">Review & QA</option>
-                  <option value="Launch">Launch</option>
-                </select>
+                  onChange={(val) => setNewSchedulePhase(val)}
+                  options={[
+                    { value: 'Discovery & Research', label: 'Discovery & Research' },
+                    { value: 'Design & Planning', label: 'Design & Planning' },
+                    { value: 'Development', label: 'Development' },
+                    { value: 'Review & QA', label: 'Review & QA' },
+                    { value: 'Launch', label: 'Launch' }
+                  ]}
+                  title="Select Roadmap Phase"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -7248,30 +7452,32 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#5C5042] mb-1">Category</label>
-                  <select
+                  <ArchivalSelect
                     value={newScheduleCategory}
-                    onChange={(e) => setNewScheduleCategory(e.target.value as any)}
-                    className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
-                  >
-                    <option value="Sprint">Sprint</option>
-                    <option value="Milestone">Milestone</option>
-                    <option value="Review">Review</option>
-                    <option value="Deadline">Deadline</option>
-                    <option value="Research">Research</option>
-                  </select>
+                    onChange={(val) => setNewScheduleCategory(val as any)}
+                    options={[
+                      { value: 'Sprint', label: 'Sprint' },
+                      { value: 'Milestone', label: 'Milestone' },
+                      { value: 'Review', label: 'Review' },
+                      { value: 'Deadline', label: 'Deadline' },
+                      { value: 'Research', label: 'Research' }
+                    ]}
+                    title="Select Event Category"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-[#5C5042] mb-1">Priority</label>
-                  <select
+                  <ArchivalSelect
                     value={newSchedulePriority}
-                    onChange={(e) => setNewSchedulePriority(e.target.value as any)}
-                    className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none"
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
-                  </select>
+                    onChange={(val) => setNewSchedulePriority(val as any)}
+                    options={[
+                      { value: 'Low', label: 'Low Priority' },
+                      { value: 'Medium', label: 'Medium Priority' },
+                      { value: 'High', label: 'High Priority', badge: 'Important' },
+                      { value: 'Urgent', label: 'Urgent Priority', badge: 'Critical' }
+                    ]}
+                    title="Select Priority"
+                  />
                 </div>
               </div>
 
@@ -7407,19 +7613,20 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#5C5042] mb-1">Role</label>
-                  <select
+                  <ArchivalSelect
                     value={newMemberRole}
-                    onChange={(e) => setNewMemberRole(e.target.value)}
-                    className="w-full bg-white border border-[#D5CABB] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
-                  >
-                    <option value="Product Owner">Product Owner</option>
-                    <option value="Project Manager">Project Manager</option>
-                    <option value="Developer">Developer</option>
-                    <option value="Frontend Engineer">Frontend Engineer</option>
-                    <option value="Backend Engineer">Backend Engineer</option>
-                    <option value="Designer">Designer</option>
-                    <option value="QA Engineer">QA Engineer</option>
-                  </select>
+                    onChange={(val) => setNewMemberRole(val)}
+                    options={[
+                      { value: 'Product Owner', label: 'Product Owner' },
+                      { value: 'Project Manager', label: 'Project Manager' },
+                      { value: 'Developer', label: 'Developer' },
+                      { value: 'Frontend Engineer', label: 'Frontend Engineer' },
+                      { value: 'Backend Engineer', label: 'Backend Engineer' },
+                      { value: 'Designer', label: 'Designer' },
+                      { value: 'QA Engineer', label: 'QA Engineer' }
+                    ]}
+                    title="Select Member Role"
+                  />
                 </div>
 
                 <div>
@@ -7861,46 +8068,49 @@ export default function App() {
                   <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
                     Category
                   </label>
-                  <select
+                  <ArchivalSelect
                     value={newProductCategory}
-                    onChange={(e) => setNewProductCategory(e.target.value)}
-                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
-                  >
-                    <option value="Web App">Web App</option>
-                    <option value="Mobile App">Mobile App</option>
-                    <option value="Design System">Design System</option>
-                    <option value="API & Service">API & Service</option>
-                    <option value="Hardware">Hardware</option>
-                  </select>
+                    onChange={(val) => setNewProductCategory(val)}
+                    options={[
+                      { value: 'Web App', label: 'Web App' },
+                      { value: 'Mobile App', label: 'Mobile App' },
+                      { value: 'Design System', label: 'Design System' },
+                      { value: 'API & Service', label: 'API & Service' },
+                      { value: 'Hardware', label: 'Hardware' }
+                    ]}
+                    title="Select Category"
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
                     Lifecycle Stage
                   </label>
-                  <select
+                  <ArchivalSelect
                     value={newProductStage}
-                    onChange={(e) => setNewProductStage(e.target.value)}
-                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
-                  >
-                    <option value="Discovery">Discovery</option>
-                    <option value="In Development">In Development</option>
-                    <option value="Review & QA">Review & QA</option>
-                    <option value="Launched">Launched</option>
-                  </select>
+                    onChange={(val) => setNewProductStage(val as any)}
+                    options={[
+                      { value: 'Discovery', label: 'Discovery' },
+                      { value: 'In Development', label: 'In Development' },
+                      { value: 'Review & QA', label: 'Review & QA' },
+                      { value: 'Launched', label: 'Launched' }
+                    ]}
+                    title="Select Lifecycle Stage"
+                  />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
                     Health Status
                   </label>
-                  <select
+                  <ArchivalSelect
                     value={newProductHealth}
-                    onChange={(e) => setNewProductHealth(e.target.value)}
-                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
-                  >
-                    <option value="On Track">On Track</option>
-                    <option value="Needs Attention">Needs Attention</option>
-                    <option value="At Risk">At Risk</option>
-                  </select>
+                    onChange={(val) => setNewProductHealth(val as any)}
+                    options={[
+                      { value: 'On Track', label: 'On Track' },
+                      { value: 'Needs Attention', label: 'Needs Attention' },
+                      { value: 'At Risk', label: 'At Risk' }
+                    ]}
+                    title="Select Health Status"
+                  />
                 </div>
               </div>
 
@@ -7933,16 +8143,17 @@ export default function App() {
                   <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
                     Lead Contributor
                   </label>
-                  <select
+                  <ArchivalSelect
                     value={newProductLead}
-                    onChange={(e) => setNewProductLead(e.target.value)}
-                    className="w-full bg-white border border-[#DCD1BC] rounded-xl px-3 py-2 text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
-                  >
-                    <option value="Mason Walker">Mason Walker (Admin)</option>
-                    <option value="Emma Carter">Emma Carter (Lead Dev)</option>
-                    <option value="Sophia Bennett">Sophia Bennett (Product Owner)</option>
-                    <option value="Lucas Wright">Lucas Wright (Systems Eng)</option>
-                  </select>
+                    onChange={(val) => setNewProductLead(val)}
+                    options={[
+                      { value: 'Mason Walker', label: 'Mason Walker (Admin)' },
+                      { value: 'Emma Carter', label: 'Emma Carter (Lead Dev)' },
+                      { value: 'Sophia Bennett', label: 'Sophia Bennett (Product Owner)' },
+                      { value: 'Lucas Wright', label: 'Lucas Wright (Systems Eng)' }
+                    ]}
+                    title="Select Lead Contributor"
+                  />
                 </div>
               </div>
 
