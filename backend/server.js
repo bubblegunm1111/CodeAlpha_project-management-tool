@@ -461,12 +461,38 @@ app.post('/api/v1/auth/login', async (req, res) => {
     const { email, password } = req.body;
     const user = await getAsync('SELECT * FROM users WHERE email = ?', [email]);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ user: { id: user.id, email: user.email, name: user.name, avatar_url: user.avatar_url }, token });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Real/Simulated Google OAuth Authentication handler
+app.post('/api/v1/auth/google', async (req, res) => {
+  try {
+    const { email, name, avatar_url, credential } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Google email is required' });
+    }
+
+    let user = await getAsync('SELECT * FROM users WHERE email = ?', [email]);
+    if (!user) {
+      // Auto-register user from Google Account credentials
+      const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+      const result = await runAsync(
+        'INSERT INTO users (email, name, password, avatar_url) VALUES (?, ?, ?, ?)',
+        [email, name || 'Google User', randomPassword, avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop']
+      );
+      user = await getAsync('SELECT id, email, name, avatar_url FROM users WHERE id = ?', [result.lastID]);
     }
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
