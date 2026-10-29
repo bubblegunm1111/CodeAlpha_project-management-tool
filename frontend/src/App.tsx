@@ -4226,13 +4226,13 @@ export default function App() {
         <div className="px-2 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
           <div className="flex items-center space-x-1.5 sm:space-x-3 flex-1 min-w-0 mr-1 sm:mr-0">
-            {/* Mobile Hamburger to open sidebar */}
+            {/* Mobile Hamburger / Sidebar Toggle */}
             <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EAE0CF] active:scale-95 border border-[#D5CABB] text-[#3F3730] shadow-2xs touch-target flex items-center justify-center shrink-0"
-              title="Open Navigation Menu"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-1.5 rounded-lg bg-[#FAF6EE] hover:bg-[#EAE0CF] active:scale-95 border border-[#D5CABB] text-[#3F3730] shadow-2xs touch-target flex items-center justify-center shrink-0"
+              title={isSidebarOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
             >
-              <Menu className="w-4 h-4" />
+              {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
 
             {/* Desktop Return to Folder Hub button */}
@@ -4453,14 +4453,14 @@ export default function App() {
               className="flex items-center space-x-2 text-left hover:text-[#2C241E] group transition-colors"
               title="Return to Folder Hub"
             >
-              <div className="p-1 rounded-md bg-[#E5DCCB] group-hover:bg-[#DACBB0] text-[#463D34] transition-colors">
+              <div className="p-1 rounded-md bg-[#FAF6EE] border border-[#DCD1BC] group-hover:bg-[#EFE8DC] text-[#463D34] transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" />
               </div>
               <span className="text-sm font-extrabold tracking-tight text-[#2B241E]">Folders Hub</span>
             </button>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#7A7064] hover:text-[#2C241E] transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[#FAF6EE] border border-transparent hover:border-[#DCD1BC] text-[#7A7064] hover:text-[#2C241E] transition-colors"
               title="Hide sidebar"
             >
               <PanelLeftClose className="w-4 h-4" />
@@ -4490,7 +4490,7 @@ export default function App() {
                       className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                         isActive
                           ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
-                          : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
+                          : 'text-[#61574C] hover:bg-[#FAF6EE] hover:text-[#2C241E]'
                       }`}
                     >
                       <Icon className="w-4 h-4 text-[#756A5E]" />
@@ -4509,7 +4509,7 @@ export default function App() {
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     activeTab === 'team'
                       ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
-                      : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
+                      : 'text-[#61574C] hover:bg-[#FAF6EE] hover:text-[#2C241E]'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
@@ -4517,7 +4517,7 @@ export default function App() {
                     <span>Team</span>
                   </div>
                   <span className="flex items-center space-x-1">
-                    <span className="px-1.5 py-0.2 text-[10px] rounded-full font-bold bg-[#DCD1BC] text-[#554C42]">
+                    <span className="px-1.5 py-0.2 text-[10px] rounded-full font-bold bg-[#EAE0CF] text-[#554C42]">
                       {teamMembers.length}
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 text-[#9C9081]" />
@@ -4528,7 +4528,7 @@ export default function App() {
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     activeTab === 'clients'
                       ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
-                      : 'text-[#61574C] hover:bg-[#E9E0CE] hover:text-[#2C241E]'
+                      : 'text-[#61574C] hover:bg-[#FAF6EE] hover:text-[#2C241E]'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
@@ -4536,7 +4536,7 @@ export default function App() {
                     <span>Clients</span>
                   </div>
                   <span className="flex items-center space-x-1">
-                    <span className="px-1.5 py-0.2 text-[10px] rounded-full font-bold bg-[#DCD1BC] text-[#554C42]">
+                    <span className="px-1.5 py-0.2 text-[10px] rounded-full font-bold bg-[#EAE0CF] text-[#554C42]">
                       {clients.length}
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 text-[#9C9081]" />
@@ -4553,7 +4553,7 @@ export default function App() {
               const liveFolderPercent = totalActiveTasks > 0 ? Math.round((completedActiveTasks / totalActiveTasks) * 100) : 0;
 
               return (
-                <div className="p-3 bg-[#F5EFEB] rounded-xl border border-[#DCD1BC] shadow-2xs text-xs space-y-1.5">
+                <div className="p-3 bg-[#FAF6EE] rounded-xl border border-[#DCD1BC] shadow-2xs text-xs space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-[#837666]">Active Folder</span>
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -4561,7 +4561,7 @@ export default function App() {
                   <p className="font-bold text-[#2A231D] text-xs truncate" title={currentFolder.name}>
                     {currentFolder.name}
                   </p>
-                  <div className="w-full bg-[#E5DCBE] h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-[#E8DEC9] h-1.5 rounded-full overflow-hidden">
                     <div
                       className="bg-[#463D34] h-full rounded-full transition-all duration-300"
                       style={{ width: `${liveFolderPercent}%` }}
@@ -4578,11 +4578,11 @@ export default function App() {
 
           {/* Pinned Bottom Footer (Uniform & Constant Sequence) */}
           <div className="shrink-0 pt-3 mt-auto border-t border-[#DCD1BC] space-y-0.5">
-            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] transition-all">
+            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#FAF6EE] transition-all">
               <Settings className="w-4 h-4 text-[#756A5E]" />
               <span>Settings</span>
             </button>
-            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] transition-all">
+            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#FAF6EE] transition-all">
               <HelpCircle className="w-4 h-4 text-[#756A5E]" />
               <span>Support</span>
             </button>
