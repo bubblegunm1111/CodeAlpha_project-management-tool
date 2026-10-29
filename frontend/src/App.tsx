@@ -227,6 +227,11 @@ function ArchivalSelect<T extends string | number = string>({
     };
   }, [isOpen]);
 
+  const handleSelect = (val: T) => {
+    onChange(val);
+    setIsOpen(false);
+  };
+
   return (
     <div ref={containerRef} className={`relative dropdown-container ${className}`} data-dropdown="true">
       <button
@@ -240,7 +245,7 @@ function ArchivalSelect<T extends string | number = string>({
           isOpen ? 'ring-2 ring-[#2E2721]/20 border-[#2E2721]' : ''
         } ${buttonClassName}`}
       >
-        <div className="flex items-center space-x-2 truncate mr-1.5">
+        <div className="flex items-center space-x-2 truncate mr-1.5 pointer-events-none">
           {selectedOption?.icon && (
             <span className="shrink-0">{selectedOption.icon}</span>
           )}
@@ -251,33 +256,36 @@ function ArchivalSelect<T extends string | number = string>({
             </span>
           )}
         </div>
-        <ChevronDown className={`w-3.5 h-3.5 text-[#8C7E6C] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-[#8C7E6C] transition-transform duration-200 shrink-0 pointer-events-none ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`absolute left-0 top-full mt-1.5 min-w-[200px] w-full bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar ${menuClassName}`}
+          className={`absolute left-0 top-full mt-1.5 min-w-[200px] w-full bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-2xl p-1 z-[9999] animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar ${menuClassName}`}
         >
           {options.map((opt) => {
             const isSelected = opt.value === value;
             return (
-              <button
+              <div
                 key={String(opt.value)}
-                type="button"
-                onMouseDown={(e) => e.stopPropagation()}
+                role="button"
+                tabIndex={0}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  handleSelect(opt.value);
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onChange(opt.value);
-                  setIsOpen(false);
+                  handleSelect(opt.value);
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all text-left mb-0.5 last:mb-0 ${
+                className={`w-full flex items-center justify-between px-2.5 py-2.5 rounded-lg text-xs transition-all text-left mb-0.5 last:mb-0 cursor-pointer select-none ${
                   isSelected
                     ? 'bg-[#2E2721] text-[#FAF6EE] font-bold shadow-2xs'
                     : 'text-[#3E342B] hover:bg-[#EAE0CF] font-medium'
                 }`}
               >
-                <div className="flex items-center space-x-2 truncate mr-2">
+                <div className="flex items-center space-x-2 truncate mr-2 pointer-events-none">
                   {opt.icon && <span className="shrink-0">{opt.icon}</span>}
                   <div className="truncate">
                     <span className="truncate block">{opt.label}</span>
@@ -288,7 +296,7 @@ function ArchivalSelect<T extends string | number = string>({
                     )}
                   </div>
                 </div>
-                <div className="flex items-center space-x-1 shrink-0 ml-1">
+                <div className="flex items-center space-x-1 shrink-0 ml-1 pointer-events-none">
                   {opt.badge && (
                     <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-[#FAF6EE]' : 'bg-[#E8DEC9] text-[#554A3E]'}`}>
                       {opt.badge}
@@ -296,7 +304,7 @@ function ArchivalSelect<T extends string | number = string>({
                   )}
                   {isSelected && <Check className="w-3.5 h-3.5 text-[#FAF6EE] ml-1 shrink-0" />}
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
