@@ -64,7 +64,7 @@ import {
 } from 'lucide-react';
 
 import { auth, googleProvider } from './firebase';
-import { signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged } from 'firebase/auth';
+import { signInWithPopup, getRedirectResult, onAuthStateChanged } from 'firebase/auth';
 
 const API_BASE = typeof window !== 'undefined'
   ? `${window.location.protocol}//${window.location.hostname}:3001/api/v1`
@@ -1702,7 +1702,8 @@ export default function App() {
     setIsAuthLoading(true);
 
     try {
-      // 1. Prioritize signInWithPopup: Works cleanly on Vercel without cross-origin iframe cookie issues
+      // Use signInWithPopup: Directly opens Google account chooser in top-level window
+      // This completely avoids the "missing initial state" error caused by redirect sessionStorage wipes
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const targetEmail = user.email || 'user@gmail.com';
@@ -1719,16 +1720,8 @@ export default function App() {
 
       applyUserData(targetEmail, targetName, targetAvatar);
     } catch (err: any) {
-      console.warn('Firebase popup error, attempting redirect fallback:', err);
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-        try {
-          await signInWithRedirect(auth, googleProvider);
-          return;
-        } catch (redirErr: any) {
-          console.error('Redirect sign in error:', redirErr);
-          setAuthError(redirErr?.message || err?.message || 'Authentication error');
-        }
-      } else {
+      console.error('Firebase signInWithPopup error:', err);
+      if (err.code !== 'auth/popup-closed-by-user') {
         setAuthError(err?.message || 'Authentication error');
       }
     } finally {
