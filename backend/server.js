@@ -347,6 +347,8 @@ const initializeDB = () => {
     db.run("ALTER TABLE tasks ADD COLUMN ai_risk_reason TEXT", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN is_timer_running BOOLEAN DEFAULT 0", () => {});
     db.run("ALTER TABLE tasks ADD COLUMN timer_started_at DATETIME", () => {});
+    db.run("ALTER TABLE tasks ADD COLUMN product_id TEXT", () => {});
+    db.run("ALTER TABLE tasks ADD COLUMN product_name TEXT", () => {});
   });
 };
 
@@ -637,11 +639,11 @@ app.get('/api/v1/projects/:id', authMiddleware, async (req, res) => {
 // Create task with custom color, tags, checklist, assignees
 app.post('/api/v1/projects/:projectId/tasks', authMiddleware, async (req, res) => {
   try {
-    const { column_id, title, description, priority, due_date, color, tags, progress, subtasks, note, assignees } = req.body;
+    const { column_id, title, description, priority, due_date, color, tags, progress, subtasks, note, assignees, product_id, product_name } = req.body;
 
     const result = await runAsync(
-      `INSERT INTO tasks (column_id, project_id, title, description, priority, due_date, color, tags, progress, subtasks, note, position, assignees)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO tasks (column_id, project_id, title, description, priority, due_date, color, tags, progress, subtasks, note, position, assignees, product_id, product_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         column_id,
         req.params.projectId,
@@ -655,7 +657,9 @@ app.post('/api/v1/projects/:projectId/tasks', authMiddleware, async (req, res) =
         JSON.stringify(subtasks || []),
         note || null,
         0,
-        JSON.stringify(assignees || [])
+        JSON.stringify(assignees || []),
+        product_id || null,
+        product_name || null
       ]
     );
 
@@ -674,7 +678,7 @@ app.post('/api/v1/projects/:projectId/tasks', authMiddleware, async (req, res) =
 // Update task (Change card color, title, priority, checklist, assignees, etc.)
 app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
   try {
-    const { title, description, priority, due_date, column_id, position, color, tags, progress, subtasks, note, assignees } = req.body;
+    const { title, description, priority, due_date, column_id, position, color, tags, progress, subtasks, note, assignees, product_id, product_name } = req.body;
 
     const updates = [];
     const params = [];
@@ -691,6 +695,8 @@ app.put('/api/v1/tasks/:id', authMiddleware, async (req, res) => {
     if (subtasks !== undefined) { updates.push('subtasks = ?'); params.push(JSON.stringify(subtasks)); }
     if (note !== undefined) { updates.push('note = ?'); params.push(note); }
     if (assignees !== undefined) { updates.push('assignees = ?'); params.push(JSON.stringify(assignees)); }
+    if (product_id !== undefined) { updates.push('product_id = ?'); params.push(product_id); }
+    if (product_name !== undefined) { updates.push('product_name = ?'); params.push(product_name); }
     if (req.body.time_spent !== undefined) { updates.push('time_spent = ?'); params.push(req.body.time_spent); }
     if (req.body.estimated_hours !== undefined) { updates.push('estimated_hours = ?'); params.push(req.body.estimated_hours); }
     if (req.body.ai_risk_score !== undefined) { updates.push('ai_risk_score = ?'); params.push(req.body.ai_risk_score); }

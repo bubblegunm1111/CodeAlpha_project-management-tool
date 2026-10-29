@@ -206,16 +206,18 @@ function ArchivalSelect<T extends string | number = string>({
   const selectedOption = options.find(o => o.value === value);
 
   useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
     if (isOpen) {
       document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('touchstart', handleOutsideClick, { passive: true });
     }
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
     };
   }, [isOpen]);
 
@@ -1135,6 +1137,7 @@ export default function App() {
   const [newTaskColor, setNewTaskColor] = useState<CardColor>('blue');
   const [newTaskTag, setNewTaskTag] = useState('#client');
   const [newTaskPriority, setNewTaskPriority] = useState<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
+  const [newTaskProductId, setNewTaskProductId] = useState<string>('');
   const [newTaskAssignees, setNewTaskAssignees] = useState<{ name: string; avatar: string }[]>([
     { name: 'Emma Carter', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop' }
   ]);
@@ -1191,6 +1194,35 @@ export default function App() {
 
   // 3-dots Card Context Menu state
   const [cardMenuOpenId, setCardMenuOpenId] = useState<string | null>(null);
+
+  // Close custom popover menus when clicking or tapping anywhere outside
+  useEffect(() => {
+    const handleGlobalOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // If clicked inside a dropdown toggle or menu container, do nothing
+      if (target.closest('.dropdown-container') || target.closest('[data-dropdown="true"]')) {
+        return;
+      }
+
+      setIsTaskColorDropdownOpen(false);
+      setIsScheduleColorDropdownOpen(false);
+      setIsDetailColorDropdownOpen(false);
+      setIsDetailMemberDropdownOpen(false);
+      setIsTaskMemberDropdownOpen(false);
+      setShowNotifications(false);
+      setIsUserMenuOpen(false);
+      setCardMenuOpenId(null);
+    };
+
+    document.addEventListener('mousedown', handleGlobalOutsideClick);
+    document.addEventListener('touchstart', handleGlobalOutsideClick, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handleGlobalOutsideClick);
+      document.removeEventListener('touchstart', handleGlobalOutsideClick);
+    };
+  }, []);
 
   // Close card menu on document click
   useEffect(() => {
@@ -1394,6 +1426,7 @@ export default function App() {
     { id: 2, text: 'Sophia Bennett assigned you to Dossier #4092', time: '5m ago' },
     { id: 3, text: 'Mason Walker commented on Ginko mobile app', time: '14m ago' }
   ]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(3);
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Load from backend API if available
@@ -1676,6 +1709,10 @@ export default function App() {
               setTasks(prev => prev.map(t => {
                 const rawId = t.id.replace('t-', '');
                 if (t.id === `t-${updated.id}` || rawId === String(updated.id)) {
+                  // If timer is currently running, keep the local monotonic timeSpent instead of rolling back to stale backend snapshot
+                  const resolvedTimeSpent = t.isTimerRunning && (t.timeSpent || 0) > (updated.time_spent || 0)
+                    ? t.timeSpent
+                    : (updated.time_spent !== undefined ? updated.time_spent : t.timeSpent);
                   return {
                     ...t,
                     title: updated.title !== undefined ? updated.title : t.title,
@@ -1683,7 +1720,9 @@ export default function App() {
                     progress: updated.progress !== undefined ? updated.progress : t.progress,
                     priority: updated.priority || t.priority,
                     note: updated.note !== undefined ? updated.note : t.note,
-                    timeSpent: updated.time_spent !== undefined ? updated.time_spent : t.timeSpent,
+                    product_id: updated.product_id !== undefined ? updated.product_id : t.product_id,
+                    product_name: updated.product_name !== undefined ? updated.product_name : t.product_name,
+                    timeSpent: resolvedTimeSpent,
                     isTimerRunning: updated.is_timer_running !== undefined ? !!updated.is_timer_running : t.isTimerRunning,
                     assignees: Array.isArray(updated.assignees) && updated.assignees.length > 0 ? updated.assignees : t.assignees
                   };
@@ -1695,6 +1734,9 @@ export default function App() {
                 if (prev) {
                   const rawSelId = prev.id.replace('t-', '');
                   if (prev.id === `t-${updated.id}` || rawSelId === String(updated.id)) {
+                    const resolvedTimeSpent = prev.isTimerRunning && (prev.timeSpent || 0) > (updated.time_spent || 0)
+                      ? prev.timeSpent
+                      : (updated.time_spent !== undefined ? updated.time_spent : prev.timeSpent);
                     return {
                       ...prev,
                       title: updated.title !== undefined ? updated.title : prev.title,
@@ -1702,7 +1744,9 @@ export default function App() {
                       progress: updated.progress !== undefined ? updated.progress : prev.progress,
                       priority: updated.priority || prev.priority,
                       note: updated.note !== undefined ? updated.note : prev.note,
-                      timeSpent: updated.time_spent !== undefined ? updated.time_spent : prev.timeSpent,
+                      product_id: updated.product_id !== undefined ? updated.product_id : prev.product_id,
+                      product_name: updated.product_name !== undefined ? updated.product_name : prev.product_name,
+                      timeSpent: resolvedTimeSpent,
                       isTimerRunning: updated.is_timer_running !== undefined ? !!updated.is_timer_running : prev.isTimerRunning,
                       assignees: Array.isArray(updated.assignees) && updated.assignees.length > 0 ? updated.assignees : prev.assignees
                     };
@@ -1790,11 +1834,13 @@ export default function App() {
     let targetAction: 'start' | 'stop' = 'start';
     let updatedTaskObj: Task | null = null;
 
+    let currentSnapshotTime = 0;
     setTasks(prev => {
       return prev.map(t => {
         if (t.id === taskId) {
           const nextRunning = !t.isTimerRunning;
           targetAction = nextRunning ? 'start' : 'stop';
+          currentSnapshotTime = t.timeSpent || 0;
           updatedTaskObj = { ...t, isTimerRunning: nextRunning };
           return updatedTaskObj;
         }
@@ -1813,7 +1859,7 @@ export default function App() {
     fetch(`${API_BASE}/tasks/${numId}/timer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: targetAction })
+      body: JSON.stringify({ action: targetAction, time_spent: currentSnapshotTime })
     }).catch(() => {});
 
     setNotifications(prev => [
@@ -2058,6 +2104,36 @@ export default function App() {
 
     setNotifications(prev => [
       { id: Date.now(), text: `Card color changed to ${newColor.toUpperCase()}`, time: 'Just now' },
+      ...prev
+    ]);
+  };
+
+  // Assign or change Product Deliverable on an existing task
+  const handleTaskProductChange = (taskId: string, productId: string) => {
+    const matchedProduct = products.find(p => p.id === productId || p.name === productId);
+    const assignedProdId = matchedProduct?.id || (productId || undefined);
+    const assignedProdName = matchedProduct?.name || undefined;
+
+    setTasks(prev => prev.map(t => {
+      if (t.id === taskId) {
+        const updated = { ...t, product_id: assignedProdId, product_name: assignedProdName };
+        if (selectedTask && selectedTask.id === taskId) {
+          setSelectedTask(updated);
+        }
+        return updated;
+      }
+      return t;
+    }));
+
+    const numId = taskId.replace('t-', '');
+    fetch(`${API_BASE}/tasks/${numId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: assignedProdId, product_name: assignedProdName })
+    }).catch(() => {});
+
+    setNotifications(prev => [
+      { id: Date.now(), text: `Assigned to ${assignedProdName || 'Standalone Deliverable'}`, time: 'Just now' },
       ...prev
     ]);
   };
@@ -2309,6 +2385,10 @@ export default function App() {
       ? newTaskAssignees
       : [{ name: currentUser.name || 'Mason Walker', avatar: currentUser.avatar }];
 
+    const matchedProduct = products.find(p => p.id === newTaskProductId || p.name === newTaskProductId);
+    const assignedProdId = matchedProduct?.id || (newTaskProductId || undefined);
+    const assignedProdName = matchedProduct?.name || undefined;
+
     const newTask: Task = {
       id: `t-${Date.now()}`,
       columnId: newTaskTargetColumn,
@@ -2322,12 +2402,15 @@ export default function App() {
       attachmentsCount: 0,
       dueDate: 'May 30, 2026',
       priority: newTaskPriority,
+      product_id: assignedProdId,
+      product_name: assignedProdName,
       comments: []
     };
 
     setTasks(prev => [newTask, ...prev]);
     setIsNewTaskModalOpen(false);
     setNewTaskTitle('');
+    setNewTaskProductId('');
     setCreateTaskSubtasks([]);
     setCreateTaskSubtaskInput('');
 
@@ -2343,7 +2426,9 @@ export default function App() {
         tags: newTask.tags,
         subtasks: newTask.subtasks,
         progress: 0,
-        assignees: newTask.assignees
+        assignees: newTask.assignees,
+        product_id: assignedProdId,
+        product_name: assignedProdName
       })
     }).catch(() => {});
 
@@ -3916,23 +4001,35 @@ export default function App() {
               />
             </div>
 
-            <div className="relative">
+            <div className="relative dropdown-container" data-dropdown="true">
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  if (!showNotifications) {
+                    setUnreadNotificationsCount(0);
+                  }
+                }}
                 className="p-1 sm:p-1.5 bg-[#FAF6EE] border border-[#D8CDBC] rounded-lg text-[#52493E] hover:bg-[#F2ECE0] relative transition-colors"
                 title="Notifications"
               >
                 <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-600 rounded-full border-2 border-[#FAF6EE]"></span>
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-600 rounded-full border-2 border-[#FAF6EE] animate-pulse"></span>
+                )}
               </button>
 
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-72 bg-[#FAF6EE] border border-[#D8CDBC] rounded-xl shadow-xl z-50 p-3">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E8DEC9]">
                     <span className="text-xs font-bold text-[#2C241E]">Live Events (WebSockets)</span>
-                    <span className="text-[11px] text-[#867B6F]">3 unread</span>
+                    <button
+                      onClick={() => setUnreadNotificationsCount(0)}
+                      className="text-[10px] text-[#867B6F] hover:text-[#2C241E] font-medium"
+                    >
+                      {unreadNotificationsCount > 0 ? `${unreadNotificationsCount} unread` : 'All read'}
+                    </button>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
                     {notifications.map(n => (
                       <div key={n.id} className="text-xs p-2 rounded-lg bg-[#F3ECDD] border border-[#E4DAC7]">
                         <p className="text-[#322A23] font-medium leading-snug">{n.text}</p>
@@ -3944,7 +4041,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="relative pl-1 sm:pl-2 border-l border-[#DCD1BC]">
+            <div className="relative pl-1 sm:pl-2 border-l border-[#DCD1BC] dropdown-container" data-dropdown="true">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2 text-left hover:opacity-85 transition-opacity"
@@ -4050,7 +4147,7 @@ export default function App() {
 
         {/* Left Sidebar (Image 1 Style) */}
         <aside
-          className={`bg-[#EFE8DC]/95 md:bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col h-full py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
+          className={`bg-[#EFE8DC] border-r border-[#DCD1BC] flex flex-col h-full py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
             isSidebarOpen ? 'w-64 md:w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
           }`}
         >
@@ -4143,20 +4240,35 @@ export default function App() {
               </nav>
             </div>
 
-            <div className="p-3 bg-[#FAF6EE] rounded-xl border border-[#DCD1BC] shadow-inner text-xs space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold text-[#837666]">Active Project</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              </div>
-              <p className="font-bold text-[#2A231D] text-xs">Acme Digital Revamp</p>
-              <div className="w-full bg-[#E5DCBE] h-1.5 rounded-full overflow-hidden">
-                <div className="bg-[#463D34] h-full rounded-full" style={{ width: '68%' }}></div>
-              </div>
-              <div className="flex justify-between text-[10px] text-[#7A7064]">
-                <span>Progress</span>
-                <span className="font-bold text-[#3B322A]">68%</span>
-              </div>
-            </div>
+            {/* Active Project / Folder Live Progress Card */}
+            {(() => {
+              const activeFolderTasks = tasks.filter(t => currentFolder ? t.columnId : true);
+              const totalActiveTasks = activeFolderTasks.length;
+              const completedActiveTasks = activeFolderTasks.filter(t => t.columnId === 'done').length;
+              const liveFolderPercent = totalActiveTasks > 0 ? Math.round((completedActiveTasks / totalActiveTasks) * 100) : 0;
+
+              return (
+                <div className="p-3 bg-[#FAF6EE] rounded-xl border border-[#DCD1BC] shadow-inner text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#837666]">Active Folder</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  </div>
+                  <p className="font-bold text-[#2A231D] text-xs truncate" title={currentFolder.name}>
+                    {currentFolder.name}
+                  </p>
+                  <div className="w-full bg-[#E5DCBE] h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#463D34] h-full rounded-full transition-all duration-300"
+                      style={{ width: `${liveFolderPercent}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-[#7A7064]">
+                    <span>{completedActiveTasks}/{totalActiveTasks} Completed</span>
+                    <span className="font-bold text-[#3B322A]">{liveFolderPercent}%</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Pinned Bottom Footer (Uniform & Constant Sequence) */}
@@ -6644,6 +6756,35 @@ export default function App() {
                 </div>
               </div>
 
+              {/* PRODUCT DELIVERABLE ASSIGNMENT: Dropdown Selector */}
+              <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
+                  <span className="flex items-center space-x-1.5">
+                    <Package className="w-4 h-4 text-[#7A6E60]" />
+                    <span>Product Deliverable Association</span>
+                  </span>
+                  <span className="font-semibold text-[#8C8072]">
+                    {selectedTask.product_name || 'Standalone Task'}
+                  </span>
+                </div>
+
+                <ArchivalSelect
+                  value={selectedTask.product_id || ''}
+                  onChange={(val) => handleTaskProductChange(selectedTask.id, val)}
+                  placeholder="Assign to Product Deliverable"
+                  options={[
+                    { value: '', label: 'None (Standalone Deliverable)', icon: <Layers className="w-3.5 h-3.5 text-[#8C7E6C]" /> },
+                    ...products.map(p => ({
+                      value: p.id,
+                      label: `${p.name} (${p.code})`,
+                      badge: p.stage,
+                      icon: <Package className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                    }))
+                  ]}
+                  title="Link this card to a Product Deliverable"
+                />
+              </div>
+
               {/* CARD COLOR CHANGER: Rich Custom Interactive Dropdown Menu */}
               <div className="bg-[#F5EFEB] p-4 rounded-xl border border-[#DCD1BC] space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-[#5A4F42]">
@@ -6654,7 +6795,7 @@ export default function App() {
                   <span className="capitalize font-semibold text-[#8C8072]">Active: {selectedTask.color}</span>
                 </div>
 
-                <div className="relative">
+                <div className="relative dropdown-container" data-dropdown="true">
                   <button
                     type="button"
                     onClick={() => setIsDetailColorDropdownOpen(!isDetailColorDropdownOpen)}
@@ -6759,7 +6900,7 @@ export default function App() {
                 </div>
 
                 {/* Dropdown Toggle matching the Color Theme Aesthetic */}
-                <div className="relative">
+                <div className="relative dropdown-container" data-dropdown="true">
                   <button
                     type="button"
                     onClick={() => setIsDetailMemberDropdownOpen(!isDetailMemberDropdownOpen)}
@@ -7023,10 +7164,30 @@ export default function App() {
                 />
               </div>
 
+              {/* Product Deliverable Link */}
+              <div>
+                <label className="block text-xs font-bold text-[#5C5042] mb-1">Product Deliverable (Optional)</label>
+                <ArchivalSelect
+                  value={newTaskProductId}
+                  onChange={(val) => setNewTaskProductId(val)}
+                  placeholder="Select Product Deliverable"
+                  options={[
+                    { value: '', label: 'None (Standalone Deliverable)', icon: <Layers className="w-3.5 h-3.5 text-[#8C7E6C]" /> },
+                    ...products.map(p => ({
+                      value: p.id,
+                      label: `${p.name} (${p.code})`,
+                      badge: p.stage,
+                      icon: <Package className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                    }))
+                  ]}
+                  title="Assign to Product Deliverable"
+                />
+              </div>
+
               {/* Card Color Selector: Rich Custom Interactive Dropdown Menu */}
               <div className="relative">
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Card Color Theme</label>
-                <div className="relative">
+                <div className="relative dropdown-container" data-dropdown="true">
                   <button
                     type="button"
                     onClick={() => setIsTaskColorDropdownOpen(!isTaskColorDropdownOpen)}
@@ -7207,7 +7368,7 @@ export default function App() {
                 </div>
 
                 {/* Custom Popover Dropdown Button */}
-                <div className="relative">
+                <div className="relative dropdown-container" data-dropdown="true">
                   <button
                     type="button"
                     onClick={() => setIsTaskMemberDropdownOpen(!isTaskMemberDropdownOpen)}
@@ -7504,7 +7665,7 @@ export default function App() {
               {/* Schedule Card Color Selector: Rich Custom Interactive Dropdown Menu */}
               <div className="relative">
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Card Color Theme</label>
-                <div className="relative">
+                <div className="relative dropdown-container" data-dropdown="true">
                   <button
                     type="button"
                     onClick={() => setIsScheduleColorDropdownOpen(!isScheduleColorDropdownOpen)}
