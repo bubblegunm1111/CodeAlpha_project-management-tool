@@ -1610,68 +1610,32 @@ export default function App() {
     setIsAuthLoading(true);
 
     try {
-      // Trigger genuine Google authentication popup via Firebase
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const targetEmail = user.email || 'user@gmail.com';
-      const targetName = user.displayName || targetEmail.split('@')[0];
-      const targetAvatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
-
-      // Register or synchronize user with backend SQLite
-      try {
-        const res = await fetch(`${API_BASE}/auth/google`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: targetEmail,
-            name: targetName,
-            avatar_url: targetAvatar
-          })
-        });
-        const data = res.ok ? await res.json() : null;
-        if (data && data.user) {
-          setCurrentUser({
-            name: data.user.name,
-            email: data.user.email,
-            avatar: data.user.avatar_url || targetAvatar
-          });
-        } else {
-          setCurrentUser({
-            name: targetName,
-            email: targetEmail,
-            avatar: targetAvatar
-          });
-        }
-      } catch {
-        setCurrentUser({
-          name: targetName,
-          email: targetEmail,
-          avatar: targetAvatar
-        });
-      }
-
-      setIsGoogleModalOpen(false);
-      if (organizations.length === 0) {
-        setCurrentScreen('org_setup');
-      } else {
-        setCurrentScreen('folder_hub');
-      }
-
-      setNotifications(prev => [
-        { id: Date.now(), text: `Authenticated via Google (${targetEmail})`, time: 'Just now' },
-        ...prev
-      ]);
+      // Trigger genuine Google authentication redirect directly to Google accounts
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: any) {
-      console.warn('Firebase signInWithPopup error or popup blocked:', err);
-      // On mobile browsers or unauthorized IP, attempt redirect first
+      console.error('Firebase signInWithRedirect error:', err);
+      // Try popup as fallback if browser blocks redirect
       try {
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      } catch (redirErr: any) {
-        console.error('Redirect sign in error:', redirErr);
-        // Only if redirect completely fails, show the error banner and account dialog
-        setAuthError(err.message || redirErr?.message || 'Google Sign-in failed. Please select your account below:');
-        setIsGoogleModalOpen(true);
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        const targetEmail = user.email || 'user@gmail.com';
+        const targetName = user.displayName || targetEmail.split('@')[0];
+        const targetAvatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
+
+        try {
+          await fetch(`${API_BASE}/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
+          });
+        } catch {}
+
+        setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
+        setCurrentScreen('folder_hub');
+      } catch (popupErr: any) {
+        console.error('Firebase popup error:', popupErr);
+        setAuthError(popupErr?.message || err?.message || 'Authentication error');
+        alert(`Google Auth Notice: ${popupErr?.message || err?.message}\n\nPlease ensure your deployed domain is added to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
       }
     } finally {
       setIsAuthLoading(false);
