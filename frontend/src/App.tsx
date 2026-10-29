@@ -4065,9 +4065,9 @@ export default function App() {
       {/* Top Manila Folder Cutout Tab Header */}
       <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-8 sm:pt-0 relative z-40">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
-        <div className="px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
+        <div className="px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-1.5 sm:gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
-          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink min-w-0">
+          <div className="flex items-center space-x-1 sm:space-x-3 shrink min-w-0">
             {/* Mobile Hamburger to open sidebar */}
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -4078,14 +4078,14 @@ export default function App() {
             </button>
             <button
               onClick={() => setCurrentScreen('folder_hub')}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0 hidden sm:flex"
               title="Return to Folder Hub"
             >
               <Folder className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-              {/* Inline Switcher for Organization */}
-              <div className="relative min-w-[120px] sm:min-w-[160px] dropdown-container" data-dropdown="true">
+              {/* Inline Switcher for Organization - on mobile in board view, streamlined or opens Folder Hub */}
+              <div className="relative min-w-[130px] sm:min-w-[170px] max-w-[150px] sm:max-w-none dropdown-container" data-dropdown="true">
                 <ArchivalSelect
                   value={currentOrg.id}
                   onChange={(val) => {
@@ -4106,16 +4106,15 @@ export default function App() {
                 />
               </div>
 
-              <span className="text-[#8C8072] text-xs shrink-0">/</span>
-
-              {/* Folder Selector / Badge */}
+              {/* Folder Selector / Badge - Clean & prominent on mobile */}
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="text-[10px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] hover:bg-[#EBDDC5] px-1.5 sm:px-2.5 py-1 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1 min-w-0 transition-colors"
+                className="text-[11px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] hover:bg-[#EBDDC5] px-2 py-1.5 rounded-lg border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5 min-w-0 transition-colors shrink-0"
                 title="Click to view all folders in Folder Hub"
               >
-                <span className="truncate max-w-[65px] sm:max-w-none">{currentFolder.name}</span>
-                <span className="font-mono text-[8px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#DFCFB7] px-1 sm:px-1.5 py-0.2 rounded shrink-0">
+                <Folder className="w-3 h-3 text-[#A66030] shrink-0 sm:hidden" />
+                <span className="truncate max-w-[70px] sm:max-w-none">{currentFolder.name}</span>
+                <span className="font-mono text-[9px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#DFCFB7] px-1.5 py-0.2 rounded shrink-0 hidden xs:inline">
                   {formatFolderCode(currentFolder.code)}
                 </span>
               </button>
