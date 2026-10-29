@@ -1487,6 +1487,47 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Auto-persist per-user data to localStorage whenever tasks, schedules, notes, orgs, or clients change
+  useEffect(() => {
+    if (!currentUser || !currentUser.email) return;
+    const storageKey = `foldable_data_${currentUser.email.toLowerCase()}`;
+    const dataToSave = {
+      organizations,
+      tasks,
+      schedules,
+      notes,
+      products,
+      clients,
+      teamMembers,
+      settingsRole,
+      settingsEmailAlerts,
+      settingsTaskAssignedAlerts,
+      settingsDeadlineReminders,
+      settingsSoundEffects,
+      settingsCompactMode
+    };
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    } catch (e) {
+      console.warn('Could not save user data to localStorage:', e);
+    }
+  }, [
+    currentUser,
+    organizations,
+    tasks,
+    schedules,
+    notes,
+    products,
+    clients,
+    teamMembers,
+    settingsRole,
+    settingsEmailAlerts,
+    settingsTaskAssignedAlerts,
+    settingsDeadlineReminders,
+    settingsSoundEffects,
+    settingsCompactMode
+  ]);
+
   const applyUserData = (email: string, name?: string, avatar?: string) => {
     const isTestAccount = email === 'shahdhosni144@gmail.com' || email === 'mason.walker@example.com';
     const targetName = name || email.split('@')[0];
@@ -1498,13 +1539,45 @@ export default function App() {
       avatar: targetAvatar
     });
 
-    // Also update settings fields so the Settings profile tab immediately matches this user
     setSettingsName(targetName);
     setSettingsEmail(email);
     setSettingsAvatar(targetAvatar);
 
+    // Check if this user has previously saved workspace data in localStorage
+    const storageKey = `foldable_data_${email.toLowerCase()}`;
+    const savedRaw = localStorage.getItem(storageKey);
+    if (savedRaw) {
+      try {
+        const saved = JSON.parse(savedRaw);
+        if (saved.organizations && saved.organizations.length > 0) {
+          setOrganizations(saved.organizations);
+          setCurrentOrg(saved.organizations[0]);
+          if (saved.organizations[0].folders && saved.organizations[0].folders.length > 0) {
+            setCurrentFolder(saved.organizations[0].folders[0]);
+          }
+        }
+        if (saved.tasks) setTasks(saved.tasks);
+        if (saved.schedules) setSchedules(saved.schedules);
+        if (saved.notes) setNotes(saved.notes);
+        if (saved.products) setProducts(saved.products);
+        if (saved.clients) setClients(saved.clients);
+        if (saved.teamMembers) setTeamMembers(saved.teamMembers);
+        if (saved.settingsRole !== undefined) setSettingsRole(saved.settingsRole);
+        if (saved.settingsEmailAlerts !== undefined) setSettingsEmailAlerts(saved.settingsEmailAlerts);
+        if (saved.settingsTaskAssignedAlerts !== undefined) setSettingsTaskAssignedAlerts(saved.settingsTaskAssignedAlerts);
+        if (saved.settingsDeadlineReminders !== undefined) setSettingsDeadlineReminders(saved.settingsDeadlineReminders);
+        if (saved.settingsSoundEffects !== undefined) setSettingsSoundEffects(saved.settingsSoundEffects);
+        if (saved.settingsCompactMode !== undefined) setSettingsCompactMode(saved.settingsCompactMode);
+
+        setCurrentScreen('folder_hub');
+        return;
+      } catch (e) {
+        console.warn('Error reading saved user data:', e);
+      }
+    }
+
     if (isTestAccount) {
-      // Keep rich dummy data for the tested account
+      // Keep rich default data for tested account if no custom edits saved yet
       setOrganizations([
         {
           id: 'org-1',
