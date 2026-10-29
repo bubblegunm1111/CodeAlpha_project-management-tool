@@ -100,6 +100,8 @@ interface Task {
   aiRiskReason?: string;
   product_id?: string;
   product_name?: string;
+  orgId?: string;
+  folderId?: string;
 }
 
 interface NoteItem {
@@ -111,6 +113,8 @@ interface NoteItem {
   isPinned: boolean;
   author: string;
   date: string;
+  orgId?: string;
+  folderId?: string;
 }
 
 interface ScheduleSubtask {
@@ -145,6 +149,8 @@ interface ScheduleItem {
   assigneeAvatar?: string;
   subtasks?: ScheduleSubtask[];
   comments?: ScheduleComment[];
+  orgId?: string;
+  folderId?: string;
 }
 
 export interface TeamMember {
@@ -321,11 +327,15 @@ export interface ProductItem {
   linked_tasks_count: number;
   features: ProductFeature[];
   metrics: ProductMetrics;
+  orgId?: string;
+  folderId?: string;
 }
 
 const INITIAL_PRODUCTS: ProductItem[] = [
   {
     id: 'prd-1',
+    orgId: 'org-1',
+    folderId: 'f-1',
     name: 'Acme Digital Portal',
     code: 'PRD-01',
     version: 'v2.4.0',
@@ -347,6 +357,8 @@ const INITIAL_PRODUCTS: ProductItem[] = [
   },
   {
     id: 'prd-2',
+    orgId: 'org-1',
+    folderId: 'f-1',
     name: 'Ginko Mobile Native App',
     code: 'PRD-02',
     version: 'v1.1.2',
@@ -368,6 +380,8 @@ const INITIAL_PRODUCTS: ProductItem[] = [
   },
   {
     id: 'prd-3',
+    orgId: 'org-1',
+    folderId: 'f-1',
     name: 'Orion Design System & UI Kit',
     code: 'PRD-03',
     version: 'v3.0.0-rc',
@@ -389,6 +403,8 @@ const INITIAL_PRODUCTS: ProductItem[] = [
   },
   {
     id: 'prd-4',
+    orgId: 'org-1',
+    folderId: 'f-1',
     name: 'Telemetry AI Risk Radar API',
     code: 'PRD-04',
     version: 'v0.9-beta',
@@ -421,6 +437,8 @@ export interface Organization {
 const INITIAL_TASKS: Task[] = [
   {
     id: 't-1',
+    orgId: 'org-1',
+    folderId: 'f-1',
     columnId: 'todo',
     title: 'Search inspirations for upcoming project',
     tags: ['#website', '#client'],
@@ -449,6 +467,8 @@ const INITIAL_TASKS: Task[] = [
   },
   {
     id: 't-2',
+    orgId: 'org-1',
+    folderId: 'f-1',
     columnId: 'todo',
     title: 'Ginko mobile app design',
     tags: ['#mobile app', '#client'],
@@ -482,6 +502,8 @@ const INITIAL_TASKS: Task[] = [
   },
   {
     id: 't-3',
+    orgId: 'org-1',
+    folderId: 'f-1',
     columnId: 'inprogress',
     title: 'Wehiu product task and the task process pages',
     tags: ['#dribbble shot', '#product'],
@@ -510,6 +532,8 @@ const INITIAL_TASKS: Task[] = [
   },
   {
     id: 't-4',
+    orgId: 'org-1',
+    folderId: 'f-1',
     columnId: 'inprogress',
     title: 'Design CRM shop product page responsive website',
     tags: ['#products', '#client'],
@@ -534,6 +558,8 @@ const INITIAL_TASKS: Task[] = [
   },
   {
     id: 't-5',
+    orgId: 'org-1',
+    folderId: 'f-1',
     columnId: 'inreview',
     title: 'Orypto product landing page create in webflow',
     tags: ['#development', '#client'],
@@ -556,6 +582,8 @@ const INITIAL_TASKS: Task[] = [
   },
   {
     id: 't-6',
+    orgId: 'org-1',
+    folderId: 'f-1',
     columnId: 'inreview',
     title: 'Natverk video platform web app design and develop',
     tags: ['#product', '#client'],
@@ -582,6 +610,8 @@ const INITIAL_TASKS: Task[] = [
 const INITIAL_NOTES: NoteItem[] = [
   {
     id: 'n-1',
+    orgId: 'org-1',
+    folderId: 'f-1',
     title: 'Client Brand Identity Guidelines',
     content: 'Client requested a vintage warm dossier palette with file-folder cutout tabs. Ensure high contrast charcoal typography (#2C2621) and soft paper drop-shadows across all cards.',
     tags: ['#design', '#client', '#spec'],
@@ -592,6 +622,8 @@ const INITIAL_NOTES: NoteItem[] = [
   },
   {
     id: 'n-2',
+    orgId: 'org-1',
+    folderId: 'f-1',
     title: 'Sprint #3 Key Milestones & Deliverables',
     content: '1. Complete responsive layout testing.\n2. Enable real-time card color changing on click.\n3. Integrate interactive Schedule & Note tabs directly into the folder interface.',
     tags: ['#sprint', '#planning'],
@@ -602,6 +634,8 @@ const INITIAL_NOTES: NoteItem[] = [
   },
   {
     id: 'n-3',
+    orgId: 'org-1',
+    folderId: 'f-1',
     title: 'WebSocket Real-time Broadcast Architecture',
     content: 'Broadcast presence events on project room whenever a card changes color, advances column, or gets a new comment.',
     tags: ['#backend', '#websockets'],
@@ -1521,6 +1555,8 @@ export default function App() {
         if (data && Array.isArray(data) && data.length > 0) {
           const apiProducts: ProductItem[] = data.map((d: any) => ({
             id: `prd-${d.id}`,
+            orgId: d.organization_id ? `org-${d.organization_id}` : 'org-1',
+            folderId: d.folder_id ? `f-${d.folder_id}` : 'f-1',
             name: d.name,
             code: d.code,
             version: d.version || 'v1.0.0',
@@ -1552,6 +1588,8 @@ export default function App() {
               col.tasks.forEach((t: any) => {
                 loadedTasks.push({
                   id: `t-${t.id}`,
+                  orgId: t.organization_id ? `org-${t.organization_id}` : 'org-1',
+                  folderId: t.folder_id ? `f-${t.folder_id}` : 'f-1',
                   columnId: colId,
                   title: t.title,
                   tags: Array.isArray(t.tags) ? t.tags : ['#client'],
@@ -1928,6 +1966,8 @@ export default function App() {
 
     const newProd: ProductItem = {
       id: `prd-${Date.now()}`,
+      orgId: currentOrg.id,
+      folderId: currentFolder.id,
       name: newProductName.trim(),
       code: newProductCode.trim().toUpperCase() || `PRD-0${products.length + 1}`,
       version: newProductVersion.trim() || 'v1.0.0',
@@ -2391,6 +2431,8 @@ export default function App() {
 
     const newTask: Task = {
       id: `t-${Date.now()}`,
+      orgId: currentOrg.id,
+      folderId: currentFolder.id,
       columnId: newTaskTargetColumn,
       title: newTaskTitle.trim(),
       tags: [newTaskTag],
@@ -2446,6 +2488,8 @@ export default function App() {
 
     const newNote: NoteItem = {
       id: `n-${Date.now()}`,
+      orgId: currentOrg.id,
+      folderId: currentFolder.id,
       title: newNoteTitle.trim(),
       content: newNoteContent.trim(),
       tags: [newNoteTag],
@@ -2503,6 +2547,8 @@ export default function App() {
 
     const newEvent: ScheduleItem = {
       id: `s-${Date.now()}`,
+      orgId: currentOrg.id,
+      folderId: currentFolder.id,
       title: newScheduleTitle.trim(),
       date: newScheduleDate,
       startDate: newScheduleStartDate || newScheduleDate,
@@ -2996,6 +3042,11 @@ export default function App() {
   };
 
   const filteredTasks = tasks.filter(t => {
+    // Scope tasks to active organization & folder
+    const matchOrg = !t.orgId || t.orgId === currentOrg.id;
+    const matchFolder = !t.folderId || !currentFolder || t.folderId === currentFolder.id;
+    if (!matchOrg || !matchFolder) return false;
+
     const matchSearch =
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -3012,6 +3063,12 @@ export default function App() {
     { id: 'inprogress', title: 'In Progress', count: filteredTasks.filter(t => t.columnId === 'inprogress').length },
     { id: 'inreview', title: 'In Review', count: filteredTasks.filter(t => t.columnId === 'inreview').length },
   ];
+
+  // Scoped collections based on active organization and folder
+  const currentOrgTasks = tasks.filter(t => (!t.orgId || t.orgId === currentOrg.id) && (!t.folderId || !currentFolder || t.folderId === currentFolder.id));
+  const currentOrgSchedules = schedules.filter(s => (!s.orgId || s.orgId === currentOrg.id) && (!s.folderId || !currentFolder || s.folderId === currentFolder.id));
+  const currentOrgNotes = notes.filter(n => (!n.orgId || n.orgId === currentOrg.id) && (!n.folderId || !currentFolder || n.folderId === currentFolder.id));
+  const currentOrgProducts = products.filter(p => !p.orgId || p.orgId === currentOrg.id);
 
   // 1. Splash & Onboarding Screen: Cinematic 3D Folder Dossier & Interactive Walkthrough
   if (currentScreen === 'splash') {
@@ -4103,10 +4160,10 @@ export default function App() {
         <div className="px-2 sm:px-6 pt-1.5 sm:pt-2 flex items-center overflow-x-auto no-scrollbar max-w-full">
           <nav className="flex space-x-1 sm:space-x-2 -mb-[1px] min-w-max">
             {[
-              { id: 'board' as const, label: 'Kanban Boards', shortLabel: 'Boards', count: tasks.length },
-              { id: 'products' as const, label: 'Products & Deliverables', shortLabel: 'Products', count: products.length },
-              { id: 'schedule' as const, label: 'Schedule & Timeline', shortLabel: 'Timeline', count: schedules.length },
-              { id: 'notes' as const, label: 'Dossier Notes', shortLabel: 'Notes', count: notes.length },
+              { id: 'board' as const, label: 'Kanban Boards', shortLabel: 'Boards', count: currentOrgTasks.length },
+              { id: 'products' as const, label: 'Products & Deliverables', shortLabel: 'Products', count: currentOrgProducts.length },
+              { id: 'schedule' as const, label: 'Schedule & Timeline', shortLabel: 'Timeline', count: currentOrgSchedules.length },
+              { id: 'notes' as const, label: 'Dossier Notes', shortLabel: 'Notes', count: currentOrgNotes.length },
               { id: 'reports' as const, label: 'Activity Logs', shortLabel: 'Logs' },
               { id: 'team' as const, label: 'Team Members', shortLabel: 'Team', count: teamMembers.length }
             ].map(tab => (
@@ -4242,9 +4299,9 @@ export default function App() {
 
             {/* Active Project / Folder Live Progress Card */}
             {(() => {
-              const activeFolderTasks = tasks.filter(t => currentFolder ? t.columnId : true);
+              const activeFolderTasks = currentOrgTasks;
               const totalActiveTasks = activeFolderTasks.length;
-              const completedActiveTasks = activeFolderTasks.filter(t => t.columnId === 'done').length;
+              const completedActiveTasks = activeFolderTasks.filter(t => t.columnId === 'inreview' || t.progress === 100).length;
               const liveFolderPercent = totalActiveTasks > 0 ? Math.round((completedActiveTasks / totalActiveTasks) * 100) : 0;
 
               return (
@@ -4335,8 +4392,8 @@ export default function App() {
                       value={boardProductFilter}
                       onChange={(val) => setBoardProductFilter(val)}
                       options={[
-                        { value: 'all', label: `All Products (${tasks.length})`, icon: <Boxes className="w-3.5 h-3.5 text-[#8C7E6C]" /> },
-                        ...products.map(p => ({
+                        { value: 'all', label: `All Products (${currentOrgTasks.length})`, icon: <Boxes className="w-3.5 h-3.5 text-[#8C7E6C]" /> },
+                        ...currentOrgProducts.map(p => ({
                           value: p.name,
                           label: p.name,
                           badge: p.code,
@@ -4885,7 +4942,7 @@ export default function App() {
                       <div className="w-72 sm:w-80 flex-shrink-0 px-4 py-3 border-r border-[#DCD1BC] flex items-center justify-between">
                         <span className="uppercase tracking-wider text-[11px] text-[#7A6D5E]">Project Roadmap & Tasks</span>
                         <span className="text-[10px] bg-[#E2D8C6] px-2 py-0.5 rounded-md font-semibold text-[#665A4E]">
-                          {schedules.length} Items
+                          {currentOrgSchedules.length} Items
                         </span>
                       </div>
                       <div className={`flex-1 grid ${gridTemplateClass} text-center`}>
@@ -4915,7 +4972,7 @@ export default function App() {
                         'Review & QA',
                         'Launch'
                       ].map(phaseName => {
-                        const phaseTasks = schedules.filter(s => (s.phase || 'Discovery & Research') === phaseName);
+                        const phaseTasks = currentOrgSchedules.filter(s => (s.phase || 'Discovery & Research') === phaseName);
                         const isCollapsed = timelineCollapsedPhases[phaseName];
 
                         return (
@@ -5306,7 +5363,7 @@ export default function App() {
                 // Find events on a specific day
                 const getEventsOnDay = (dayNum: number) => {
                   const targetStr = getDayStr(dayNum);
-                  return schedules.filter(s => {
+                  return currentOrgSchedules.filter(s => {
                     const start = s.startDate || s.date;
                     const end = s.endDate || s.date;
                     return targetStr >= start && targetStr <= end;
@@ -5323,7 +5380,7 @@ export default function App() {
 
                 // Selected day string for event filtering
                 const selectedDayFormatted = `${calendarSelectedDate.getFullYear()}-${String(calendarSelectedDate.getMonth() + 1).padStart(2, '0')}-${String(calendarSelectedDate.getDate()).padStart(2, '0')}`;
-                const eventsForSelectedDay = schedules.filter(s => {
+                const eventsForSelectedDay = currentOrgSchedules.filter(s => {
                   const start = s.startDate || s.date;
                   const end = s.endDate || s.date;
                   return selectedDayFormatted >= start && selectedDayFormatted <= end;
@@ -5339,7 +5396,7 @@ export default function App() {
                     const weekEnd = new Date(curr.setDate(first + 6));
                     const startStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
                     const endStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
-                    return schedules.filter(s => {
+                    return currentOrgSchedules.filter(s => {
                       const sStart = s.startDate || s.date;
                       const sEnd = s.endDate || s.date;
                       return sEnd >= startStr && sStart <= endStr;
@@ -5351,7 +5408,7 @@ export default function App() {
                     const qStartStr = `${calendarViewYear}-${String(qStartMonth + 1).padStart(2, '0')}-01`;
                     const qEndDays = new Date(calendarViewYear, qEndMonth + 1, 0).getDate();
                     const qEndStr = `${calendarViewYear}-${String(qEndMonth + 1).padStart(2, '0')}-${qEndDays}`;
-                    return schedules.filter(s => {
+                    return currentOrgSchedules.filter(s => {
                       const sStart = s.startDate || s.date;
                       const sEnd = s.endDate || s.date;
                       return sEnd >= qStartStr && sStart <= qEndStr;
@@ -5360,7 +5417,7 @@ export default function App() {
                     // Month View (Default)
                     const mStartStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-01`;
                     const mEndStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${daysInMonth}`;
-                    return schedules.filter(s => {
+                    return currentOrgSchedules.filter(s => {
                       const sStart = s.startDate || s.date;
                       const sEnd = s.endDate || s.date;
                       return sEnd >= mStartStr && sStart <= mEndStr;
@@ -5641,6 +5698,7 @@ export default function App() {
               {/* Notes Grid (Vintage stationery sticky notes) */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {[...notes]
+                  .filter(n => (!n.orgId || n.orgId === currentOrg.id) && (!n.folderId || !currentFolder || n.folderId === currentFolder.id))
                   .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0))
                   .map(note => {
                   const paperClass = getNotePaperColor(note.color);
@@ -6116,16 +6174,16 @@ export default function App() {
 
           {/* VIEW 5: ACTIVITY LOGS & ANALYTICS REPORTS */}
           {activeTab === 'reports' && (() => {
-            const totalTasksCount = tasks.length;
-            const completedTasks = tasks.filter(t => t.columnId === 'inreview' || t.progress === 100).length;
-            const inProgressTasks = tasks.filter(t => t.columnId === 'inprogress').length;
-            const todoTasks = tasks.filter(t => t.columnId === 'todo').length;
+            const totalTasksCount = currentOrgTasks.length;
+            const completedTasks = currentOrgTasks.filter(t => t.columnId === 'inreview' || t.progress === 100).length;
+            const inProgressTasks = currentOrgTasks.filter(t => t.columnId === 'inprogress').length;
+            const todoTasks = currentOrgTasks.filter(t => t.columnId === 'todo').length;
             const overallCompletionRate = totalTasksCount > 0 ? Math.round((completedTasks / totalTasksCount) * 100) : 0;
-            const totalHoursLogged = tasks.reduce((sum, t) => sum + (t.timeSpent || 0), 0);
+            const totalHoursLogged = currentOrgTasks.reduce((sum, t) => sum + (t.timeSpent || 0), 0);
             
             // Unified Risk Alert Radar: Combines high-risk tasks + products marked 'At Risk' or 'Needs Attention'
-            const highRiskTasks = tasks.filter(t => t.aiRiskScore === 'High').length;
-            const atRiskProducts = products.filter(p => p.health === 'At Risk' || p.health === 'Needs Attention').length;
+            const highRiskTasks = currentOrgTasks.filter(t => t.aiRiskScore === 'High').length;
+            const atRiskProducts = currentOrgProducts.filter(p => p.health === 'At Risk' || p.health === 'Needs Attention').length;
             const totalRiskCount = highRiskTasks + atRiskProducts;
 
             return (
@@ -6332,7 +6390,7 @@ export default function App() {
                       Product Engineering
                     </span>
                     <span className="text-xs text-[#7B7062]">
-                      • {products.length} Active Deliverables
+                      • {currentOrgProducts.length} Active Deliverables
                     </span>
                   </div>
                   <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
@@ -6375,7 +6433,7 @@ export default function App() {
                     <span>Deliverables</span>
                     <Boxes className="w-3.5 h-3.5 text-[#8C7E6C]" />
                   </div>
-                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">{products.length}</p>
+                  <p className="text-xl sm:text-2xl font-black text-[#2A231D]">{currentOrgProducts.length}</p>
                   <p className="text-[9px] sm:text-[10px] text-emerald-700 font-bold mt-0.5 truncate">100% synced with tasks</p>
                 </div>
 
@@ -6385,7 +6443,7 @@ export default function App() {
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   </div>
                   <p className="text-xl sm:text-2xl font-black text-[#2A231D]">
-                    {products.filter(p => p.health === 'On Track').length}
+                    {currentOrgProducts.filter(p => p.health === 'On Track').length}
                   </p>
                   <p className="text-[9px] sm:text-[10px] text-[#7A6F62] mt-0.5 truncate">Healthy velocity</p>
                 </div>
@@ -6396,7 +6454,7 @@ export default function App() {
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                   </div>
                   <p className="text-xl sm:text-2xl font-black text-amber-800">
-                    {products.filter(p => p.health !== 'On Track').length}
+                    {currentOrgProducts.filter(p => p.health !== 'On Track').length}
                   </p>
                   <p className="text-[9px] sm:text-[10px] text-amber-700 mt-0.5 truncate">Pacing radar alert</p>
                 </div>
@@ -6407,8 +6465,8 @@ export default function App() {
                     <Gauge className="w-3.5 h-3.5 text-[#8C7E6C]" />
                   </div>
                   <p className="text-xl sm:text-2xl font-black text-[#2A231D]">
-                    {products.length > 0
-                      ? Math.round(products.reduce((acc, p) => acc + (p.metrics?.completionRate || 0), 0) / products.length)
+                    {currentOrgProducts.length > 0
+                      ? Math.round(currentOrgProducts.reduce((acc, p) => acc + (p.metrics?.completionRate || 0), 0) / currentOrgProducts.length)
                       : 0}%
                   </p>
                   <p className="text-[9px] sm:text-[10px] text-[#7A6F62] mt-0.5 truncate">Across all features</p>
@@ -6454,7 +6512,7 @@ export default function App() {
 
               {/* Product Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {products
+                {currentOrgProducts
                   .filter(p => {
                     const matchQuery =
                       p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
