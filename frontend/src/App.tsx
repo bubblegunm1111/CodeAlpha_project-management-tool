@@ -4050,31 +4050,33 @@ export default function App() {
 
         {/* Left Sidebar (Image 1 Style) */}
         <aside
-          className={`bg-[#EFE8DC]/95 md:bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col justify-between py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
+          className={`bg-[#EFE8DC]/95 md:bg-[#EFE8DC]/90 border-r border-[#DCD1BC] flex flex-col h-full py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
             isSidebarOpen ? 'w-64 md:w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
           }`}
         >
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-2 text-[#463D34]">
-              <button
-                onClick={() => setCurrentScreen('folder_hub')}
-                className="flex items-center space-x-2 text-left hover:text-[#2C241E] group transition-colors"
-                title="Return to Folder Hub"
-              >
-                <div className="p-1 rounded-md bg-[#E5DCCB] group-hover:bg-[#DACBB0] text-[#463D34] transition-colors">
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-sm font-extrabold tracking-tight text-[#2B241E]">Folders Hub</span>
-              </button>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#7A7064] hover:text-[#2C241E] transition-colors"
-                title="Hide sidebar"
-              >
-                <PanelLeftClose className="w-4 h-4" />
-              </button>
-            </div>
+          {/* Top Header */}
+          <div className="flex items-center justify-between px-2 text-[#463D34] shrink-0 mb-4">
+            <button
+              onClick={() => setCurrentScreen('folder_hub')}
+              className="flex items-center space-x-2 text-left hover:text-[#2C241E] group transition-colors"
+              title="Return to Folder Hub"
+            >
+              <div className="p-1 rounded-md bg-[#E5DCCB] group-hover:bg-[#DACBB0] text-[#463D34] transition-colors">
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-sm font-extrabold tracking-tight text-[#2B241E]">Folders Hub</span>
+            </button>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 rounded-lg hover:bg-[#E4DAC7] text-[#7A7064] hover:text-[#2C241E] transition-colors"
+              title="Hide sidebar"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </button>
+          </div>
 
+          {/* Scrollable Navigation Body */}
+          <div className="flex-1 overflow-y-auto space-y-5 no-scrollbar pr-0.5">
             <div>
               <p className="text-[10px] font-bold text-[#8C8072] tracking-wider px-2 uppercase mb-1.5">Main</p>
               <nav className="space-y-0.5">
@@ -4157,7 +4159,8 @@ export default function App() {
             </div>
           </div>
 
-          <div className="space-y-0.5 pt-4 border-t border-[#DCD1BC]">
+          {/* Pinned Bottom Footer (Uniform & Constant Sequence) */}
+          <div className="shrink-0 pt-3 mt-auto border-t border-[#DCD1BC] space-y-0.5">
             <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#E9E0CE] transition-all">
               <Settings className="w-4 h-4 text-[#756A5E]" />
               <span>Settings</span>
