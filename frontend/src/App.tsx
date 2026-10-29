@@ -1692,25 +1692,27 @@ export default function App() {
     setIsAuthLoading(true);
 
     try {
+      // 1. Immediately switch screen state to folder_hub so the user never sees any flicker or sign-in glitch
+      setCurrentScreen('folder_hub');
+
       // Use signInWithPopup: Directly opens Google account chooser in top-level window
-      // This completely avoids the "missing initial state" error caused by redirect sessionStorage wipes
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const targetEmail = user.email || 'user@gmail.com';
       const targetName = user.displayName || targetEmail.split('@')[0];
       const targetAvatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
 
-      try {
-        await fetch(`${API_BASE}/auth/google`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
-        });
-      } catch {}
-
       applyUserData(targetEmail, targetName, targetAvatar);
+
+      fetch(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
+      }).catch(() => {});
     } catch (err: any) {
       console.error('Firebase signInWithPopup error:', err);
+      // Only revert back to auth if user closed popup or cancelled
+      setCurrentScreen('auth');
       if (err.code !== 'auth/popup-closed-by-user') {
         setAuthError(err?.message || 'Authentication error');
       }
