@@ -4433,7 +4433,7 @@ export default function App() {
                                   className="mb-2 text-[11px] font-semibold text-[#8C7F70] hover:text-[#2C241E] flex items-center space-x-1 opacity-75 hover:opacity-100 transition-opacity"
                                 >
                                   <Plus className="w-3 h-3" />
-                                  <span>+ Add checklist</span>
+                                  <span>Add checklist</span>
                                 </button>
                               )}
 
@@ -4656,7 +4656,7 @@ export default function App() {
                     className="px-3.5 py-1.5 bg-[#2E2721] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#463D34] shadow-sm flex items-center space-x-1.5 transition-all"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>+ Schedule Task</span>
+                    <span>Schedule Task</span>
                   </button>
                 </div>
               </div>
@@ -4758,12 +4758,7 @@ export default function App() {
                     {/* Gantt Header: Left Phase label + Dynamic Zoom Columns */}
                     <div className="flex border-b border-[#DCD1BC] bg-[#EFE8DC] text-xs font-bold text-[#554A3D]">
                       <div className="w-72 sm:w-80 flex-shrink-0 px-4 py-3 border-r border-[#DCD1BC] flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="uppercase tracking-wider text-[11px] text-[#7A6D5E]">Project Roadmap & Tasks</span>
-                          <span className="text-[9px] uppercase font-black px-1.5 py-0.5 rounded bg-[#2E2721] text-[#FAF6EE]">
-                            {timelineZoom}
-                          </span>
-                        </div>
+                        <span className="uppercase tracking-wider text-[11px] text-[#7A6D5E]">Project Roadmap & Tasks</span>
                         <span className="text-[10px] bg-[#E2D8C6] px-2 py-0.5 rounded-md font-semibold text-[#665A4E]">
                           {schedules.length} Items
                         </span>
@@ -5391,18 +5386,13 @@ export default function App() {
                     <div className="lg:col-span-7 space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-[#E5DBCA] gap-2">
                         <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#2E2721] text-[#FAF6EE]">
-                              {timelineZoom} View
-                            </span>
-                            <h2 className="text-sm font-black text-[#2C241E]">
-                              {timelineZoom === 'Week'
-                                ? `Sprint Deliverables for Week of ${calendarSelectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                                : timelineZoom === 'Quarter'
-                                ? `Quarterly Deliverables (${currentMonthName} Quarter)`
-                                : `${currentMonthName} ${calendarViewYear} Deliverables`}
-                            </h2>
-                          </div>
+                          <h2 className="text-sm font-black text-[#2C241E]">
+                            {timelineZoom === 'Week'
+                              ? `Sprint Deliverables for Week of ${calendarSelectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                              : timelineZoom === 'Quarter'
+                              ? `Quarterly Deliverables (${currentMonthName} Quarter)`
+                              : `${currentMonthName} ${calendarViewYear} Deliverables`}
+                          </h2>
                           <p className="text-[11px] text-[#7A6D5E] mt-0.5">
                             {displayedSchedules.length} deliverables active in this timeframe • Click date or event to inspect
                           </p>
@@ -5490,7 +5480,7 @@ export default function App() {
                           <div className="p-12 text-center bg-[#F5EFEB] rounded-2xl border-2 border-dashed border-[#DCD1BC] text-xs text-[#8A7D6E] space-y-2">
                             <CalendarIcon className="w-8 h-8 text-[#A89C8C] mx-auto" />
                             <p className="font-bold text-[#3B3127]">No Events Scheduled in {currentMonthName}</p>
-                            <p>Click on "+ Schedule Task" above to add deliverables for this date.</p>
+                            <p>Click on "Schedule Task" above to add deliverables for this date.</p>
                           </div>
                         )}
                       </div>
@@ -5519,7 +5509,7 @@ export default function App() {
                   className="px-4 py-2 bg-[#2E2721] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#463D34] shadow flex items-center space-x-1.5 self-start sm:self-auto"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ New Memo</span>
+                  <span>New Memo</span>
                 </button>
               </div>
 
@@ -6018,20 +6008,12 @@ export default function App() {
                 {/* Header & Subtitle */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E5DBCA] gap-3">
                   <div>
-                    <div className="flex items-center space-x-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F4E9D5] text-[#8A4A1C] border border-[#DFD1B8]">
-                        Archival Telemetry & Dossier Analytics
-                      </span>
-                      <span className="text-xs text-[#7B7062]">
-                        • Live Database Telemetry
-                      </span>
-                    </div>
-                    <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
+                    <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight flex items-center space-x-2">
                       <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-[#756A5E]" />
                       <span>Activity Logs & Project Reports</span>
                     </h1>
                     <p className="text-xs text-[#7B7062] mt-0.5">
-                      Comprehensive sprint analytics, team delivery velocity, risk radar, and real-time audit ledger.
+                      Comprehensive sprint analytics, team delivery velocity, risk radar, and audit ledger.
                     </p>
                   </div>
 
@@ -6883,7 +6865,7 @@ export default function App() {
                   <form onSubmit={handleAddSubtaskToSelectedTask} className="flex space-x-2 pt-2 border-t border-[#E8DEC9]">
                     <input
                       type="text"
-                      placeholder="+ Add a todo item (e.g. Make wireframe, Setup database)..."
+                      placeholder="Add a todo item (e.g. Make wireframe, Setup database)..."
                       value={newSubtaskInput}
                       onChange={(e) => setNewSubtaskInput(e.target.value)}
                       className="flex-1 bg-white border border-[#D5CABB] rounded-xl px-3 py-1.5 text-xs text-[#2A231D] placeholder-[#9D9181] focus:outline-none focus:ring-1 focus:ring-[#7D6F5E]"
@@ -6892,7 +6874,7 @@ export default function App() {
                       type="submit"
                       className="px-3.5 py-1.5 bg-[#2E2721] text-[#FAF6EE] text-xs font-bold rounded-xl hover:bg-[#463D34] transition-colors"
                     >
-                      + Add
+                      Add
                     </button>
                   </form>
                 </div>
@@ -7130,7 +7112,7 @@ export default function App() {
                     }}
                     className="px-3 py-1.5 bg-[#E4DAC7] text-[#3A3026] text-xs font-bold rounded-xl hover:bg-[#D8CDBC]"
                   >
-                    + Add
+                    Add
                   </button>
                 </div>
 
