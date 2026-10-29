@@ -228,11 +228,14 @@ function ArchivalSelect<T extends string | number = string>({
   }, [isOpen]);
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative dropdown-container ${className}`} data-dropdown="true">
       <button
         type="button"
         title={title}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className={`w-full bg-[#FAF6EE] border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3 py-2 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all active:scale-[0.99] touch-target ${
           isOpen ? 'ring-2 ring-[#2E2721]/20 border-[#2E2721]' : ''
         } ${buttonClassName}`}
@@ -253,7 +256,8 @@ function ArchivalSelect<T extends string | number = string>({
 
       {isOpen && (
         <div
-          className={`absolute left-0 right-0 top-full mt-1.5 bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar ${menuClassName}`}
+          onClick={(e) => e.stopPropagation()}
+          className={`absolute left-0 top-full mt-1.5 min-w-[200px] w-full bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar ${menuClassName}`}
         >
           {options.map((opt) => {
             const isSelected = opt.value === value;
@@ -261,7 +265,9 @@ function ArchivalSelect<T extends string | number = string>({
               <button
                 key={String(opt.value)}
                 type="button"
-                onClick={() => {
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
                   onChange(opt.value);
                   setIsOpen(false);
                 }}
