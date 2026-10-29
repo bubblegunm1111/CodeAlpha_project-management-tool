@@ -1236,7 +1236,11 @@ export default function App() {
       if (!target) return;
 
       // If clicked inside a dropdown toggle or menu container, do nothing
-      if (target.closest('.dropdown-container') || target.closest('[data-dropdown="true"]')) {
+      if (
+        target.closest('.dropdown-container') ||
+        target.closest('[data-dropdown="true"]') ||
+        target.closest('[data-card-menu="true"]')
+      ) {
         return;
       }
 
@@ -1256,15 +1260,6 @@ export default function App() {
       document.removeEventListener('mousedown', handleGlobalOutsideClick);
       document.removeEventListener('touchstart', handleGlobalOutsideClick);
     };
-  }, []);
-
-  // Close card menu on document click
-  useEffect(() => {
-    const handleDocumentClick = () => {
-      setCardMenuOpenId(null);
-    };
-    window.addEventListener('click', handleDocumentClick);
-    return () => window.removeEventListener('click', handleDocumentClick);
   }, []);
 
   // Splash Screen Animation sequence: opens folder smoothly without rushing user away
@@ -2362,6 +2357,8 @@ export default function App() {
     const duplicated: Task = {
       ...task,
       id: `t-${Date.now()}`,
+      orgId: task.orgId || currentOrg.id,
+      folderId: task.folderId || currentFolder.id,
       title: `${task.title} (Copy)`,
       subtasks: task.subtasks ? task.subtasks.map((s, idx) => ({ ...s, id: `st-${Date.now()}-${idx}` })) : [],
       comments: [],
@@ -4023,24 +4020,40 @@ export default function App() {
               <Folder className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+              {/* Inline Switcher for Organization */}
+              <div className="relative min-w-[120px] sm:min-w-[160px] dropdown-container" data-dropdown="true">
+                <ArchivalSelect
+                  value={currentOrg.id}
+                  onChange={(val) => {
+                    const found = organizations.find(o => o.id === val);
+                    if (found) {
+                      setCurrentOrg(found);
+                      if (found.folders && found.folders.length > 0) {
+                        setCurrentFolder(found.folders[0]);
+                      }
+                    }
+                  }}
+                  options={organizations.map(org => ({
+                    value: org.id,
+                    label: org.name,
+                    icon: <Building2 className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                  }))}
+                  title="Switch Organization"
+                />
+              </div>
+
+              <span className="text-[#8C8072] text-xs shrink-0">/</span>
+
+              {/* Folder Selector / Badge */}
               <button
                 onClick={() => setCurrentScreen('folder_hub')}
-                className="font-extrabold text-xs sm:text-sm tracking-tight text-[#2B241F] hover:underline truncate max-w-[85px] sm:max-w-[140px]"
+                className="text-[10px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] hover:bg-[#EBDDC5] px-1.5 sm:px-2.5 py-1 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1 min-w-0 transition-colors"
+                title="Click to view all folders in Folder Hub"
               >
-                {currentOrg.name}
-              </button>
-              <span className="text-[#8C8072] text-xs shrink-0">/</span>
-              <span className="text-[10px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] px-1.5 sm:px-2.5 py-0.5 rounded-md border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1 min-w-0">
                 <span className="truncate max-w-[65px] sm:max-w-none">{currentFolder.name}</span>
-                <span className="font-mono text-[8px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#EBDDC5] px-1 sm:px-1.5 py-0.2 rounded shrink-0">
+                <span className="font-mono text-[8px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#DFCFB7] px-1 sm:px-1.5 py-0.2 rounded shrink-0">
                   {formatFolderCode(currentFolder.code)}
                 </span>
-              </span>
-              <button
-                onClick={() => setCurrentScreen('folder_hub')}
-                className="hidden sm:inline text-[11px] text-[#85796B] hover:text-[#2C241E] font-medium ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded hover:bg-[#E5DCBE] transition-colors shrink-0"
-              >
-                Switch
               </button>
             </div>
           </div>
@@ -4204,7 +4217,7 @@ export default function App() {
 
         {/* Left Sidebar (Image 1 Style) */}
         <aside
-          className={`bg-[#EFE8DC] border-r border-[#DCD1BC] flex flex-col h-full py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
+          className={`bg-[#FAF6EE] border-r border-[#DCD1BC] flex flex-col h-full py-4 px-3 select-none transition-all duration-300 ease-in-out z-40 md:z-20 shrink-0 shadow-lg md:shadow-none fixed md:relative inset-y-0 left-0 pt-10 md:pt-4 ${
             isSidebarOpen ? 'w-64 md:w-60 translate-x-0 opacity-100' : 'w-0 p-0 -translate-x-full opacity-0 overflow-hidden border-r-0'
           }`}
         >
@@ -4305,7 +4318,7 @@ export default function App() {
               const liveFolderPercent = totalActiveTasks > 0 ? Math.round((completedActiveTasks / totalActiveTasks) * 100) : 0;
 
               return (
-                <div className="p-3 bg-[#FAF6EE] rounded-xl border border-[#DCD1BC] shadow-inner text-xs space-y-1.5">
+                <div className="p-3 bg-[#F5EFEB] rounded-xl border border-[#DCD1BC] shadow-2xs text-xs space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-[#837666]">Active Folder</span>
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -4491,7 +4504,7 @@ export default function App() {
                                     <Palette className="w-3.5 h-3.5 text-[#7A6D5E]" />
                                   </button>
                                   {/* Contextual 3-Dots Dropdown Menu */}
-                                  <div className="relative">
+                                  <div className="relative dropdown-container" data-dropdown="true" data-card-menu="true">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -4506,12 +4519,17 @@ export default function App() {
                                     {cardMenuOpenId === task.id && (
                                       <div
                                         onClick={(e) => e.stopPropagation()}
-                                        className="absolute right-0 mt-1 w-48 bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-2xl z-50 py-1.5 text-xs animate-in fade-in zoom-in-95 duration-100"
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        data-dropdown="true"
+                                        data-card-menu="true"
+                                        className="dropdown-container absolute right-0 mt-1 w-48 bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-2xl z-50 py-1.5 text-xs animate-in fade-in zoom-in-95 duration-100"
                                       >
                                         {/* Edit / Open */}
                                         <button
                                           type="button"
-                                          onClick={() => {
+                                          onMouseDown={(e) => e.stopPropagation()}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
                                             setSelectedTask(task);
                                             setCardMenuOpenId(null);
                                           }}
@@ -4524,7 +4542,11 @@ export default function App() {
                                         {/* Duplicate Card */}
                                         <button
                                           type="button"
-                                          onClick={() => handleDuplicateTask(task)}
+                                          onMouseDown={(e) => e.stopPropagation()}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDuplicateTask(task);
+                                          }}
                                           className="w-full text-left px-3 py-1.5 flex items-center space-x-2 text-[#3A3026] hover:bg-[#EFE8DC] font-medium transition-colors"
                                         >
                                           <Copy className="w-3.5 h-3.5 text-[#7A6D5E]" />
@@ -4543,7 +4565,11 @@ export default function App() {
                                               key={col}
                                               type="button"
                                               disabled={isCurrent}
-                                              onClick={() => moveTask(task.id, col)}
+                                              onMouseDown={(e) => e.stopPropagation()}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                moveTask(task.id, col);
+                                              }}
                                               className={`w-full text-left px-3 py-1 flex items-center justify-between text-xs font-medium transition-colors ${
                                                 isCurrent
                                                   ? 'opacity-40 cursor-default bg-black/5 text-[#8A7D6F]'
@@ -4560,7 +4586,11 @@ export default function App() {
                                         <div className="border-t border-[#E8DEC9] mt-1 pt-1">
                                           <button
                                             type="button"
-                                            onClick={() => handleDeleteTask(task.id)}
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteTask(task.id);
+                                            }}
                                             className="w-full text-left px-3 py-1.5 flex items-center space-x-2 text-rose-700 hover:bg-rose-50 font-bold transition-colors"
                                           >
                                             <Trash2 className="w-3.5 h-3.5 text-rose-600" />
