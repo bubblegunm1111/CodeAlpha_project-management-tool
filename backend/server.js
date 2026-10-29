@@ -15,7 +15,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'archival-secret-key-change-in-prod';
-const APP_BASE_URL = process.env.APP_BASE_URL || 'http://localhost:5173';
+const APP_BASE_URL = process.env.APP_BASE_URL || 'https://foldable-shahd.vercel.app';
 
 // Broadcast helper for real-time WebSocket communication
 const broadcast = (data) => {
@@ -2140,7 +2140,7 @@ app.post('/api/v1/organizations/:orgId/invites', authMiddleware, async (req, res
     invitation.organization_name = org.name;
     
     // Dynamic link (supports local or Vercel production deployment)
-    const clientBaseUrl = req.headers.origin || APP_BASE_URL || 'http://localhost:5173';
+    const clientBaseUrl = req.headers.origin || APP_BASE_URL || 'https://foldable-shahd.vercel.app';
     const inviteUrl = `${clientBaseUrl}/?invite=${token}`;
     invitation.invite_url = inviteUrl;
 

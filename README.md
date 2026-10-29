@@ -1,5 +1,7 @@
 # Foldable — Tactile Project & Dossier Management
 
+**Live Demo:** [https://foldable-shahd.vercel.app/](https://foldable-shahd.vercel.app/)
+
 A full-stack, tactile project management web application crafted with a warm archival manila folder design. Features interactive Kanban boards, sprint timeline calendars, notes, client accounts, product roadmaps, and Google Authentication.
 
 ---

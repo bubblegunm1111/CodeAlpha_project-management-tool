@@ -3250,7 +3250,7 @@ export default function App() {
 
     const emailTrimmed = newMemberEmail.trim().toLowerCase();
     const generatedToken = 'inv_' + Math.random().toString(36).substring(2, 9);
-    const origin = window.location.origin || 'http://localhost:5173';
+    const origin = window.location.origin || 'https://foldable-shahd.vercel.app';
     const inviteLink = `${origin}/?invite=${generatedToken}`;
 
     const newMember: TeamMember = {
