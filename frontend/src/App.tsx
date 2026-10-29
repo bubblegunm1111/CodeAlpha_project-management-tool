@@ -1663,20 +1663,16 @@ export default function App() {
       ]);
     } catch (err: any) {
       console.warn('Firebase signInWithPopup error or popup blocked:', err);
-      // If popup was blocked or mobile browser requires redirect
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
-        if (err.code === 'auth/popup-blocked') {
-          try {
-            await signInWithRedirect(auth, googleProvider);
-            return;
-          } catch (redirErr) {
-            console.error('Redirect sign in error:', redirErr);
-          }
-        }
+      // On mobile browsers or unauthorized IP, attempt redirect first
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      } catch (redirErr: any) {
+        console.error('Redirect sign in error:', redirErr);
+        // Only if redirect completely fails, show the error banner and account dialog
+        setAuthError(err.message || redirErr?.message || 'Google Sign-in failed. Please select your account below:');
+        setIsGoogleModalOpen(true);
       }
-      // If Google Auth provider isn't enabled yet or network issue, open account picker dialog as friendly fallback
-      setAuthError(err.message || 'Google Sign-in failed. Please try again.');
-      setIsGoogleModalOpen(true);
     } finally {
       setIsAuthLoading(false);
     }
