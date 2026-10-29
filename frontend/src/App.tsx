@@ -203,6 +203,7 @@ function ArchivalSelect<T extends string | number = string>({
   placeholder = 'Select option',
   className = '',
   buttonClassName = '',
+  menuClassName = '',
   title
 }: ArchivalSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -233,32 +234,18 @@ function ArchivalSelect<T extends string | number = string>({
 
   return (
     <div ref={containerRef} className={`relative dropdown-container ${className}`} data-dropdown="true">
-      {/* Standard Select Element Overlay for 100% Guaranteed Native Browser Interactivity */}
-      <select
-        value={String(value)}
-        onChange={(e) => {
-          const rawVal = e.target.value;
-          const matched = options.find(o => String(o.value) === rawVal);
-          if (matched) {
-            handleSelect(matched.value);
-          }
-        }}
+      <button
+        type="button"
         title={title}
-        aria-label={title || placeholder}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(prev => !prev);
+        }}
+        className={`w-full bg-[#FAF6EE] border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3 py-2 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all active:scale-[0.99] touch-target cursor-pointer ${
+          isOpen ? 'ring-2 ring-[#2E2721]/20 border-[#2E2721]' : ''
+        } ${buttonClassName}`}
       >
-        {options.map((opt) => (
-          <option key={String(opt.value)} value={String(opt.value)}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-
-      {/* Tactile Dossier Styled Trigger Button (Mirrors Selection) */}
-      <div
-        className={`w-full bg-[#FAF6EE] border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3 py-2 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all pointer-events-none ${buttonClassName}`}
-      >
-        <div className="flex items-center space-x-2 truncate mr-1.5">
+        <div className="flex items-center space-x-2 truncate mr-1.5 pointer-events-none">
           {selectedOption?.icon && (
             <span className="shrink-0">{selectedOption.icon}</span>
           )}
@@ -269,8 +256,58 @@ function ArchivalSelect<T extends string | number = string>({
             </span>
           )}
         </div>
-        <ChevronDown className="w-3.5 h-3.5 text-[#8C7E6C] shrink-0" />
-      </div>
+        <ChevronDown className={`w-3.5 h-3.5 text-[#8C7E6C] transition-transform duration-200 shrink-0 pointer-events-none ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className={`absolute left-0 top-full mt-1.5 min-w-[210px] w-full bg-[#FAF6EE] border border-[#D5CABB] rounded-xl shadow-2xl p-1.5 z-[9999] animate-in fade-in zoom-in-95 duration-150 max-h-56 overflow-y-auto no-scrollbar ${menuClassName}`}
+        >
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  handleSelect(opt.value);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelect(opt.value);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs transition-all text-left mb-1 last:mb-0 cursor-pointer select-none ${
+                  isSelected
+                    ? 'bg-[#2E2721] text-[#FAF6EE] font-bold shadow-2xs'
+                    : 'text-[#3E342B] hover:bg-[#EAE0CF] font-medium'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5 truncate mr-2 pointer-events-none">
+                  {opt.icon && <span className="shrink-0">{opt.icon}</span>}
+                  <div className="truncate">
+                    <span className="truncate block font-semibold">{opt.label}</span>
+                    {opt.sublabel && (
+                      <span className={`text-[10px] block truncate ${isSelected ? 'text-[#DCD1BC]' : 'text-[#8C7E6C]'}`}>
+                        {opt.sublabel}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1 shrink-0 ml-1 pointer-events-none">
+                  {opt.badge && (
+                    <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${isSelected ? 'bg-white/20 text-[#FAF6EE]' : 'bg-[#E8DEC9] text-[#554A3E]'}`}>
+                      {opt.badge}
+                    </span>
+                  )}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#FAF6EE] ml-1 shrink-0" />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
