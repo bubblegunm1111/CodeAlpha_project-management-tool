@@ -218,11 +218,11 @@ function ArchivalSelect<T extends string | number = string>({
       }
     };
     if (isOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('click', handleOutsideClick);
       document.addEventListener('touchstart', handleOutsideClick, { passive: true });
     }
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('click', handleOutsideClick);
       document.removeEventListener('touchstart', handleOutsideClick);
     };
   }, [isOpen]);
@@ -238,6 +238,7 @@ function ArchivalSelect<T extends string | number = string>({
         type="button"
         title={title}
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           setIsOpen(prev => !prev);
         }}
@@ -270,11 +271,13 @@ function ArchivalSelect<T extends string | number = string>({
               <button
                 key={String(opt.value)}
                 type="button"
-                onPointerDown={(e) => {
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   handleSelect(opt.value);
                 }}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   handleSelect(opt.value);
                 }}
@@ -3687,7 +3690,7 @@ export default function App() {
         <div className="absolute inset-0 bg-[radial-gradient(#D5C8B2_1.2px,transparent_1.2px)] [background-size:20px_20px] opacity-35 pointer-events-none" />
 
         {/* Top Header */}
-        <header className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-9 sm:pt-4 relative z-10">
+        <header className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-9 sm:pt-4 relative z-50">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 rounded-xl bg-[#3F3730] text-[#FAF6EE] flex items-center justify-center shadow-sm shrink-0">
               <Folder className="w-5 h-5" />
@@ -3751,6 +3754,54 @@ export default function App() {
             </button>
           </div>
         </header>
+
+        {/* Tactile Organization Tabs Strip */}
+        <div className="bg-[#EAE0D0] border-b border-[#D5CABB] px-4 sm:px-6 py-2 relative z-40">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
+            <div className="flex items-center space-x-2 shrink-0">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-[#7A7064] mr-1 hidden sm:inline">
+                Workspace:
+              </span>
+              {organizations.map(org => {
+                const isActive = org.id === currentOrg.id;
+                return (
+                  <button
+                    key={org.id}
+                    type="button"
+                    onClick={() => {
+                      setCurrentOrg(org);
+                      if (org.folders && org.folders.length > 0) {
+                        setCurrentFolder(org.folders[0]);
+                      }
+                    }}
+                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border shrink-0 cursor-pointer ${
+                      isActive
+                        ? 'bg-[#2E2721] text-[#FAF6EE] border-[#2E2721] shadow-sm'
+                        : 'bg-[#FAF6EE] text-[#5A5046] border-[#D5CABB] hover:bg-[#F3ECE1] hover:text-[#2C241E]'
+                    }`}
+                  >
+                    <Building2 className={`w-3.5 h-3.5 ${isActive ? 'text-[#DCD1BC]' : 'text-[#8C7E6C]'}`} />
+                    <span className="truncate max-w-[150px]">{org.name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-extrabold ${
+                      isActive ? 'bg-white/20 text-[#FAF6EE]' : 'bg-[#E4DAC7] text-[#554A3E]'
+                    }`}>
+                      {org.folders ? org.folders.length : 0}
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setIsNewOrgModalOpen(true)}
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#665B4E] hover:text-[#2C241E] hover:bg-[#DFD4C0] border border-dashed border-[#C5B7A0] transition-colors shrink-0 cursor-pointer"
+                title="Create New Organization Workspace"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>New</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Main Folder Grid */}
         <main className="max-w-6xl mx-auto w-full px-6 py-10 flex-1 relative z-10">
@@ -4012,7 +4063,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F5EFEB] text-[#2C2621] flex flex-col antialiased selection:bg-[#E8DECA]">
       {/* Top Manila Folder Cutout Tab Header */}
-      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-8 sm:pt-0">
+      <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-8 sm:pt-0 relative z-40">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
         <div className="px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
