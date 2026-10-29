@@ -64,7 +64,7 @@ import {
 } from 'lucide-react';
 
 import { auth, googleProvider } from './firebase';
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged } from 'firebase/auth';
 
 const API_BASE = typeof window !== 'undefined'
   ? `${window.location.protocol}//${window.location.hostname}:3001/api/v1`
@@ -1439,8 +1439,9 @@ export default function App() {
     };
   }, []);
 
-  // Check for Firebase redirect sign-in result on page load (mobile fallback)
+  // Persistent Firebase Authentication State Listener
   useEffect(() => {
+    // 1. Check redirect result if coming back from accounts.google.com
     getRedirectResult(auth)
       .then((result) => {
         if (result && result.user) {
@@ -1452,46 +1453,41 @@ export default function App() {
           fetch(`${API_BASE}/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: targetEmail,
-              name: targetName,
-              avatar_url: targetAvatar
-            })
-          })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-              if (data && data.user) {
-                setCurrentUser({
-                  name: data.user.name,
-                  email: data.user.email,
-                  avatar: data.user.avatar_url || targetAvatar
-                });
-              } else {
-                setCurrentUser({
-                  name: targetName,
-                  email: targetEmail,
-                  avatar: targetAvatar
-                });
-              }
-            })
-            .catch(() => {
-              setCurrentUser({
-                name: targetName,
-                email: targetEmail,
-                avatar: targetAvatar
-              });
-            });
+            body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
+          }).catch(() => {});
 
+          setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
           setCurrentScreen('folder_hub');
-          setNotifications(prev => [
-            { id: Date.now(), text: `Authenticated via Google (${targetEmail})`, time: 'Just now' },
-            ...prev
-          ]);
         }
       })
       .catch((err) => {
-        console.warn('Firebase redirect error:', err);
+        console.warn('Firebase redirect result warning:', err);
       });
+
+    // 2. Firebase persistent state subscriber: guarantees seamless sign-in immediately
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const targetEmail = user.email || 'user@gmail.com';
+        const targetName = user.displayName || targetEmail.split('@')[0];
+        const targetAvatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
+
+        fetch(`${API_BASE}/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
+        }).catch(() => {});
+
+        setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
+        // Automatically unlock Foldable workspace for signed-in user
+        setCurrentScreen('folder_hub');
+        setNotifications(prev => [
+          { id: Date.now(), text: `Authenticated as ${targetName} (${targetEmail})`, time: 'Just now' },
+          ...prev
+        ]);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Splash Screen Animation sequence: opens folder smoothly without rushing user away
