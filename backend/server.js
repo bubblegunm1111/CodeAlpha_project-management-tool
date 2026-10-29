@@ -836,7 +836,7 @@ app.post('/api/v1/tasks/:taskId/comments', authMiddleware, async (req, res) => {
       taskId: req.params.taskId,
       comment: {
         id: comment.id,
-        author: comment.name || 'Agent',
+        author: comment.name || req.body.author || 'Team Member',
         avatar: comment.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
         time: 'Just now',
         created_at: comment.created_at,

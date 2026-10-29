@@ -1626,8 +1626,11 @@ export default function App() {
               setTasks(prevTasks => prevTasks.map(t => {
                 const rawId = t.id.replace('t-', '');
                 if (t.id === taskId || rawId === String(taskId)) {
-                  // Prevent duplicate comment if local optimistic update added it
-                  const exists = (t.comments || []).some(c => c.content === formattedComment.content && Math.abs(Number(c.id.replace('c-', '')) - Number(formattedComment.id.replace('c-', ''))) < 5000);
+                  // Prevent duplicate comment if matching text content
+                  const exists = (t.comments || []).some(c => (
+                    c.id === formattedComment.id ||
+                    c.content.trim().toLowerCase() === formattedComment.content.trim().toLowerCase()
+                  ));
                   if (exists) return t;
 
                   const updatedComments = [formattedComment, ...(t.comments || [])];
@@ -1644,7 +1647,10 @@ export default function App() {
                 if (prevSelected) {
                   const rawSelId = prevSelected.id.replace('t-', '');
                   if (prevSelected.id === taskId || rawSelId === String(taskId)) {
-                    const exists = (prevSelected.comments || []).some(c => c.content === formattedComment.content && Math.abs(Number(c.id.replace('c-', '')) - Number(formattedComment.id.replace('c-', ''))) < 5000);
+                    const exists = (prevSelected.comments || []).some(c => (
+                      c.id === formattedComment.id ||
+                      c.content.trim().toLowerCase() === formattedComment.content.trim().toLowerCase()
+                    ));
                     if (!exists) {
                       return {
                         ...prevSelected,
@@ -2181,12 +2187,16 @@ export default function App() {
     e.preventDefault();
     if (!newCommentText.trim() || !selectedTask) return;
 
+    const trimmed = newCommentText.trim();
+    const commentAuthor = currentUser.name || 'Mason Walker';
+    const commentAvatar = currentUser.avatar;
+
     const newComment: Comment = {
       id: `c-${Date.now()}`,
-      author: 'Mason Walker',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces',
+      author: commentAuthor,
+      avatar: commentAvatar,
       time: 'Just now',
-      content: newCommentText.trim()
+      content: trimmed
     };
 
     const updatedTask = {
@@ -2203,7 +2213,7 @@ export default function App() {
     fetch(`${API_BASE}/tasks/${numId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: newComment.content })
+      body: JSON.stringify({ content: trimmed, author: commentAuthor })
     }).catch(() => {});
 
     setNotifications(prev => [
@@ -6947,19 +6957,43 @@ export default function App() {
       })()}
 
       {/* Modal: Create Task Card */}
-      {isNewTaskModalOpen && (
+      {isNewTaskModalOpen && (() => {
+        const modalColorStyles = getColorStyles(newTaskColor);
+        return (
         <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+          <div className={`border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-8 sm:pb-6 max-h-[88vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200 transition-colors ${modalColorStyles.bg}`}>
             {/* Mobile Drag Handle indicator */}
             <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto mb-3" />
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E8DEC9]">
-              <h3 className="text-base font-bold text-[#2C241E]">Create New Task Card</h3>
+              <div className="flex items-center space-x-2">
+                <span className={`w-3.5 h-3.5 rounded-full border border-black/15 shadow-xs shrink-0 ${modalColorStyles.bg}`} />
+                <h3 className="text-base font-bold text-[#2C241E]">Create New Task Card</h3>
+              </div>
               <button onClick={() => setIsNewTaskModalOpen(false)} className="text-[#786D60] hover:text-[#2A231D] p-1 rounded-lg touch-target flex items-center justify-center">
                 <X className="w-5 h-5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateTask} className="space-y-4">
+              {/* Live Preview Card Banner */}
+              <div className={`p-3.5 rounded-2xl border ${modalColorStyles.border} bg-white/70 shadow-xs transition-all`}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${modalColorStyles.tagBg} ${modalColorStyles.tagText}`}>
+                    {newTaskTag}
+                  </span>
+                  <span className="text-[10px] font-bold text-[#6D6052]">
+                    {newTaskPriority} Priority
+                  </span>
+                </div>
+                <p className="text-xs font-black text-[#26201A] truncate">
+                  {newTaskTitle.trim() || 'Untitled Task (Live Preview)'}
+                </p>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-black/5 text-[10px] text-[#7A6D5E]">
+                  <span>Column: {newTaskTargetColumn.toUpperCase()}</span>
+                  <span>{newTaskAssignees.length} assigned</span>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-[#5C5042] mb-1">Task Title</label>
                 <input
@@ -6996,7 +7030,7 @@ export default function App() {
                     className="w-full bg-white border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#2A231D] flex items-center justify-between shadow-2xs transition-all"
                   >
                     <div className="flex items-center space-x-2.5">
-                      <span className={`w-4 h-4 rounded-full border border-black/15 shadow-xs shrink-0 ${getColorStyles(newTaskColor).bg}`} />
+                      <span className={`w-4 h-4 rounded-full border border-black/15 shadow-xs shrink-0 ${modalColorStyles.bg}`} />
                       <span className="capitalize font-extrabold text-[#2C241E]">
                         {newTaskColor === 'peach' ? 'Peach Warmth' :
                          newTaskColor === 'blue' ? 'Archival Blue' :
@@ -7248,12 +7282,13 @@ export default function App() {
             </form>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Modal: Create Dossier Note */}
       {isNewNoteModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-8 sm:pb-6 max-h-[88vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
             {/* Mobile Drag Handle indicator */}
             <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto mb-3" />
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E8DEC9]">
@@ -7349,7 +7384,7 @@ export default function App() {
       {/* Modal: Create Schedule Event */}
       {isNewScheduleModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl p-5 sm:p-6 pb-8 sm:pb-6 max-h-[88vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
             {/* Mobile Drag Handle indicator */}
             <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto mb-3" />
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E8DEC9]">
@@ -7551,7 +7586,7 @@ export default function App() {
       {/* Invite Team Member Modal */}
       {isInviteMemberModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden pb-8 sm:pb-6 max-h-[88vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
             {/* Mobile Drag Handle indicator */}
             <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2" />
             <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
@@ -7686,7 +7721,7 @@ export default function App() {
       {/* ClickUp-Style Invitation Email Sent Modal */}
       {showInviteSuccessModal && lastCreatedInvite && (
         <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden pb-8 sm:pb-6 max-h-[88vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
             {/* Mobile Drag Handle indicator */}
             <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2" />
             {/* Header */}
@@ -7987,7 +8022,7 @@ export default function App() {
       {/* New Product Dossier Modal */}
       {isNewProductModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#29221C]/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden pb-safe max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
+          <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden pb-8 sm:pb-6 max-h-[88vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 duration-200">
             {/* Mobile Drag Handle indicator */}
             <div className="sm:hidden w-12 h-1.5 bg-[#D5CABB] rounded-full mx-auto my-2" />
             <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-[#EFE8DC] border-b border-[#DCD1BC] flex items-center justify-between">
