@@ -1489,10 +1489,12 @@ export default function App() {
 
   // Auto-persist per-user data to localStorage whenever tasks, schedules, notes, orgs, or clients change
   useEffect(() => {
-    if (!currentUser || !currentUser.email) return;
+    if (!currentUser || !currentUser.email || currentUser.email === 'mason.walker@example.com') return;
     const storageKey = `foldable_data_${currentUser.email.toLowerCase()}`;
     const dataToSave = {
+      user: currentUser,
       organizations,
+      currentOrgId: currentOrg?.id,
       tasks,
       schedules,
       notes,
@@ -1514,6 +1516,7 @@ export default function App() {
   }, [
     currentUser,
     organizations,
+    currentOrg,
     tasks,
     schedules,
     notes,
@@ -1530,30 +1533,35 @@ export default function App() {
 
   const applyUserData = (email: string, name?: string, avatar?: string) => {
     const isTestAccount = email === 'shahdhosni144@gmail.com' || email === 'mason.walker@example.com';
-    const targetName = name || email.split('@')[0];
-    const targetAvatar = avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
-
-    setCurrentUser({
-      name: targetName,
-      email: email,
-      avatar: targetAvatar
-    });
-
-    setSettingsName(targetName);
-    setSettingsEmail(email);
-    setSettingsAvatar(targetAvatar);
-
-    // Check if this user has previously saved workspace data in localStorage
     const storageKey = `foldable_data_${email.toLowerCase()}`;
     const savedRaw = localStorage.getItem(storageKey);
+    let restoredUser = {
+      name: name || email.split('@')[0],
+      email: email,
+      avatar: avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name || email.split('@')[0])}`
+    };
+
     if (savedRaw) {
       try {
         const saved = JSON.parse(savedRaw);
+        if (saved.user) {
+          restoredUser = {
+            name: saved.user.name || restoredUser.name,
+            email: email,
+            avatar: saved.user.avatar || restoredUser.avatar
+          };
+        }
+        setCurrentUser(restoredUser);
+        setSettingsName(restoredUser.name);
+        setSettingsEmail(restoredUser.email);
+        setSettingsAvatar(restoredUser.avatar);
+
         if (saved.organizations && saved.organizations.length > 0) {
           setOrganizations(saved.organizations);
-          setCurrentOrg(saved.organizations[0]);
-          if (saved.organizations[0].folders && saved.organizations[0].folders.length > 0) {
-            setCurrentFolder(saved.organizations[0].folders[0]);
+          const activeOrg = saved.organizations.find((o: any) => o.id === saved.currentOrgId) || saved.organizations[0];
+          setCurrentOrg(activeOrg);
+          if (activeOrg.folders && activeOrg.folders.length > 0) {
+            setCurrentFolder(activeOrg.folders[0]);
           }
         }
         if (saved.tasks) setTasks(saved.tasks);
@@ -1575,6 +1583,12 @@ export default function App() {
         console.warn('Error reading saved user data:', e);
       }
     }
+
+    // If no saved data yet:
+    setCurrentUser(restoredUser);
+    setSettingsName(restoredUser.name);
+    setSettingsEmail(restoredUser.email);
+    setSettingsAvatar(restoredUser.avatar);
 
     if (isTestAccount) {
       // Keep rich default data for tested account if no custom edits saved yet
@@ -1626,8 +1640,8 @@ export default function App() {
       // Completely clean slate for ANY new user: no dummy records or clutter
       const userCleanOrg: Organization = {
         id: `org-${Date.now()}`,
-        name: `${targetName.split(' ')[0]}'s Workspace`,
-        slug: `${targetName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-workspace`,
+        name: `${restoredUser.name.split(' ')[0]}'s Workspace`,
+        slug: `${restoredUser.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-workspace`,
         description: 'Personal organization workspace',
         folders: [
           {
@@ -1651,10 +1665,10 @@ export default function App() {
       setTeamMembers([
         {
           id: `tm-${Date.now()}`,
-          name: targetName,
+          name: restoredUser.name,
           email: email,
           role: 'Workspace Owner',
-          avatar: targetAvatar,
+          avatar: restoredUser.avatar,
           projects: ['Primary Tasks'],
           workload: 0,
           lastActive: 'Just now'
