@@ -1606,32 +1606,35 @@ export default function App() {
     setIsAuthLoading(true);
 
     try {
-      // Trigger genuine Google authentication redirect directly to Google accounts
-      await signInWithRedirect(auth, googleProvider);
-    } catch (err: any) {
-      console.error('Firebase signInWithRedirect error:', err);
-      // Try popup as fallback if browser blocks redirect
+      // 1. Prioritize signInWithPopup: Works cleanly on Vercel without cross-origin iframe cookie issues
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const targetEmail = user.email || 'user@gmail.com';
+      const targetName = user.displayName || targetEmail.split('@')[0];
+      const targetAvatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
+
       try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-        const targetEmail = user.email || 'user@gmail.com';
-        const targetName = user.displayName || targetEmail.split('@')[0];
-        const targetAvatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
+        await fetch(`${API_BASE}/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
+        });
+      } catch {}
 
+      setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
+      setCurrentScreen('folder_hub');
+    } catch (err: any) {
+      console.warn('Firebase popup error, attempting redirect fallback:', err);
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
         try {
-          await fetch(`${API_BASE}/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: targetEmail, name: targetName, avatar_url: targetAvatar })
-          });
-        } catch {}
-
-        setCurrentUser({ name: targetName, email: targetEmail, avatar: targetAvatar });
-        setCurrentScreen('folder_hub');
-      } catch (popupErr: any) {
-        console.error('Firebase popup error:', popupErr);
-        setAuthError(popupErr?.message || err?.message || 'Authentication error');
-        alert(`Google Auth Notice: ${popupErr?.message || err?.message}\n\nPlease ensure your deployed domain is added to Firebase Console -> Authentication -> Settings -> Authorized Domains.`);
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirErr: any) {
+          console.error('Redirect sign in error:', redirErr);
+          setAuthError(redirErr?.message || err?.message || 'Authentication error');
+        }
+      } else {
+        setAuthError(err?.message || 'Authentication error');
       }
     } finally {
       setIsAuthLoading(false);
