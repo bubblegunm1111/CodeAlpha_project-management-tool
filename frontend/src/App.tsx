@@ -1498,6 +1498,11 @@ export default function App() {
       avatar: targetAvatar
     });
 
+    // Also update settings fields so the Settings profile tab immediately matches this user
+    setSettingsName(targetName);
+    setSettingsEmail(email);
+    setSettingsAvatar(targetAvatar);
+
     if (isTestAccount) {
       // Keep rich dummy data for the tested account
       setOrganizations([
@@ -1667,17 +1672,7 @@ export default function App() {
       }
 
       const loggedUser = data.user || { name, email, avatar_url: '' };
-      setCurrentUser({
-        name: loggedUser.name,
-        email: loggedUser.email,
-        avatar: loggedUser.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
-      });
-
-      if (authMode === 'signup' || organizations.length === 0) {
-        setCurrentScreen('org_setup');
-      } else {
-        setCurrentScreen('folder_hub');
-      }
+      applyUserData(loggedUser.email, loggedUser.name, loggedUser.avatar_url);
 
       setNotifications(prev => [
         { id: Date.now(), text: `Authenticated as ${loggedUser.name}`, time: 'Just now' },
@@ -1686,12 +1681,7 @@ export default function App() {
     } catch (err: any) {
       // Fallback optimistic offline sign in if backend unreachable
       console.warn('Backend auth unreachable, falling back to local credentials:', err);
-      setCurrentUser({
-        name,
-        email,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
-      });
-      setCurrentScreen(authMode === 'signup' || organizations.length === 0 ? 'org_setup' : 'folder_hub');
+      applyUserData(email, name);
     } finally {
       setIsAuthLoading(false);
     }
@@ -7899,7 +7889,17 @@ export default function App() {
 
                       setOrganizations(updatedOrgs);
                       setCurrentOrg(prev => ({ ...prev, name: targetName, description: targetDesc }));
-                      setSettingsSaveMessage(`Workspace "${targetName}" updated successfully.`);
+                      setSettingsOrgName(targetName);
+                      setSettingsOrgDescription(targetDesc);
+
+                      // Also persist to backend API
+                      fetch(`${API_BASE}/organizations`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: targetName, description: targetDesc })
+                      }).catch(() => {});
+
+                      setSettingsSaveMessage(`Workspace renamed to "${targetName}" across all views.`);
                       setTimeout(() => setSettingsSaveMessage(null), 4000);
                     }}
                     className="space-y-4"
