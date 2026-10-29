@@ -63,6 +63,9 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 
+import { auth, googleProvider } from './firebase';
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+
 const API_BASE = typeof window !== 'undefined'
   ? `${window.location.protocol}//${window.location.hostname}:3001/api/v1`
   : 'http://localhost:3001/api/v1';
@@ -1436,6 +1439,61 @@ export default function App() {
     };
   }, []);
 
+  // Check for Firebase redirect sign-in result on page load (mobile fallback)
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result && result.user) {
+          const u = result.user;
+          const targetEmail = u.email || 'user@gmail.com';
+          const targetName = u.displayName || targetEmail.split('@')[0];
+          const targetAvatar = u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
+
+          fetch(`${API_BASE}/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: targetEmail,
+              name: targetName,
+              avatar_url: targetAvatar
+            })
+          })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+              if (data && data.user) {
+                setCurrentUser({
+                  name: data.user.name,
+                  email: data.user.email,
+                  avatar: data.user.avatar_url || targetAvatar
+                });
+              } else {
+                setCurrentUser({
+                  name: targetName,
+                  email: targetEmail,
+                  avatar: targetAvatar
+                });
+              }
+            })
+            .catch(() => {
+              setCurrentUser({
+                name: targetName,
+                email: targetEmail,
+                avatar: targetAvatar
+              });
+            });
+
+          setCurrentScreen('folder_hub');
+          setNotifications(prev => [
+            { id: Date.now(), text: `Authenticated via Google (${targetEmail})`, time: 'Just now' },
+            ...prev
+          ]);
+        }
+      })
+      .catch((err) => {
+        console.warn('Firebase redirect error:', err);
+      });
+  }, []);
+
   // Splash Screen Animation sequence: opens folder smoothly without rushing user away
   useEffect(() => {
     if (currentScreen === 'splash') {
@@ -1542,6 +1600,83 @@ export default function App() {
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
       });
       setCurrentScreen(authMode === 'signup' || organizations.length === 0 ? 'org_setup' : 'folder_hub');
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleFirebaseGoogleSignIn = async () => {
+    setAuthError(null);
+    setIsAuthLoading(true);
+
+    try {
+      // Trigger genuine Google authentication popup via Firebase
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const targetEmail = user.email || 'user@gmail.com';
+      const targetName = user.displayName || targetEmail.split('@')[0];
+      const targetAvatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`;
+
+      // Register or synchronize user with backend SQLite
+      try {
+        const res = await fetch(`${API_BASE}/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: targetEmail,
+            name: targetName,
+            avatar_url: targetAvatar
+          })
+        });
+        const data = res.ok ? await res.json() : null;
+        if (data && data.user) {
+          setCurrentUser({
+            name: data.user.name,
+            email: data.user.email,
+            avatar: data.user.avatar_url || targetAvatar
+          });
+        } else {
+          setCurrentUser({
+            name: targetName,
+            email: targetEmail,
+            avatar: targetAvatar
+          });
+        }
+      } catch {
+        setCurrentUser({
+          name: targetName,
+          email: targetEmail,
+          avatar: targetAvatar
+        });
+      }
+
+      setIsGoogleModalOpen(false);
+      if (organizations.length === 0) {
+        setCurrentScreen('org_setup');
+      } else {
+        setCurrentScreen('folder_hub');
+      }
+
+      setNotifications(prev => [
+        { id: Date.now(), text: `Authenticated via Google (${targetEmail})`, time: 'Just now' },
+        ...prev
+      ]);
+    } catch (err: any) {
+      console.warn('Firebase signInWithPopup error or popup blocked:', err);
+      // If popup was blocked or mobile browser requires redirect
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        if (err.code === 'auth/popup-blocked') {
+          try {
+            await signInWithRedirect(auth, googleProvider);
+            return;
+          } catch (redirErr) {
+            console.error('Redirect sign in error:', redirErr);
+          }
+        }
+      }
+      // If Google Auth provider isn't enabled yet or network issue, open account picker dialog as friendly fallback
+      setAuthError(err.message || 'Google Sign-in failed. Please try again.');
+      setIsGoogleModalOpen(true);
     } finally {
       setIsAuthLoading(false);
     }
@@ -3835,8 +3970,9 @@ export default function App() {
               <div>
                 <button
                   type="button"
-                  onClick={() => setIsGoogleModalOpen(true)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-white border border-[#D5CABB] hover:border-[#8C7E6C] text-xs font-semibold text-[#2C2621] hover:bg-[#F5EFEB] transition-all flex items-center justify-center space-x-2 shadow-2xs cursor-pointer active:scale-[0.99]"
+                  onClick={handleFirebaseGoogleSignIn}
+                  disabled={isAuthLoading}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white border border-[#D5CABB] hover:border-[#8C7E6C] text-xs font-semibold text-[#2C2621] hover:bg-[#F5EFEB] transition-all flex items-center justify-center space-x-2 shadow-2xs cursor-pointer active:scale-[0.99] disabled:opacity-60"
                 >
                   <GoogleIcon />
                   <span>Continue with Google</span>
