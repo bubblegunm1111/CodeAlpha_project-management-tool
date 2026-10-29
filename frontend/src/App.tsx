@@ -4065,9 +4065,9 @@ export default function App() {
       {/* Top Manila Folder Cutout Tab Header */}
       <header className="bg-[#EFE8DC] border-b border-[#DCD1BC] select-none pt-8 sm:pt-0 relative z-40">
         {/* Upper Row: Breadcrumbs & Utility Actions */}
-        <div className="px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-1.5 sm:gap-2 min-w-0">
+        <div className="px-2 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between border-b border-[#E4DAC7] gap-2 min-w-0">
           {/* Organization & Active Folder Breadcrumb with Return to Hub */}
-          <div className="flex items-center space-x-1 sm:space-x-3 shrink min-w-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-3 flex-1 min-w-0 mr-1 sm:mr-0">
             {/* Mobile Hamburger to open sidebar */}
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -4076,6 +4076,8 @@ export default function App() {
             >
               <Menu className="w-4 h-4" />
             </button>
+
+            {/* Desktop Return to Folder Hub button */}
             <button
               onClick={() => setCurrentScreen('folder_hub')}
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#3F3730] hover:bg-[#2B241E] flex items-center justify-center text-[#FAF6EE] shadow-sm transition-transform hover:scale-105 shrink-0 hidden sm:flex"
@@ -4083,42 +4085,43 @@ export default function App() {
             >
               <Folder className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
-            <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-              {/* Inline Switcher for Organization - on mobile in board view, streamlined or opens Folder Hub */}
-              <div className="relative min-w-[130px] sm:min-w-[170px] max-w-[150px] sm:max-w-none dropdown-container" data-dropdown="true">
-                <ArchivalSelect
-                  value={currentOrg.id}
-                  onChange={(val) => {
-                    const found = organizations.find(o => o.id === val);
-                    if (found) {
-                      setCurrentOrg(found);
-                      if (found.folders && found.folders.length > 0) {
-                        setCurrentFolder(found.folders[0]);
-                      }
-                    }
-                  }}
-                  options={organizations.map(org => ({
-                    value: org.id,
-                    label: org.name,
-                    icon: <Building2 className="w-3.5 h-3.5 text-[#8C7E6C]" />
-                  }))}
-                  title="Switch Organization"
-                />
-              </div>
 
-              {/* Folder Selector / Badge - Clean & prominent on mobile */}
-              <button
-                onClick={() => setCurrentScreen('folder_hub')}
-                className="text-[11px] sm:text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] hover:bg-[#EBDDC5] px-2 py-1.5 rounded-lg border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5 min-w-0 transition-colors shrink-0"
-                title="Click to view all folders in Folder Hub"
-              >
-                <Folder className="w-3 h-3 text-[#A66030] shrink-0 sm:hidden" />
-                <span className="truncate max-w-[70px] sm:max-w-none">{currentFolder.name}</span>
-                <span className="font-mono text-[9px] sm:text-[10px] text-[#A66030] font-extrabold bg-[#DFCFB7] px-1.5 py-0.2 rounded shrink-0 hidden xs:inline">
-                  {formatFolderCode(currentFolder.code)}
-                </span>
-              </button>
+            {/* Organization Dropdown (hidden on small mobile; on mobile, switched from Folder Hub or Sidebar to keep header clean) */}
+            <div className="hidden sm:block relative min-w-[150px] max-w-[200px] dropdown-container shrink-0" data-dropdown="true">
+              <ArchivalSelect
+                value={currentOrg.id}
+                onChange={(val) => {
+                  const found = organizations.find(o => o.id === val);
+                  if (found) {
+                    setCurrentOrg(found);
+                    if (found.folders && found.folders.length > 0) {
+                      setCurrentFolder(found.folders[0]);
+                    }
+                  }
+                }}
+                options={organizations.map(org => ({
+                  value: org.id,
+                  label: org.name,
+                  icon: <Building2 className="w-3.5 h-3.5 text-[#8C7E6C]" />
+                }))}
+                title="Switch Organization"
+              />
             </div>
+
+            <span className="text-[#8C8072] text-xs shrink-0 hidden sm:inline">/</span>
+
+            {/* Active Folder Badge / Return to Folder Hub */}
+            <button
+              onClick={() => setCurrentScreen('folder_hub')}
+              className="text-xs font-bold text-[#8A4A1C] bg-[#F4E9D5] hover:bg-[#EBDDC5] px-2.5 py-1.5 rounded-lg border border-[#DFD1B8] shadow-2xs inline-flex items-center space-x-1.5 min-w-0 transition-colors max-w-full"
+              title="Switch folder or view Folder Hub"
+            >
+              <Folder className="w-3.5 h-3.5 text-[#A66030] shrink-0" />
+              <span className="truncate">{currentFolder.name}</span>
+              <span className="font-mono text-[9px] text-[#A66030] font-extrabold bg-[#DFCFB7] px-1.5 py-0.2 rounded shrink-0 hidden md:inline">
+                {formatFolderCode(currentFolder.code)}
+              </span>
+            </button>
           </div>
 
           {/* Right Controls: Search, Notifications, Profile */}
