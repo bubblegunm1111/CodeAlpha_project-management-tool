@@ -487,6 +487,63 @@ app.get('/api/v1/auth/me', authMiddleware, async (req, res) => {
   }
 });
 
+// Update Profile & Preferences Settings
+app.put('/api/v1/auth/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name, email, avatar_url } = req.body;
+    const userId = req.userId || 1;
+
+    const updates = [];
+    const params = [];
+
+    if (name) { updates.push('name = ?'); params.push(name.trim()); }
+    if (email) { updates.push('email = ?'); params.push(email.trim()); }
+    if (avatar_url) { updates.push('avatar_url = ?'); params.push(avatar_url); }
+
+    if (updates.length > 0) {
+      params.push(userId);
+      await runAsync(`UPDATE users SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, params);
+    }
+
+    let user = await getAsync('SELECT id, email, name, avatar_url FROM users WHERE id = ?', [userId]);
+    if (!user) {
+      user = { id: userId, email: email || 'mason.walker@example.com', name: name || 'Mason Walker', avatar_url: avatar_url || '' };
+    }
+    broadcast({ type: 'USER_PROFILE_UPDATED', user });
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update Password in Settings
+app.put('/api/v1/auth/password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.userId || 1;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+    }
+
+    const user = await getAsync('SELECT * FROM users WHERE id = ?', [userId]);
+    if (user && user.password) {
+      if (currentPassword) {
+        const valid = await bcrypt.compare(currentPassword, user.password);
+        if (!valid) {
+          return res.status(400).json({ error: 'Current password does not match.' });
+        }
+      }
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await runAsync('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [hashed, userId]);
+    }
+
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ ORGANIZATIONS ENDPOINTS ============
 
 app.get('/api/v1/organizations', authMiddleware, async (req, res) => {

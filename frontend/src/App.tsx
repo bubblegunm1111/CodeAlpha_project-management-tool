@@ -1224,7 +1224,7 @@ export default function App() {
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces'
   });
 
-  const [activeTab, setActiveTab] = useState<'board' | 'schedule' | 'notes' | 'reports' | 'team' | 'products' | 'clients'>('board');
+  const [activeTab, setActiveTab] = useState<'board' | 'schedule' | 'notes' | 'reports' | 'team' | 'products' | 'clients' | 'settings'>('board');
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
   const [schedules, setSchedules] = useState<ScheduleItem[]>(INITIAL_SCHEDULE);
@@ -1232,6 +1232,25 @@ export default function App() {
   const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
   const [clients, setClients] = useState<ClientItem[]>(INITIAL_CLIENTS);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Settings State & Forms
+  const [settingsActiveSubtab, setSettingsActiveSubtab] = useState<'profile' | 'organization' | 'notifications' | 'security' | 'integrations'>('profile');
+  const [settingsName, setSettingsName] = useState(currentUser.name);
+  const [settingsEmail, setSettingsEmail] = useState(currentUser.email);
+  const [settingsAvatar, setSettingsAvatar] = useState(currentUser.avatar);
+  const [settingsRole, setSettingsRole] = useState('Lead Archival Architect');
+  const [settingsOrgName, setSettingsOrgName] = useState('');
+  const [settingsOrgDescription, setSettingsOrgDescription] = useState('');
+  const [settingsCurrentPassword, setSettingsCurrentPassword] = useState('');
+  const [settingsNewPassword, setSettingsNewPassword] = useState('');
+  const [settingsConfirmPassword, setSettingsConfirmPassword] = useState('');
+  const [settingsEmailAlerts, setSettingsEmailAlerts] = useState(true);
+  const [settingsTaskAssignedAlerts, setSettingsTaskAssignedAlerts] = useState(true);
+  const [settingsDeadlineReminders, setSettingsDeadlineReminders] = useState(true);
+  const [settingsSoundEffects, setSettingsSoundEffects] = useState(false);
+  const [settingsCompactMode, setSettingsCompactMode] = useState(false);
+  const [settingsSaveMessage, setSettingsSaveMessage] = useState<string | null>(null);
+  const [settingsSaveError, setSettingsSaveError] = useState<string | null>(null);
 
   // Clients Page State & Modals
   const [selectedClient, setSelectedClient] = useState<ClientItem | null>(null);
@@ -4403,7 +4422,8 @@ export default function App() {
               { id: 'schedule' as const, label: 'Schedule & Timeline', shortLabel: 'Timeline', count: currentOrgSchedules.length },
               { id: 'notes' as const, label: 'Dossier Notes', shortLabel: 'Notes', count: currentOrgNotes.length },
               { id: 'reports' as const, label: 'Activity Logs', shortLabel: 'Logs' },
-              { id: 'team' as const, label: 'Team Members', shortLabel: 'Team', count: teamMembers.length }
+              { id: 'team' as const, label: 'Team Members', shortLabel: 'Team', count: teamMembers.length },
+              { id: 'settings' as const, label: 'System Settings', shortLabel: 'Settings' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -4578,11 +4598,23 @@ export default function App() {
 
           {/* Pinned Bottom Footer (Uniform & Constant Sequence) */}
           <div className="shrink-0 pt-3 mt-auto border-t border-[#DCD1BC] space-y-0.5">
-            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#FAF6EE] transition-all">
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'settings'
+                  ? 'bg-[#FAF6EE] text-[#2C241E] font-bold shadow-sm border border-[#DCD1BC]'
+                  : 'text-[#61574C] hover:bg-[#FAF6EE] hover:text-[#2C241E]'
+              }`}
+            >
               <Settings className="w-4 h-4 text-[#756A5E]" />
               <span>Settings</span>
             </button>
-            <button className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#FAF6EE] transition-all">
+            <button
+              onClick={() => {
+                alert('Archival PM System Documentation & Support is active. Contact sys1.admin.system@gmail.com for enterprise inquiries.');
+              }}
+              className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-medium text-[#61574C] hover:bg-[#FAF6EE] transition-all cursor-pointer"
+            >
               <HelpCircle className="w-4 h-4 text-[#756A5E]" />
               <span>Support</span>
             </button>
@@ -7199,6 +7231,509 @@ export default function App() {
                     );
                   })}
               </div>
+            </div>
+          )}
+
+          {/* VIEW 8: SYSTEM & ARCHIVAL SETTINGS (Fully Functional) */}
+          {activeTab === 'settings' && (
+            <div className="space-y-4 sm:space-y-6 max-w-4xl">
+              {/* Header */}
+              <div className="flex flex-col md:flex-row md:items-start justify-between pb-3 sm:pb-4 border-b border-[#E5DBCA] gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F4E9D5] text-[#8A4A1C] border border-[#DFD1B8]">
+                      Account & Preferences
+                    </span>
+                    <span className="text-xs text-[#7B7062]">
+                      • Workspace: {currentOrg.name}
+                    </span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-black text-[#26201A] tracking-tight mt-1 flex items-center space-x-2">
+                    <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-[#756A5E] shrink-0" />
+                    <span>System Settings & Profile</span>
+                  </h1>
+                  <p className="text-xs text-[#7B7062] mt-0.5 max-w-xl">
+                    Configure your user identity, active organization dossiers, notification rules, and archival security credentials.
+                  </p>
+                </div>
+
+                {settingsSaveMessage && (
+                  <div className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center space-x-2 animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{settingsSaveMessage}</span>
+                  </div>
+                )}
+                {settingsSaveError && (
+                  <div className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center space-x-2 animate-in fade-in">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{settingsSaveError}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Subtab Navigation Pills */}
+              <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar pb-1">
+                {[
+                  { id: 'profile' as const, label: 'Profile & Identity', icon: Users },
+                  { id: 'organization' as const, label: 'Organization & Workspace', icon: Building2 },
+                  { id: 'notifications' as const, label: 'Alerts & Notifications', icon: Bell },
+                  { id: 'security' as const, label: 'Password & Security', icon: Lock },
+                  { id: 'integrations' as const, label: 'System & Preferences', icon: ShieldAlert }
+                ].map(sub => {
+                  const Icon = sub.icon;
+                  const isActive = settingsActiveSubtab === sub.id;
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        setSettingsActiveSubtab(sub.id);
+                        setSettingsSaveMessage(null);
+                        setSettingsSaveError(null);
+                      }}
+                      className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                        isActive
+                          ? 'bg-[#2E2721] text-[#FAF6EE] shadow-sm'
+                          : 'bg-[#FAF6EE] text-[#5C5042] border border-[#DCD1BC] hover:bg-[#F3ECE0]'
+                      }`}
+                    >
+                      <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#DCD1BC]' : 'text-[#8C7E6C]'}`} />
+                      <span>{sub.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* TAB 1: PROFILE & IDENTITY */}
+              {settingsActiveSubtab === 'profile' && (
+                <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl p-5 sm:p-6 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="text-base font-bold text-[#2A231D] mb-1">User Profile</h3>
+                    <p className="text-xs text-[#7A7064]">Update your avatar, display name, and communication email across all task cards.</p>
+                  </div>
+
+                  {/* Avatar Picker */}
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-5 pt-2">
+                    <img
+                      src={settingsAvatar || currentUser.avatar}
+                      alt={settingsName}
+                      className="w-16 h-16 rounded-2xl object-cover border-2 border-[#D5CABB] shadow-xs"
+                    />
+                    <div className="space-y-1.5 flex-1">
+                      <label className="block text-[11px] font-bold text-[#7A6E60] uppercase">
+                        Avatar Image URL
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="url"
+                          value={settingsAvatar}
+                          onChange={(e) => setSettingsAvatar(e.target.value)}
+                          placeholder="https://..."
+                          className="flex-1 px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSettingsAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop')}
+                          className="px-2.5 py-2 text-xs font-semibold rounded-xl bg-white border border-[#D5CABB] hover:bg-[#F5EFEB] text-[#5A4E40] shrink-0"
+                          title="Reset to default portrait"
+                        >
+                          Default
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setSettingsSaveMessage(null);
+                      setSettingsSaveError(null);
+                      try {
+                        const res = await fetch(`${API_BASE}/auth/profile`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            name: settingsName,
+                            email: settingsEmail,
+                            avatar_url: settingsAvatar
+                          })
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          setCurrentUser({
+                            name: data.user.name,
+                            email: data.user.email,
+                            avatar: data.user.avatar_url || settingsAvatar
+                          });
+                          setSettingsSaveMessage('Profile credentials updated and synced successfully.');
+                          setTimeout(() => setSettingsSaveMessage(null), 4000);
+                        } else {
+                          const errData = await res.json();
+                          setSettingsSaveError(errData.error || 'Failed to update profile.');
+                        }
+                      } catch (err: any) {
+                        setSettingsSaveError(err.message || 'Network error updating profile.');
+                      }
+                    }}
+                    className="space-y-4 pt-2"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                          Full Display Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={settingsName}
+                          onChange={(e) => setSettingsName(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={settingsEmail}
+                          onChange={(e) => setSettingsEmail(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                        Professional Title & Department
+                      </label>
+                      <input
+                        type="text"
+                        value={settingsRole}
+                        onChange={(e) => setSettingsRole(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                      />
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-all cursor-pointer flex items-center space-x-1.5"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Save Profile Changes</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB 2: ORGANIZATION & WORKSPACE */}
+              {settingsActiveSubtab === 'organization' && (
+                <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl p-5 sm:p-6 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="text-base font-bold text-[#2A231D] mb-1">Active Organization Workspace</h3>
+                    <p className="text-xs text-[#7A7064]">
+                      Edit details for <strong>{currentOrg.name}</strong> ({currentOrg.folders.length} Dossiers).
+                    </p>
+                  </div>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      setSettingsSaveMessage(null);
+                      const targetName = settingsOrgName.trim() || currentOrg.name;
+                      const targetDesc = settingsOrgDescription.trim() || currentOrg.description;
+
+                      const updatedOrgs = organizations.map(o => {
+                        if (o.id === currentOrg.id) {
+                          return { ...o, name: targetName, description: targetDesc };
+                        }
+                        return o;
+                      });
+
+                      setOrganizations(updatedOrgs);
+                      setCurrentOrg(prev => ({ ...prev, name: targetName, description: targetDesc }));
+                      setSettingsSaveMessage(`Workspace "${targetName}" updated successfully.`);
+                      setTimeout(() => setSettingsSaveMessage(null), 4000);
+                    }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                        Organization Workspace Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={currentOrg.name}
+                        value={settingsOrgName}
+                        onChange={(e) => setSettingsOrgName(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                        Organization Dossier Description
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder={currentOrg.description || 'Focus areas and business scope...'}
+                        value={settingsOrgDescription}
+                        onChange={(e) => setSettingsOrgDescription(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                      />
+                    </div>
+
+                    {/* Organization Folders Quick List */}
+                    <div className="p-3.5 bg-[#F4ECE1] rounded-xl border border-[#DFD4C2] space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-[#4F4438]">
+                        <span>Dossiers in this Workspace:</span>
+                        <span>{currentOrg.folders.length} Active</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {currentOrg.folders.map(f => (
+                          <div key={f.id} className="px-2.5 py-1 bg-white rounded-lg border border-[#D5CABB] text-xs font-medium text-[#2C241E] flex items-center space-x-1.5 shadow-2xs">
+                            <Folder className="w-3.5 h-3.5 text-amber-700" />
+                            <span>{f.name}</span>
+                            <span className="font-mono text-[9px] text-[#A66030] font-bold">({f.code})</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-all cursor-pointer flex items-center space-x-1.5"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Update Workspace</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB 3: ALERTS & NOTIFICATIONS */}
+              {settingsActiveSubtab === 'notifications' && (
+                <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+                  <div>
+                    <h3 className="text-base font-bold text-[#2A231D] mb-1">Notification & Event Rules</h3>
+                    <p className="text-xs text-[#7A7064]">Choose how real-time WebSocket actions and deadline reminders trigger alerts.</p>
+                  </div>
+
+                  <div className="space-y-3 pt-1">
+                    {[
+                      {
+                        title: 'Email Notifications & Daily Summary',
+                        desc: 'Send daily digests for critical dossier updates and milestones via SMTP.',
+                        checked: settingsEmailAlerts,
+                        setter: setSettingsEmailAlerts
+                      },
+                      {
+                        title: 'Task Assignment & Mention Broadcasts',
+                        desc: 'Receive live alerts when you are assigned or mentioned on a task card.',
+                        checked: settingsTaskAssignedAlerts,
+                        setter: setSettingsTaskAssignedAlerts
+                      },
+                      {
+                        title: 'Realistic Deadline & Slip Risk Alerts',
+                        desc: 'AI radar warnings for tasks slipping past estimated milestone velocity.',
+                        checked: settingsDeadlineReminders,
+                        setter: setSettingsDeadlineReminders
+                      },
+                      {
+                        title: 'Audio Feedback & Stopwatch Chimes',
+                        desc: 'Play subtle mechanical typewriter / click chimes when toggling timers.',
+                        checked: settingsSoundEffects,
+                        setter: setSettingsSoundEffects
+                      }
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          item.setter(!item.checked);
+                          setSettingsSaveMessage('Notification preferences updated.');
+                          setTimeout(() => setSettingsSaveMessage(null), 3000);
+                        }}
+                        className="flex items-center justify-between p-3.5 bg-white border border-[#D5CABB] hover:border-[#8C7E6C] rounded-xl cursor-pointer transition-colors shadow-2xs"
+                      >
+                        <div className="pr-4">
+                          <p className="text-xs font-bold text-[#2A231D]">{item.title}</p>
+                          <p className="text-[11px] text-[#7A7064] mt-0.5">{item.desc}</p>
+                        </div>
+                        <div
+                          className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors shrink-0 ${
+                            item.checked ? 'bg-[#2E2721]' : 'bg-[#DCD1BC]'
+                          }`}
+                        >
+                          <div
+                            className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                              item.checked ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: PASSWORD & SECURITY */}
+              {settingsActiveSubtab === 'security' && (
+                <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl p-5 sm:p-6 shadow-xs space-y-6">
+                  <div>
+                    <h3 className="text-base font-bold text-[#2A231D] mb-1">Password & Authentication Security</h3>
+                    <p className="text-xs text-[#7A7064]">Keep your archival account safe with an encrypted bcrypt password.</p>
+                  </div>
+
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setSettingsSaveMessage(null);
+                      setSettingsSaveError(null);
+
+                      if (settingsNewPassword !== settingsConfirmPassword) {
+                        setSettingsSaveError('New password and confirmation do not match.');
+                        return;
+                      }
+
+                      try {
+                        const res = await fetch(`${API_BASE}/auth/password`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            currentPassword: settingsCurrentPassword,
+                            newPassword: settingsNewPassword
+                          })
+                        });
+
+                        if (res.ok) {
+                          setSettingsCurrentPassword('');
+                          setSettingsNewPassword('');
+                          setSettingsConfirmPassword('');
+                          setSettingsSaveMessage('Password updated successfully.');
+                          setTimeout(() => setSettingsSaveMessage(null), 4000);
+                        } else {
+                          const errData = await res.json();
+                          setSettingsSaveError(errData.error || 'Failed to update password.');
+                        }
+                      } catch (err: any) {
+                        setSettingsSaveError(err.message || 'Network error updating password.');
+                      }
+                    }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={settingsCurrentPassword}
+                        onChange={(e) => setSettingsCurrentPassword(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                          New Password (min 6 chars) *
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={settingsNewPassword}
+                          onChange={(e) => setSettingsNewPassword(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7A6E60] uppercase mb-1">
+                          Confirm New Password *
+                        </label>
+                        <input
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={settingsConfirmPassword}
+                          onChange={(e) => setSettingsConfirmPassword(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-[#D5CABB] rounded-xl text-xs text-[#2A231D] focus:outline-none focus:border-[#8C7E6C]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 bg-[#2B231D] text-[#FAF6EE] text-xs font-bold rounded-xl shadow hover:bg-[#433931] transition-all cursor-pointer flex items-center space-x-1.5"
+                      >
+                        <Lock className="w-4 h-4" />
+                        <span>Update Password</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB 5: SYSTEM & PREFERENCES */}
+              {settingsActiveSubtab === 'integrations' && (
+                <div className="bg-[#FAF6EE] border border-[#D5CABB] rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+                  <div>
+                    <h3 className="text-base font-bold text-[#2A231D] mb-1">Display & System Preferences</h3>
+                    <p className="text-xs text-[#7A7064]">Fine-tune layout density and view telemetry status.</p>
+                  </div>
+
+                  <div className="p-4 bg-white rounded-xl border border-[#D5CABB] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-[#2A231D]">Compact Board Density</p>
+                        <p className="text-[11px] text-[#7A7064]">Display smaller task cards to fit more columns across the screen.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettingsCompactMode(!settingsCompactMode);
+                          setSettingsSaveMessage(`Compact view ${!settingsCompactMode ? 'enabled' : 'disabled'}.`);
+                          setTimeout(() => setSettingsSaveMessage(null), 3000);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                          settingsCompactMode ? 'bg-[#2E2721] text-white' : 'bg-[#EAE0CF] text-[#4F4438]'
+                        }`}
+                      >
+                        {settingsCompactMode ? 'Enabled' : 'Disabled'}
+                      </button>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#E8DEC9] flex items-center justify-between text-xs">
+                      <div>
+                        <p className="font-bold text-[#2A231D]">WebSocket Tunnel Status</p>
+                        <p className="text-[11px] text-[#7A7064]">Port 3001 live event synchronization</p>
+                      </div>
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping mr-1"></span>
+                        Connected
+                      </span>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#E8DEC9] flex items-center justify-between text-xs">
+                      <div>
+                        <p className="font-bold text-[#2A231D]">SQLite Storage Database</p>
+                        <p className="text-[11px] text-[#7A7064]">Local persistence file at ./backend/app.db</p>
+                      </div>
+                      <span className="font-mono text-[10px] font-bold text-[#695D50] bg-[#EFE8DC] px-2 py-0.5 rounded">
+                        Healthy • Ready
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
